@@ -657,6 +657,14 @@ tr.cal-row:nth-child(odd) .cal-cell{background:rgba(128,128,128,.02)}
   <div class="modal" id="habitModal"></div>
 </div>
 
+<!-- ============ HABIT TEMPLATE PICKER MODAL ============ -->
+<div class="modal-veil" id="tplVeil" onclick="if(event.target===this)closeTemplateModal()">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-head"><div class="modal-title">Habit Templates</div><button class="icon-btn" onclick="closeTemplateModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+    <div id="tplModalBody"></div>
+  </div>
+</div>
+
 <!-- ============ TOASTS ============ -->
 <div id="toast-wrap"></div>
 
@@ -1289,11 +1297,13 @@ function renderToday(){
   var missed = all.filter(function(h){ return getStatus(h,_todayStr)==='missed'; });
 
   var html = '<div class="page-head"><div><div class="page-title">Today</div><div class="page-sub">'+niceDate(_todayStr)+' · '+done.length+'/'+all.length+' done</div></div>'+
-    '<div class="page-actions"><button class="btn primary" onclick="openHabitModal()">'+ICONS.plus+' New Habit</button></div></div>';
+    '<div class="page-actions">'+
+      '<button class="btn" onclick="openTemplateModal()">'+ICONS.sparkle+' Habit Template</button>'+
+      '<button class="btn primary" onclick="openHabitModal()">'+ICONS.plus+' New Habit</button>'+
+    '</div></div>';
 
   if(!S.habits.length){
     html += emptyState('No habits yet','Start with a template below, or create your own from scratch.','openHabitModal()','New Habit');
-    html += templateSectionHTML();
   } else if(!all.length){
     html += emptyState('Nothing scheduled today','Enjoy the rest, or add a habit for today.','openHabitModal()','New Habit');
   } else {
@@ -1301,6 +1311,8 @@ function renderToday(){
     if(done.length) html += '<div class="sec-title"><h3>Done — '+done.length+'</h3></div><div class="hab-list">'+done.map(habitItemHTML).join('')+'</div>';
     if(missed.length) html += '<div class="sec-title"><h3>Missed — '+missed.length+'</h3></div><div class="hab-list">'+missed.map(habitItemHTML).join('')+'</div>';
   }
+
+  html += templateSectionHTML();
 
   var archived = S.habits.filter(function(h){ return h.archived; });
   if(archived.length){
@@ -1317,8 +1329,8 @@ function renderToday(){
   updateSideRing();
 }
 
-function templateSectionHTML(){
-  return '<div class="sec-title"><h3>Quick-add templates</h3></div><div class="tpl-grid">'+
+function templateGridHTML(){
+  return '<div class="tpl-grid">'+
     TEMPLATES.map(function(t,i){
       return '<button class="tpl-card" onclick="addFromTemplate('+i+')">'+
         '<div class="tpl-icon">'+t.icon+'</div>'+
@@ -1327,6 +1339,14 @@ function templateSectionHTML(){
     }).join('')+
   '</div>';
 }
+function templateSectionHTML(){
+  return '<div class="sec-title"><h3>Quick-add templates</h3></div>'+templateGridHTML();
+}
+function openTemplateModal(){
+  document.getElementById('tplModalBody').innerHTML = templateGridHTML();
+  document.getElementById('tplVeil').classList.add('open');
+}
+function closeTemplateModal(){ document.getElementById('tplVeil').classList.remove('open'); }
 /* ==================================================================
    CALENDAR PAGE
    ================================================================== */
@@ -1927,6 +1947,7 @@ function addFromTemplate(i){
   };
   S.habits.push(h); save();
   toast('Added "'+t.name+'"');
+  closeTemplateModal();
   reRenderCurrent(); go(_curPage);
 }
 
@@ -1960,7 +1981,7 @@ function refreshTodayIfChanged(){
   checkReminders();
 }
 document.addEventListener('keydown', function(e){
-  if(e.key==='Escape'){ closeHabitModal(); closeMore(); if(_aiOpen) toggleAI(); }
+  if(e.key==='Escape'){ closeHabitModal(); closeMore(); closeTemplateModal(); if(_aiOpen) toggleAI(); }
 });
 _todayStr = dateStr(new Date());
 _calMonth = _todayStr.slice(0,7);
