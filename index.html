@@ -531,10 +531,51 @@ tr.cal-row:nth-child(odd) .cal-cell{background:rgba(128,128,128,.02)}
 @media(prefers-reduced-motion:reduce){
   *{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important}
 }
+
+/* ============================================================
+   AUTH GATE (Firebase Google Sign-In)
+   ============================================================ */
+#authGate{
+  position:fixed;inset:0;z-index:999;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;padding:20px;
+}
+.auth-card{
+  width:100%;max-width:360px;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius-lg);padding:34px 28px;text-align:center;box-shadow:var(--shadow);
+}
+.auth-brand{width:52px;height:52px;border-radius:15px;margin:0 auto 18px;background:linear-gradient(150deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px var(--accent-soft)}
+.auth-brand svg{width:26px;height:26px}
+.auth-title{font-family:var(--f-display);font-size:21px;font-weight:700;margin-bottom:8px}
+.auth-sub{color:var(--text2);font-size:13.5px;line-height:1.55;margin-bottom:24px}
+.auth-google-btn{
+  width:100%;background:var(--text);color:var(--bg);border:none;height:46px;border-radius:12px;
+  font-size:14px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  transition:all .15s;
+}
+.auth-google-btn:hover{opacity:.9;transform:translateY(-1px)}
+.auth-google-btn:disabled{opacity:.55;pointer-events:none}
+.auth-status{margin-top:14px;font-size:12px;color:var(--text3);min-height:16px}
+.auth-spinner{width:22px;height:22px;border-radius:50%;border:2.5px solid var(--border2);border-top-color:var(--accent);margin:0 auto 16px;animation:authspin .7s linear infinite}
+@keyframes authspin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
-<div id="app">
+<!-- ============ AUTH GATE ============ -->
+<div id="authGate">
+  <div class="auth-card">
+    <div class="auth-brand"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg></div>
+    <div class="auth-title">HabitOS</div>
+    <div class="auth-sub" id="authSub">Checking sign-in…</div>
+    <div class="auth-spinner" id="authSpinner"></div>
+    <button class="auth-google-btn" id="authGoogleBtn" onclick="signInWithGoogle()" style="display:none">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.9 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.8 1.1 8 3l5.7-5.7C34.6 6.1 29.6 4 24 4c-7.6 0-14.1 4.3-17.4 10.7z"/><path fill="#4CAF50" d="M24 44c5.5 0 10.4-1.9 14.3-5.1l-6.6-5.6C29.6 34.9 26.9 36 24 36c-5.3 0-9.7-3.1-11.3-7.6l-6.6 5.1C9.8 39.6 16.4 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.3 5.7l6.6 5.6C40.8 36.4 44 30.9 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>
+      Continue with Google
+    </button>
+    <div class="auth-status" id="authStatus"></div>
+  </div>
+</div>
+
+<div id="app" style="display:none">
 
   <!-- ============ SIDEBAR (desktop) ============ -->
   <aside id="sidebar">
@@ -639,6 +680,11 @@ tr.cal-row:nth-child(odd) .cal-cell{background:rgba(128,128,128,.02)}
   </div>
 </div>
 
+<!-- ============ FIREBASE SDK (compat build) ============ -->
+<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore-compat.js"></script>
+
 <script>
 /* ==================================================================
    CONSTANTS
@@ -698,45 +744,110 @@ var S = {
   profile:{ name:'', theme:'night', accent:'ember', weekStart:1, notif:false },
   habits:[]
 };
-var _storageOK = (typeof window.storage !== 'undefined');
-var _memStore = {};
 var _todayStr = '';
 var _curPage = 'dashboard';
 var _calMonth = ''; // 'YYYY-MM'
 
-/* ---- storage layer (persistent artifact storage, with in-memory fallback) ---- */
-async function storeGet(key){
-  if(_storageOK){
-    try{ var r = await window.storage.get(key,false); return r ? r.value : null; }
-    catch(e){ return null; }
-  }
-  return Object.prototype.hasOwnProperty.call(_memStore,key) ? _memStore[key] : null;
-}
-async function storeSet(key,val){
-  if(_storageOK){
-    try{ var r = await window.storage.set(key,val,false); return !!r; }
-    catch(e){ console.error('storage set failed',e); return false; }
-  }
-  _memStore[key] = val; return true;
-}
+/* ==================================================================
+   FIREBASE — paste your own project's config below (Firebase Console
+   → Project settings → General → "Your apps" → SDK setup and config).
+   ================================================================== */
+var FIREBASE_CONFIG = {
+  apiKey: "PASTE_YOUR_API_KEY",
+  authDomain: "PASTE_YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "PASTE_YOUR_PROJECT_ID",
+  storageBucket: "PASTE_YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "PASTE_YOUR_SENDER_ID",
+  appId: "PASTE_YOUR_APP_ID"
+};
+firebase.initializeApp(FIREBASE_CONFIG);
+var auth = firebase.auth();
+var db = firebase.firestore();
+var googleProvider = new firebase.auth.GoogleAuthProvider();
 
-async function loadData(){
-  var raw = await storeGet('habitos:data');
-  if(raw){
-    try{
-      var parsed = JSON.parse(raw);
-      if(parsed.profile) S.profile = Object.assign(S.profile, parsed.profile);
-      if(Array.isArray(parsed.habits)) S.habits = parsed.habits;
-    }catch(e){ console.error('parse failed', e); }
-  }
+var _currentUser = null;   // firebase.auth() user object once signed in
+var _unsubDoc = null;      // unsubscribe fn for the realtime Firestore listener
+var _firstSnapshot = true;
+
+/* ---- storage layer: one Firestore doc per signed-in user, realtime-synced ---- */
+function userDocRef(){
+  return db.collection('users').doc(_currentUser.uid);
 }
 var _saveTimer = null;
 function save(){
+  if(!_currentUser) return;
   clearTimeout(_saveTimer);
   _saveTimer = setTimeout(function(){
-    storeSet('habitos:data', JSON.stringify({profile:S.profile, habits:S.habits}));
+    userDocRef().set({
+      profile: S.profile,
+      habits: S.habits,
+      email: _currentUser.email || null,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, {merge:true}).catch(function(err){
+      console.error('save failed', err);
+      toast('Could not save — check your connection', true);
+    });
   }, 260);
 }
+function startRealtimeSync(){
+  _firstSnapshot = true;
+  _unsubDoc = userDocRef().onSnapshot(function(doc){
+    if(doc.exists){
+      var data = doc.data();
+      if(data.profile) S.profile = Object.assign(S.profile, data.profile);
+      if(Array.isArray(data.habits)) S.habits = data.habits;
+    }
+    if(_firstSnapshot){
+      _firstSnapshot = false;
+      if(!doc.exists) save();   // brand-new account — create its document
+      initApp();
+    } else if(!doc.metadata.hasPendingWrites){
+      // a genuine remote update (another device/tab on the same account) —
+      // our own local writes also fire this listener, so we skip those
+      // (hasPendingWrites=true) to avoid re-rendering mid-keystroke.
+      applyTheme(); renderNav(); reRenderCurrent();
+    }
+  }, function(err){
+    console.error('sync error', err);
+    toast('Sync error: ' + err.message, true);
+  });
+}
+function stopRealtimeSync(){
+  if(_unsubDoc){ _unsubDoc(); _unsubDoc = null; }
+}
+
+/* ---- auth (Google sign-in via Firebase Auth) ---- */
+function signInWithGoogle(){
+  document.getElementById('authGoogleBtn').disabled = true;
+  document.getElementById('authStatus').textContent = '';
+  auth.signInWithPopup(googleProvider).catch(function(err){
+    document.getElementById('authGoogleBtn').disabled = false;
+    document.getElementById('authStatus').textContent = err.message || 'Sign-in failed. Please try again.';
+  });
+}
+function signOutUser(){
+  stopRealtimeSync();
+  auth.signOut();
+}
+auth.onAuthStateChanged(function(user){
+  var gate = document.getElementById('authGate');
+  var appEl = document.getElementById('app');
+  if(user){
+    _currentUser = user;
+    gate.style.display = 'none';
+    appEl.style.display = 'flex';
+    startRealtimeSync();
+  } else {
+    _currentUser = null;
+    stopRealtimeSync();
+    appEl.style.display = 'none';
+    gate.style.display = 'flex';
+    document.getElementById('authSpinner').style.display = 'none';
+    document.getElementById('authSub').textContent = 'Sign in to sync your habits across every device.';
+    document.getElementById('authGoogleBtn').style.display = 'inline-flex';
+    document.getElementById('authGoogleBtn').disabled = false;
+  }
+});
 
 /* ==================================================================
    DATE / FORMAT UTILITIES
@@ -978,7 +1089,8 @@ function openMore(){
   body.innerHTML =
     '<button class="btn block" style="justify-content:flex-start" onclick="closeMore();go(\'achievements\')">'+ICONS.trophy+' &nbsp;Achievements</button>'+
     '<button class="btn block" style="justify-content:flex-start" onclick="closeMore();go(\'settings\')">'+ICONS.settings+' &nbsp;Settings</button>'+
-    '<button class="btn block" style="justify-content:flex-start" onclick="closeMore();toggleAI()">'+ICONS.sparkle+' &nbsp;Ask Habit Coach</button>';
+    '<button class="btn block" style="justify-content:flex-start" onclick="closeMore();toggleAI()">'+ICONS.sparkle+' &nbsp;Ask Habit Coach</button>'+
+    '<button class="btn block" style="justify-content:flex-start" onclick="closeMore();signOutUser()">'+ICONS.trash+' &nbsp;Sign out</button>';
   document.getElementById('moreVeil').classList.add('open');
 }
 function closeMore(){ document.getElementById('moreVeil').classList.remove('open'); }
@@ -1353,6 +1465,17 @@ function renderSettings(){
   var el = document.getElementById('page-settings');
   var initials = (S.profile.name||'?').trim().split(/\s+/).map(function(w){return w[0];}).slice(0,2).join('').toUpperCase();
   var html = '<div class="page-head"><div><div class="page-title">Settings</div><div class="page-sub">Make HabitOS yours</div></div></div>';
+
+  html += '<div class="card" style="margin-bottom:16px"><div class="sec-title" style="margin-top:0"><h3>Account</h3></div>'+
+    '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">'+
+      (_currentUser && _currentUser.photoURL ? '<img src="'+esc(_currentUser.photoURL)+'" referrerpolicy="no-referrer" style="width:42px;height:42px;border-radius:50%;flex-shrink:0"/>' : '')+
+      '<div style="flex:1;min-width:120px">'+
+        '<div style="font-weight:700;font-size:14px">'+esc((_currentUser&&_currentUser.displayName)||'')+'</div>'+
+        '<div class="muted" style="font-size:12.5px">'+esc((_currentUser&&_currentUser.email)||'')+'</div>'+
+      '</div>'+
+      '<button class="btn" onclick="signOutUser()">Sign out</button>'+
+    '</div>'+
+  '</div>';
 
   html += '<div class="card" style="margin-bottom:16px"><div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">'+
     '<div class="avatar-big">'+(initials||'🙂')+'</div>'+
@@ -1818,16 +1941,15 @@ function refreshTodayIfChanged(){
 document.addEventListener('keydown', function(e){
   if(e.key==='Escape'){ closeHabitModal(); closeMore(); if(_aiOpen) toggleAI(); }
 });
-(async function init(){
-  _todayStr = dateStr(new Date());
-  _calMonth = _todayStr.slice(0,7);
-  await loadData();
+_todayStr = dateStr(new Date());
+_calMonth = _todayStr.slice(0,7);
+/* called once, right after the first Firestore snapshot for the signed-in user arrives */
+function initApp(){
   applyTheme();
   renderNav();
   go('dashboard');
-  if(!_storageOK) toast('Running without persistent storage this session — your data stays until you close this tab.');
   setInterval(refreshTodayIfChanged, 60000);
-})();
+}
 </script>
 </body>
 </html>
