@@ -1769,6 +1769,20 @@ var AI_TOOLS = [
     input_schema:{ type:'object', properties:{ name:{type:'string'}, archived:{type:'boolean'} }, required:['name','archived'] } }
 ];
 
+/* ==================================================================
+   GEMINI — Habit Coach runs on Google's Gemini API (client-side call).
+   Get/rotate your key at https://aistudio.google.com/apikey
+   NOTE: shipping an API key inside client-side HTML/JS means anyone who
+   views source can read and reuse it. Fine for a personal/local build;
+   for anything public-facing, proxy this call through a small backend
+   instead so the key never reaches the browser.
+   ================================================================== */
+var GEMINI_API_KEY = "AQ.Ab8RN6LjLx0pRi_32bG70S_BN5ogNYdhmRTE2e_ryR9jqc2eNA";
+var GEMINI_MODEL = "gemini-2.5-flash";
+var GEMINI_TOOLS = [{ functionDeclarations: AI_TOOLS.map(function(t){
+  return { name:t.name, description:t.description, parameters:t.input_schema };
+}) }];
+
 function findHabitFuzzy(name){
   if(!name) return null;
   var nl = name.toLowerCase();
@@ -1840,13 +1854,18 @@ function aiSystemPrompt(){
     "Never fabricate streaks or numbers — always base them on tool results.";
 }
 
-async function callClaude(){
-  var body0 = { model:'claude-sonnet-4-6', max_tokens:1000, system:aiSystemPrompt(), messages:_aiHistory, tools:AI_TOOLS };
+async function callGemini(){
+  var url = 'https://generativelanguage.googleapis.com/v1beta/models/'+GEMINI_MODEL+':generateContent';
   var maxRounds = 5, finalText = '';
   for(var round=0; round<maxRounds; round++){
-    var resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify(Object.assign({}, body0, {messages:_aiHistory}))
+    var resp = await fetch(url, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-goog-api-key':GEMINI_API_KEY},
+      body: JSON.stringify({
+        contents: _aiHistory,
+        systemInstruction: { parts:[{ text: aiSystemPrompt() }] },
+        tools: GEMINI_TOOLS
+      })
     });
     if(!resp.ok){
       var errText = await resp.text(); var errJson;
@@ -1854,20 +1873,22 @@ async function callClaude(){
       throw new Error((errJson && errJson.error && errJson.error.message) || ('HTTP '+resp.status));
     }
     var data = await resp.json();
-    var blocks = data.content || [];
-    _aiHistory.push({ role:'assistant', content:blocks });
+    var cand = data.candidates && data.candidates[0];
+    if(!cand) throw new Error('No response from Gemini (possibly blocked by safety filters).');
+    var parts = (cand.content && cand.content.parts) || [];
+    _aiHistory.push({ role:'model', parts:parts });
 
-    var toolUses = blocks.filter(function(b){ return b.type==='tool_use'; });
-    var textBlocks = blocks.filter(function(b){ return b.type==='text'; });
-    if(textBlocks.length) finalText += textBlocks.map(function(b){ return b.text; }).join('\n');
+    var funcCalls = parts.filter(function(p){ return !!p.functionCall; });
+    var textParts = parts.filter(function(p){ return typeof p.text === 'string'; });
+    if(textParts.length) finalText += textParts.map(function(p){ return p.text; }).join('\n');
 
-    if(!toolUses.length) break;
+    if(!funcCalls.length) break;
 
-    var toolResults = toolUses.map(function(tu){
-      var result = aiExecuteTool(tu.name, tu.input || {});
-      return { type:'tool_result', tool_use_id:tu.id, content: JSON.stringify(result) };
+    var responseParts = funcCalls.map(function(fc){
+      var result = aiExecuteTool(fc.functionCall.name, fc.functionCall.args || {});
+      return { functionResponse: { name: fc.functionCall.name, response: result } };
     });
-    _aiHistory.push({ role:'user', content:toolResults });
+    _aiHistory.push({ role:'user', parts:responseParts });
   }
   return finalText.trim();
 }
@@ -1879,12 +1900,12 @@ async function aiSend(){
   if(!text) return;
   inp.value=''; inp.style.height='';
   aiAppendMsg('user', text);
-  _aiHistory.push({ role:'user', content:text });
+  _aiHistory.push({ role:'user', parts:[{ text:text }] });
   _aiBusy = true;
   document.getElementById('ai-send').disabled = true;
   aiShowThinking();
   try{
-    var reply = await callClaude();
+    var reply = await callGemini();
     aiHideThinking();
     if(reply) aiAppendMsg('agent', reply);
   }catch(err){
