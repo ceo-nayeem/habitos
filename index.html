@@ -52,8 +52,7 @@ html{-webkit-text-size-adjust:100%}
   --shadow-widget:0 1px 0 var(--glass-hi) inset,0 10px 26px rgba(0,0,0,.34),0 26px 60px rgba(0,0,0,.22);
   --shadow-widget-sm:0 1px 0 var(--glass-hi) inset,0 6px 16px rgba(0,0,0,.28);
   --shadow-fab:0 10px 26px rgba(0,0,0,.4),0 3px 8px rgba(0,0,0,.3);
-  /* ---- gradient "flash" border + glossy sheen for glass cards ---- */
-  --glass-border-grad:linear-gradient(135deg,rgba(255,255,255,.9) 0%,rgba(255,255,255,.22) 20%,rgba(255,255,255,.04) 42%,rgba(0,0,0,.5) 65%,rgba(255,255,255,.65) 100%);
+  /* ---- glossy transparent sheen for glass cards ---- */
   --glass-shine:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.10) 45%,rgba(255,255,255,.22) 50%,rgba(255,255,255,.10) 55%,transparent 70%);
   --ripple-color:rgba(255,255,255,.5);
 
@@ -93,7 +92,6 @@ html.day{
   --shadow-widget:0 1px 0 var(--glass-hi) inset,0 10px 26px rgba(30,41,80,.08),0 26px 54px rgba(30,41,80,.06);
   --shadow-widget-sm:0 1px 0 var(--glass-hi) inset,0 6px 16px rgba(30,41,80,.07);
   --shadow-fab:0 10px 24px rgba(30,41,80,.18),0 3px 8px rgba(30,41,80,.1);
-  --glass-border-grad:linear-gradient(135deg,rgba(255,255,255,1) 0%,rgba(255,255,255,.6) 20%,rgba(255,255,255,.25) 42%,rgba(90,100,130,.35) 65%,rgba(255,255,255,.95) 100%);
   --glass-shine:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.35) 45%,rgba(255,255,255,.55) 50%,rgba(255,255,255,.35) 55%,transparent 70%);
   --ripple-color:rgba(20,26,44,.16);
 
@@ -249,11 +247,10 @@ a{color:inherit}
 .icon-only{padding:9px;border-radius:10px}
 
 /* ---- cards ---- */
-/* shared frosted-glass "flash" card treatment: gradient border via double background,
+/* shared frosted-glass card treatment: flat glossy transparent background,
    plus an animated diagonal sheen that sweeps across on hover/tap */
 .card,.stat-card,.widget,.badge,.tpl-card,.hero,.auth-card,.mini-ring-row{
-  border:1.5px solid transparent;background-origin:border-box;background-clip:padding-box,border-box;
-  background-image:linear-gradient(var(--glass-bg-strong),var(--glass-bg-strong)),var(--glass-border-grad);
+  border:1.5px solid var(--glass-border);background:var(--glass-bg-strong);
   -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(180%);backdrop-filter:blur(var(--glass-blur)) saturate(180%);
   position:relative;overflow:hidden;isolation:isolate;
   transition:transform .22s cubic-bezier(.2,.8,.2,1),box-shadow .22s ease,border-color .22s ease;
@@ -269,8 +266,8 @@ a{color:inherit}
 }
 .card{border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow-widget-sm)}
 .card-flat{
-  background:linear-gradient(var(--glass-bg),var(--glass-bg)) padding-box,var(--glass-border-grad) border-box;
-  border:1.5px solid transparent;border-radius:var(--radius-sm);padding:14px;
+  background:var(--glass-bg);
+  border:1.5px solid var(--glass-border);border-radius:var(--radius-sm);padding:14px;
   -webkit-backdrop-filter:blur(14px) saturate(160%);backdrop-filter:blur(14px) saturate(160%);
 }
 
@@ -338,8 +335,7 @@ a{color:inherit}
 }
 .modal-veil.open{opacity:1;pointer-events:auto}
 .modal{
-  border:1.5px solid transparent;background-origin:border-box;background-clip:padding-box,border-box;
-  background-image:linear-gradient(var(--glass-bg-strong),var(--glass-bg-strong)),var(--glass-border-grad);
+  border:1.5px solid var(--glass-border);background:var(--glass-bg-strong);
   border-radius:24px 24px 0 0;width:100%;max-width:480px;
   -webkit-backdrop-filter:blur(28px) saturate(180%);backdrop-filter:blur(28px) saturate(180%);
   box-shadow:var(--shadow-widget);
@@ -679,8 +675,7 @@ tr.cal-row:nth-child(odd) .cal-cell{background:rgba(128,128,128,.02)}
 
 #ai-panel{
   position:fixed;bottom:0;right:0;z-index:250;width:400px;max-width:100vw;height:min(640px,100vh);
-  border:1.5px solid transparent;background-origin:border-box;background-clip:padding-box,border-box;
-  background-image:linear-gradient(var(--glass-bg-strong),var(--glass-bg-strong)),var(--glass-border-grad);
+  border:1.5px solid var(--glass-border);background:var(--glass-bg-strong);
   border-radius:24px 0 0 0;box-shadow:var(--shadow-widget);
   -webkit-backdrop-filter:blur(28px) saturate(180%);backdrop-filter:blur(28px) saturate(180%);
   display:flex;flex-direction:column;transform:translateY(100%);opacity:0;pointer-events:none;transition:all .3s cubic-bezier(.2,.8,.2,1);
