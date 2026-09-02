@@ -422,6 +422,7 @@ a{color:inherit}
   border-radius:14px;padding:12px 14px;transition:all .15s;position:relative;overflow:hidden;cursor:pointer;
 }
 .hab-item:hover{border-color:var(--border2)}
+.hab-item:active{transform:scale(.99)}
 .hab-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--hc,var(--accent));opacity:.7}
 .hab-icon{
   width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;
@@ -442,6 +443,29 @@ a{color:inherit}
 .hab-item.missed .hab-check{background:var(--bad);border-color:var(--bad)}
 .hab-item.missed .hab-check svg{opacity:1;color:#fff}
 .hab-item.missed{background:var(--bad-soft)}
+.hab-edit-btn{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--text3);flex-shrink:0}
+.hab-edit-btn:hover{background:var(--surface2);color:var(--text)}
+.hab-edit-btn svg{width:14px;height:14px}
+
+/* ---- habit action sheet (tap a habit card) ---- */
+.action-list{display:flex;flex-direction:column;gap:3px}
+.action-row{display:flex;align-items:center;gap:13px;padding:12px 8px;border-radius:14px;cursor:pointer;transition:background .15s}
+.action-row:hover{background:var(--surface2)}
+.action-row:active{transform:scale(.99)}
+.action-row-icon{
+  width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;background:var(--surface2);color:var(--text2);
+}
+.action-row-icon svg{width:16px;height:16px}
+.action-row-text{flex:1;min-width:0}
+.action-row-text b{font-size:13.5px;font-weight:700;display:block}
+.action-row-text span{font-size:11px;color:var(--text2)}
+.action-row-chev{color:var(--text3);flex-shrink:0}
+.action-row-chev svg{width:15px;height:15px}
+.action-row.danger .action-row-icon{background:var(--bad-soft);color:var(--bad)}
+.action-row.danger b{color:var(--bad)}
+.action-row-sep{height:1px;background:var(--border);margin:6px 2px}
+
 /* ============================================================
    CALENDAR HEATMAP
    ============================================================ */
@@ -860,14 +884,14 @@ tr.cal-row:nth-child(odd) .cal-cell{background:rgba(128,128,128,.02)}
   <div class="modal" id="habitModal"></div>
 </div>
 
-<!-- ============ HABIT ACTIONS SHEET (tap a habit card) ============ -->
-<div class="modal-veil" id="habitActionsVeil" onclick="if(event.target===this)closeHabitActions()">
-  <div class="modal" style="max-width:380px" id="habitActionsModal"></div>
+<!-- ============ HABIT ACTION SHEET (tap a habit card) ============ -->
+<div class="modal-veil" id="habitActionVeil" onclick="if(event.target===this)closeHabitAction()">
+  <div class="modal" id="habitActionModal" style="max-width:420px"></div>
 </div>
 
-<!-- ============ HABIT STATS MODAL ============ -->
+<!-- ============ PER-HABIT STATS MODAL ============ -->
 <div class="modal-veil" id="habitStatsVeil" onclick="if(event.target===this)closeHabitStats()">
-  <div class="modal" style="max-width:560px" id="habitStatsModal"></div>
+  <div class="modal" id="habitStatsModal" style="max-width:480px"></div>
 </div>
 
 <!-- ============ HABIT TEMPLATE PICKER MODAL ============ -->
@@ -1427,7 +1451,7 @@ function renderDashboard(){
   var archived = S.habits.filter(function(h){ return h.archived; });
   if(archived.length){
     html += '<div class="sec-title"><h3>Archived</h3></div><div class="hab-list">'+archived.map(function(h){
-      return '<div class="hab-item" style="--hc:'+h.color+';--hc-soft:'+h.color+'26;opacity:.55" onclick="openHabitActions(\''+h.id+'\')">'+
+      return '<div class="hab-item" style="--hc:'+h.color+';--hc-soft:'+h.color+'26;opacity:.55" onclick="openHabitAction(\''+h.id+'\')">'+
         '<div class="hab-icon" style="background:'+h.color+'26">'+h.icon+'</div>'+
         '<div class="hab-info"><div class="hab-name">'+esc(h.name)+'</div><div class="hab-meta">Archived</div></div>'+
       '</div>';
@@ -1482,7 +1506,7 @@ function habitItemHTML(h){
   var streak = currentStreak(h);
   var cls = st==='done' ? 'done' : (st==='missed' ? 'missed' : '');
   var checkIcon = st==='done' ? ICONS.check : (st==='missed' ? ICONS.x : '');
-  return '<div class="hab-item '+cls+'" style="--hc:'+h.color+';--hc-soft:'+h.color+'26" onclick="openHabitActions(\''+h.id+'\')">'+
+  return '<div class="hab-item '+cls+'" style="--hc:'+h.color+';--hc-soft:'+h.color+'26" onclick="openHabitAction(\''+h.id+'\')">'+
     '<div class="hab-icon" style="background:'+h.color+'26">'+h.icon+'</div>'+
     '<div class="hab-info"><div class="hab-name">'+esc(h.name)+'</div>'+
       '<div class="hab-meta">'+(streak>0?'<span class="flame">🔥 '+streak+'</span> · ':'')+esc(freqLabel(h))+(h.reminder?' · ⏰ '+fmtTime(h.reminder):'')+'</div></div>'+
@@ -1505,51 +1529,88 @@ function updateSideRing(){
 }
 
 /* ==================================================================
-   HABIT ACTIONS SHEET — tapping any habit card opens this
-   (Customize / View stats / Remove habit)
+   HABIT ACTION SHEET  (tap a habit card → customize / stats / remove)
    ================================================================== */
-function openHabitActions(id){
+function openHabitAction(id){
   var h = habitById(id); if(!h) return;
-  document.getElementById('habitActionsModal').innerHTML = habitActionsHTML(h);
-  document.getElementById('habitActionsVeil').classList.add('open');
+  document.getElementById('habitActionModal').innerHTML = habitActionHTML(h);
+  document.getElementById('habitActionVeil').classList.add('open');
 }
-function closeHabitActions(){ document.getElementById('habitActionsVeil').classList.remove('open'); }
-function habitActionsHTML(h){
-  return '<div class="modal-head"><div class="modal-title" style="display:flex;align-items:center;gap:9px"><span style="font-size:19px;line-height:1">'+h.icon+'</span><span>'+esc(h.name)+'</span></div>'+
-    '<button class="icon-btn" onclick="closeHabitActions()">'+ICONS.x+'</button></div>'+
-    '<div style="display:flex;flex-direction:column;gap:8px">'+
-      '<button class="btn block" style="justify-content:flex-start" onclick="closeHabitActions();openHabitModal(\''+h.id+'\')">'+ICONS.edit+' &nbsp;Customize habit</button>'+
-      '<button class="btn block" style="justify-content:flex-start" onclick="openHabitStats(\''+h.id+'\')">'+ICONS.stats+' &nbsp;View stats</button>'+
-      '<button class="btn danger block" style="justify-content:flex-start" onclick="closeHabitActions();deleteHabitConfirm(\''+h.id+'\')">'+ICONS.trash+' &nbsp;Remove habit</button>'+
-    '</div>';
+function closeHabitAction(){ document.getElementById('habitActionVeil').classList.remove('open'); }
+function habitActionHTML(h){
+  var streak = currentStreak(h);
+  var out = '<div class="modal-head">'+
+      '<div style="display:flex;align-items:center;gap:12px;min-width:0">'+
+        '<div class="hab-icon" style="background:'+h.color+'26;width:44px;height:44px;font-size:20px;flex-shrink:0">'+h.icon+'</div>'+
+        '<div style="min-width:0">'+
+          '<div class="modal-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(h.name)+'</div>'+
+          '<div class="hab-meta" style="margin-top:2px">'+(streak>0?'<span class="flame">🔥 '+streak+'</span> · ':'')+esc(freqLabel(h))+(h.archived?' · Archived':'')+'</div>'+
+        '</div>'+
+      '</div>'+
+    '<button class="icon-btn" onclick="closeHabitAction()">'+ICONS.x+'</button></div>';
+
+  out += '<div class="action-list">'+
+    '<div class="action-row" onclick="closeHabitAction();openHabitModal(\''+h.id+'\')">'+
+      '<div class="action-row-icon">'+ICONS.edit+'</div>'+
+      '<div class="action-row-text"><b>Customize habit</b><span>Edit name, icon, color & schedule</span></div>'+
+      '<div class="action-row-chev">'+ICONS.chevR+'</div>'+
+    '</div>'+
+    '<div class="action-row" onclick="openHabitStats(\''+h.id+'\')">'+
+      '<div class="action-row-icon">'+ICONS.stats+'</div>'+
+      '<div class="action-row-text"><b>View stats</b><span>Streaks, trends & consistency</span></div>'+
+      '<div class="action-row-chev">'+ICONS.chevR+'</div>'+
+    '</div>'+
+    '<div class="action-row-sep"></div>'+
+    '<div class="action-row danger" onclick="closeHabitAction();deleteHabitConfirm(\''+h.id+'\')">'+
+      '<div class="action-row-icon">'+ICONS.trash+'</div>'+
+      '<div class="action-row-text"><b>Remove habit</b><span>Deletes all history — can\'t be undone</span></div>'+
+    '</div>'+
+  '</div>';
+  return out;
 }
 
 /* ==================================================================
-   PER-HABIT STATS — detailed view for one habit
+   PER-HABIT STATS MODAL
    ================================================================== */
-function habitRateOverLastNDays(h,n){
-  var d=addDays(parseDate(_todayStr),-(n-1)); var sum=0,cnt=0;
+function habitDayCompletionPct(h, dStr){
+  if(!isScheduledOn(h,dStr) || dStr<h.createdAt) return null;
+  return getStatus(h,dStr)==='done' ? 1 : 0;
+}
+function habitRateOverLastNDays(h, n, offset){
+  var d=addDays(parseDate(_todayStr),-(n-1)-(offset||0)); var done=0,total=0;
   for(var i=0;i<n;i++){
     var ds=dateStr(d);
-    if(ds>=h.createdAt && ds<=_todayStr && isScheduledOn(h,ds)){
-      cnt++; if(getStatus(h,ds)==='done') sum++;
+    if(ds<=_todayStr){
+      var p = habitDayCompletionPct(h,ds);
+      if(p!==null){ total++; done+=p; }
     }
     d=addDays(d,1);
   }
-  return cnt ? sum/cnt : 0;
+  return total ? done/total : 0;
 }
-function habitHeatmapHTML(h,weeks){
-  weeks = weeks || 18;
+function habitDayOfWeekStats(h, weeks){
+  var sums=[0,0,0,0,0,0,0], counts=[0,0,0,0,0,0,0];
+  var d = addDays(parseDate(_todayStr), -(weeks*7-1));
+  for(var i=0;i<weeks*7;i++){
+    var ds = dateStr(d);
+    if(ds<=_todayStr){
+      var p = habitDayCompletionPct(h,ds);
+      if(p!==null){ var dow=d.getDay(); sums[dow]+=p; counts[dow]++; }
+    }
+    d = addDays(d,1);
+  }
+  return sums.map(function(s,i){ return counts[i] ? s/counts[i] : null; });
+}
+function habitConsistencyHeatmapHTML(h, weeks){
+  weeks = weeks || 12;
   var start = weekStartDate(dateStr(addDays(parseDate(_todayStr), -(weeks*7-1))));
   var cols=[], monthMarks=[], d=new Date(start);
   for(var w=0; w<weeks; w++){
     var col=[];
     for(var day=0; day<7; day++){
       var ds=dateStr(d);
-      var future = ds>_todayStr;
-      var sched = !future && isScheduledOn(h,ds) && ds>=h.createdAt;
-      var st = sched ? getStatus(h,ds) : null;
-      col.push({ds:ds, sched:sched, st:st, future:future});
+      var p = ds>_todayStr ? null : habitDayCompletionPct(h,ds);
+      col.push({ds:ds,p:p});
       if(day===0 && d.getDate()<=7) monthMarks.push({w:w, label:d.toLocaleDateString('en-US',{month:'short'})});
       d=addDays(d,1);
     }
@@ -1559,50 +1620,66 @@ function habitHeatmapHTML(h,weeks){
   var monthsHTML = monthMarks.map(function(m){ return '<span style="left:'+(m.w*CELL)+'px">'+m.label+'</span>'; }).join('');
   var gridHTML = cols.map(function(col){
     return '<div class="heat-col">'+col.map(function(cell){
-      var cls='heat-cell', title;
-      if(!cell.sched){ cls+=' empty'; title=cell.ds+(cell.future?' · Upcoming':' · Not scheduled'); }
-      else if(cell.st==='done'){ cls+=' l4'; title=cell.ds+' · Done'; }
-      else if(cell.st==='missed'){ cls+=' l0'; title=cell.ds+' · Missed'; }
-      else { cls+=' l1'; title=cell.ds+' · Pending'; }
+      var cls='heat-cell';
+      if(cell.p===null) cls+=' empty';
+      else if(cell.p<=0) cls+=' l0';
+      else cls+=' l4';
+      var title = cell.ds+(cell.p!==null?(cell.p>0?' · Done':' · Missed'):' · No data');
       return '<div class="'+cls+'" title="'+title+'"></div>';
     }).join('')+'</div>';
   }).join('');
   return '<div class="heatmap-scroll"><div class="heatmap-inner">'+
       '<div class="heatmap-months">'+monthsHTML+'</div>'+
       '<div class="heatmap-grid">'+gridHTML+'</div>'+
-    '</div></div>'+
-    '<div class="heatmap-legend"><span>Missed</span><span class="heat-cell l0"></span><span class="heat-cell l1"></span><span class="heat-cell l4"></span><span>Done</span></div>';
+    '</div></div>';
 }
 function openHabitStats(id){
   var h = habitById(id); if(!h) return;
-  closeHabitActions();
   document.getElementById('habitStatsModal').innerHTML = habitStatsHTML(h);
+  document.getElementById('habitActionVeil').classList.remove('open');
   document.getElementById('habitStatsVeil').classList.add('open');
 }
 function closeHabitStats(){ document.getElementById('habitStatsVeil').classList.remove('open'); }
 function habitStatsHTML(h){
-  var streak = currentStreak(h);
-  var best = bestStreak(h);
+  var streak = currentStreak(h), best = bestStreak(h);
   var total = totalCompletions(h);
-  var rate30 = habitRateOverLastNDays(h,30);
+  var w30 = habitRateOverLastNDays(h,30);
+  var dow = habitDayOfWeekStats(h,8);
+  var maxV = Math.max.apply(null, dow.map(function(v){ return v===null?-1:v; }));
 
-  var out = '<div class="modal-head"><div class="modal-title" style="display:flex;align-items:center;gap:9px"><span style="font-size:19px;line-height:1">'+h.icon+'</span><span>'+esc(h.name)+'</span></div>'+
+  var out = '<div class="modal-head">'+
+      '<div style="display:flex;align-items:center;gap:12px;min-width:0">'+
+        '<div class="hab-icon" style="background:'+h.color+'26;width:44px;height:44px;font-size:20px;flex-shrink:0">'+h.icon+'</div>'+
+        '<div style="min-width:0">'+
+          '<div class="modal-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(h.name)+'</div>'+
+          '<div class="hab-meta" style="margin-top:2px">'+esc(freqLabel(h))+'</div>'+
+        '</div>'+
+      '</div>'+
     '<button class="icon-btn" onclick="closeHabitStats()">'+ICONS.x+'</button></div>';
 
-  out += '<div class="hint" style="margin-bottom:16px">'+esc(h.cat)+' · '+esc(freqLabel(h))+' · Started '+niceDate(h.createdAt)+'</div>';
-
-  out += '<div class="stat-grid" style="margin-bottom:22px">'+
-    statCard(streak,'Current streak')+
+  out += '<div class="stat-grid" style="grid-template-columns:repeat(2,1fr);margin-bottom:8px">'+
+    statCard((streak>0?'🔥 ':'')+streak,'Current streak')+
     statCard(best,'Best streak')+
     statCard(total,'Total check-ins')+
-    statCard(pct(rate30)+'%','Last 30 days')+
+    statCard(pct(w30)+'%','Last 30 days')+
   '</div>';
 
-  out += '<div class="sec-title" style="margin-top:0"><h3>Last 18 weeks</h3></div>'+habitHeatmapHTML(h,18);
+  out += '<div class="sec-title" style="margin-top:18px"><h3>Last 30 days</h3></div>'+
+    '<div style="display:flex;gap:3px;flex-wrap:wrap">'+sparkCellsHTML(h,30)+'</div>';
+
+  out += '<div class="sec-title"><h3>Weekday pattern</h3></div>'+
+    DAY_LABELS_FULL.map(function(lbl,i){
+      var v=dow[i]; var isBest = v!==null && v===maxV && maxV>0;
+      return '<div class="wd-row'+(isBest?' is-best':'')+'"><div class="wd-label">'+lbl.slice(0,3)+'</div>'+
+        '<div class="wd-track"><div class="wd-fill" style="width:'+(v===null?0:pct(v))+'%"></div></div>'+
+        '<div class="wd-val mono">'+(v===null?'—':pct(v)+'%')+'</div></div>';
+    }).join('');
+
+  out += '<div class="sec-title"><h3>Consistency — last 12 weeks</h3></div>'+
+    habitConsistencyHeatmapHTML(h,12);
 
   out += '<div class="modal-foot">'+
-    '<button class="btn" onclick="closeHabitStats();openHabitModal(\''+h.id+'\')">'+ICONS.edit+' Edit</button>'+
-    '<button class="btn danger" onclick="closeHabitStats();deleteHabitConfirm(\''+h.id+'\')">'+ICONS.trash+' Remove</button>'+
+    '<button class="btn block" onclick="closeHabitStats();openHabitModal(\''+h.id+'\')">'+ICONS.edit+' Edit habit</button>'+
   '</div>';
   return out;
 }
@@ -2058,9 +2135,10 @@ function renderSettings(){
   el.innerHTML = html;
 }
 function manageHabitRowHTML(h){
-  return '<div class="hab-item" style="--hc:'+h.color+';--hc-soft:'+h.color+'26'+(h.archived?';opacity:.5':'')+'" onclick="openHabitActions(\''+h.id+'\')">'+
+  return '<div class="hab-item" style="--hc:'+h.color+';--hc-soft:'+h.color+'26'+(h.archived?';opacity:.5':'')+'">'+
     '<div class="hab-icon" style="background:'+h.color+'26">'+h.icon+'</div>'+
     '<div class="hab-info"><div class="hab-name">'+esc(h.name)+'</div><div class="hab-meta">'+esc(h.cat)+' · '+esc(freqLabel(h))+(h.reminder?' · ⏰ '+fmtTime(h.reminder):'')+(h.archived?' · Archived':'')+'</div></div>'+
+    '<button class="hab-edit-btn" onclick="openHabitModal(\''+h.id+'\')" title="Edit">'+ICONS.edit+'</button>'+
   '</div>';
 }
 function toggleNotif(){
@@ -2216,7 +2294,7 @@ function deleteHabitConfirm(id){
   var h = habitById(id); if(!h) return;
   if(!confirm('Delete "'+h.name+'" and all of its history? This can\'t be undone.')) return;
   S.habits = S.habits.filter(function(x){ return x.id!==id; });
-  save(); closeHabitModal(); closeHabitActions(); closeHabitStats(); go(_curPage);
+  save(); closeHabitModal(); go(_curPage);
   toast('Habit deleted');
 }
 function toggleArchive(id){
@@ -2488,7 +2566,7 @@ function refreshTodayIfChanged(){
   checkReminders();
 }
 document.addEventListener('keydown', function(e){
-  if(e.key==='Escape'){ closeHabitModal(); closeMore(); closeTemplateModal(); closeHabitActions(); closeHabitStats(); if(_aiOpen) toggleAI(); }
+  if(e.key==='Escape'){ closeHabitModal(); closeMore(); closeTemplateModal(); closeHabitAction(); closeHabitStats(); if(_aiOpen) toggleAI(); }
 });
 _todayStr = dateStr(new Date());
 _calMonth = _todayStr.slice(0,7);
