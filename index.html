@@ -829,9 +829,6 @@ tr.cal-row:nth-child(odd) .cal-cell{background:rgba(128,128,128,.02)}
       <!-- ---------- DASHBOARD ---------- -->
       <section class="page" id="page-dashboard"></section>
 
-      <!-- ---------- TODAY ---------- -->
-      <section class="page" id="page-today"></section>
-
       <!-- ---------- CALENDAR ---------- -->
       <section class="page" id="page-calendar"></section>
 
@@ -1260,13 +1257,12 @@ var ICONS = {
 };
 var NAV = [
   {id:'dashboard', label:'Dashboard', icon:ICONS.home},
-  {id:'today', label:'Today', icon:ICONS.today},
   {id:'calendar', label:'Calendar', icon:ICONS.calendar},
   {id:'stats', label:'Stats', icon:ICONS.stats},
   {id:'achievements', label:'Achievements', icon:ICONS.trophy},
   {id:'settings', label:'Settings', icon:ICONS.settings}
 ];
-var BN_MAIN = ['dashboard','today','calendar','stats'];
+var BN_MAIN = ['dashboard','calendar','stats'];
 
 function pendingTodayCount(){
   return activeHabits().filter(function(h){ return isScheduledOn(h,_todayStr) && getStatus(h,_todayStr)===null; }).length;
@@ -1275,14 +1271,14 @@ function renderNav(){
   var pending = pendingTodayCount();
   var side = document.getElementById('sideNav');
   side.innerHTML = NAV.map(function(n){
-    var badge = (n.id==='today' && pending>0) ? '<span class="nav-badge">'+pending+'</span>' : '';
+    var badge = (n.id==='dashboard' && pending>0) ? '<span class="nav-badge">'+pending+'</span>' : '';
     return '<button class="nav-item'+(n.id===_curPage?' active':'')+'" onclick="go(\''+n.id+'\')">'+n.icon+'<span>'+n.label+'</span>'+badge+'</button>';
   }).join('');
 
   var bn = document.getElementById('bnRow');
   var mainItems = NAV.filter(function(n){ return BN_MAIN.indexOf(n.id)!==-1; });
   var html = mainItems.map(function(n){
-    var dot = (n.id==='today' && pending>0) ? '<span class="bn-dot"></span>' : '';
+    var dot = (n.id==='dashboard' && pending>0) ? '<span class="bn-dot"></span>' : '';
     return '<button class="bn-item'+(n.id===_curPage?' active':'')+'" onclick="go(\''+n.id+'\')">'+dot+n.icon+'<span>'+n.label+'</span></button>';
   }).join('');
   var moreActive = (_curPage==='achievements'||_curPage==='settings');
@@ -1297,7 +1293,6 @@ function go(pageId){
   renderNav();
   closeMore();
   if(pageId==='dashboard') renderDashboard();
-  else if(pageId==='today') renderToday();
   else if(pageId==='calendar') renderCalendar();
   else if(pageId==='stats') renderStats();
   else if(pageId==='achievements') renderAchievements();
@@ -1379,7 +1374,10 @@ function renderDashboard(){
 
   var html = '';
   html += '<div class="page-head"><div><div class="page-title">'+greeting+(name?', '+name:'')+'</div><div class="page-sub">'+niceDate(_todayStr)+'</div></div>'+
-    '<div class="page-actions"><button class="btn primary" onclick="openHabitModal()">'+ICONS.plus+' New Habit</button></div></div>';
+    '<div class="page-actions">'+
+      '<button class="btn" onclick="openTemplateModal()">'+ICONS.sparkle+' Habit Template</button>'+
+      '<button class="btn primary" onclick="openHabitModal()">'+ICONS.plus+' New Habit</button>'+
+    '</div></div>';
 
   html += '<div class="hero">'+
     '<div class="ring-wrap">'+ringSVG(ts.pct,132,11)+
@@ -1402,18 +1400,36 @@ function renderDashboard(){
     statCard(BADGES.filter(isBadgeEarned).length+'/'+BADGES.length,'Badges earned')+
   '</div>';
 
-  html += '<div class="mom-strip-wrap"><div class="sec-title"><h3>Last 9 weeks</h3><a href="javascript:void(0)" onclick="go(\'calendar\')">Full calendar →</a></div>'+
-    momentumStripHTML(63)+'</div>';
+  var all = activeHabits().filter(function(h){ return isScheduledOn(h,_todayStr); });
+  var pending = all.filter(function(h){ return getStatus(h,_todayStr)===null; });
+  var done2 = all.filter(function(h){ return getStatus(h,_todayStr)==='done'; });
+  var missed = all.filter(function(h){ return getStatus(h,_todayStr)==='missed'; });
 
-  var todayList = activeHabits().filter(function(h){ return isScheduledOn(h,_todayStr); }).slice(0,5);
-  html += '<div class="sec-title"><h3>Today\'s habits</h3><a href="javascript:void(0)" onclick="go(\'today\')">View all →</a></div>';
-  if(!todayList.length){
-    html += emptyState('Nothing scheduled for today','Add your first habit to start building momentum.','openHabitModal()','New Habit');
+  if(!S.habits.length){
+    html += emptyState('No habits yet','Start with a habit template, or create your own from scratch.','openHabitModal()','New Habit');
+  } else if(!all.length){
+    html += '<div class="sec-title" style="margin-top:26px"><h3>Today\'s habits</h3></div>';
+    html += emptyState('Nothing scheduled today','Enjoy the rest, or add a habit for today.','openHabitModal()','New Habit');
   } else {
-    html += '<div class="hab-list">'+todayList.map(habitItemHTML).join('')+'</div>';
+    html += '<div class="sec-title" style="margin-top:26px"><h3>Today\'s habits</h3></div>';
+    if(pending.length) html += '<div class="sec-title" style="margin-top:0"><h3>To do — '+pending.length+'</h3></div><div class="hab-list">'+pending.map(habitItemHTML).join('')+'</div>';
+    if(done2.length) html += '<div class="sec-title"><h3>Done — '+done2.length+'</h3></div><div class="hab-list">'+done2.map(habitItemHTML).join('')+'</div>';
+    if(missed.length) html += '<div class="sec-title"><h3>Missed — '+missed.length+'</h3></div><div class="hab-list">'+missed.map(habitItemHTML).join('')+'</div>';
+  }
+
+  var archived = S.habits.filter(function(h){ return h.archived; });
+  if(archived.length){
+    html += '<div class="sec-title"><h3>Archived</h3></div><div class="hab-list">'+archived.map(function(h){
+      return '<div class="hab-item" style="--hc:'+h.color+';--hc-soft:'+h.color+'26;opacity:.55">'+
+        '<div class="hab-icon" style="background:'+h.color+'26">'+h.icon+'</div>'+
+        '<div class="hab-info"><div class="hab-name">'+esc(h.name)+'</div><div class="hab-meta">Archived</div></div>'+
+        '<button class="hab-edit-btn" onclick="openHabitModal(\''+h.id+'\')" title="Edit">'+ICONS.edit+'</button>'+
+      '</div>';
+    }).join('')+'</div>';
   }
 
   el.innerHTML = html;
+  updateSideRing();
 }
 
 function greetingText(){
@@ -1437,22 +1453,6 @@ function rateOverLastNDays(n, offset){
   return cnt ? sum/cnt : 0;
 }
 function last30Rate(){ return rateOverLastNDays(30); }
-function momentumStripHTML(days){
-  var d = addDays(parseDate(_todayStr), -(days-1)); var cells='';
-  for(var i=0;i<days;i++){
-    var ds=dateStr(d); var p=dayCompletionPct(ds);
-    var bg = p===null ? 'var(--surface2)' : intensityColor(p);
-    cells += '<div class="mom-cell" title="'+ds+(p!==null?' · '+pct(p)+'%':'')+'" style="background:'+bg+'"></div>';
-    d=addDays(d,1);
-  }
-  return '<div class="mom-strip">'+cells+'</div>';
-}
-function intensityColor(p){
-  if(p<=0) return 'var(--bad-soft)';
-  if(p<.5) return 'color-mix(in srgb, var(--accent) 35%, var(--surface2))';
-  if(p<1) return 'color-mix(in srgb, var(--accent) 65%, var(--surface2))';
-  return 'var(--accent)';
-}
 function emptyState(title,desc,onclick,btnLabel){
   return '<div class="empty">'+
     '<div class="empty-icon">'+ICONS.sparkle+'</div>'+
@@ -1486,7 +1486,6 @@ function habitItemHTML(h){
 }
 function reRenderCurrent(){
   if(_curPage==='dashboard') renderDashboard();
-  else if(_curPage==='today') renderToday();
   else if(_curPage==='stats') renderStats();
   else if(_curPage==='calendar') renderCalendar();
   updateSideRing();
@@ -1503,46 +1502,6 @@ function updateSideRing(){
 /* ==================================================================
    TODAY PAGE
    ================================================================== */
-function renderToday(){
-  var el = document.getElementById('page-today');
-  var all = activeHabits().filter(function(h){ return isScheduledOn(h,_todayStr); });
-  var pending = all.filter(function(h){ return getStatus(h,_todayStr)===null; });
-  var done = all.filter(function(h){ return getStatus(h,_todayStr)==='done'; });
-  var missed = all.filter(function(h){ return getStatus(h,_todayStr)==='missed'; });
-
-  var html = '<div class="page-head"><div><div class="page-title">Today</div><div class="page-sub">'+niceDate(_todayStr)+' · '+done.length+'/'+all.length+' done</div></div>'+
-    '<div class="page-actions">'+
-      '<button class="btn" onclick="openTemplateModal()">'+ICONS.sparkle+' Habit Template</button>'+
-      '<button class="btn primary" onclick="openHabitModal()">'+ICONS.plus+' New Habit</button>'+
-    '</div></div>';
-
-  if(!S.habits.length){
-    html += emptyState('No habits yet','Start with a template below, or create your own from scratch.','openHabitModal()','New Habit');
-  } else if(!all.length){
-    html += emptyState('Nothing scheduled today','Enjoy the rest, or add a habit for today.','openHabitModal()','New Habit');
-  } else {
-    if(pending.length) html += '<div class="sec-title" style="margin-top:0"><h3>To do — '+pending.length+'</h3></div><div class="hab-list">'+pending.map(habitItemHTML).join('')+'</div>';
-    if(done.length) html += '<div class="sec-title"><h3>Done — '+done.length+'</h3></div><div class="hab-list">'+done.map(habitItemHTML).join('')+'</div>';
-    if(missed.length) html += '<div class="sec-title"><h3>Missed — '+missed.length+'</h3></div><div class="hab-list">'+missed.map(habitItemHTML).join('')+'</div>';
-  }
-
-  html += templateSectionHTML();
-
-  var archived = S.habits.filter(function(h){ return h.archived; });
-  if(archived.length){
-    html += '<div class="sec-title"><h3>Archived</h3></div><div class="hab-list">'+archived.map(function(h){
-      return '<div class="hab-item" style="--hc:'+h.color+';--hc-soft:'+h.color+'26;opacity:.55">'+
-        '<div class="hab-icon" style="background:'+h.color+'26">'+h.icon+'</div>'+
-        '<div class="hab-info"><div class="hab-name">'+esc(h.name)+'</div><div class="hab-meta">Archived</div></div>'+
-        '<button class="hab-edit-btn" onclick="openHabitModal(\''+h.id+'\')" title="Edit">'+ICONS.edit+'</button>'+
-      '</div>';
-    }).join('')+'</div>';
-  }
-
-  el.innerHTML = html;
-  updateSideRing();
-}
-
 function templateGridHTML(){
   return '<div class="tpl-grid">'+
     TEMPLATES.map(function(t,i){
@@ -1552,9 +1511,6 @@ function templateGridHTML(){
       '</button>';
     }).join('')+
   '</div>';
-}
-function templateSectionHTML(){
-  return '<div class="sec-title"><h3>Quick-add templates</h3></div>'+templateGridHTML();
 }
 function openTemplateModal(){
   document.getElementById('tplModalBody').innerHTML = templateGridHTML();
