@@ -247,22 +247,13 @@ a{color:inherit}
 .icon-only{padding:9px;border-radius:10px}
 
 /* ---- cards ---- */
-/* shared frosted-glass card treatment: flat glossy transparent background,
-   plus an animated diagonal sheen that sweeps across on hover/tap */
+/* shared frosted-glass surface: flat glossy transparent background (static by default).
+   the animated diagonal sheen + lift is added separately, only to cards that are
+   actually clickable — see .tpl-card below. Purely-informational cards stay static. */
 .card,.stat-card,.widget,.badge,.tpl-card,.hero,.auth-card,.mini-ring-row{
   border:1.5px solid var(--glass-border);background:var(--glass-bg-strong);
   -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(180%);backdrop-filter:blur(var(--glass-blur)) saturate(180%);
   position:relative;overflow:hidden;isolation:isolate;
-  transition:transform .22s cubic-bezier(.2,.8,.2,1),box-shadow .22s ease,border-color .22s ease;
-}
-.card::after,.stat-card::after,.widget::after,.badge::after,.tpl-card::after,.hero::after,.auth-card::after{
-  content:'';position:absolute;inset:0;background:var(--glass-shine);mix-blend-mode:overlay;
-  transform:translateX(-120%);pointer-events:none;z-index:1;transition:transform .7s ease;
-}
-.card:hover::after,.stat-card:hover::after,.widget:hover::after,.badge:hover::after,
-.tpl-card:hover::after,.hero:hover::after,.auth-card:hover::after{transform:translateX(120%)}
-.card:hover,.stat-card:hover,.widget:hover,.badge:hover,.tpl-card:hover{
-  box-shadow:var(--shadow-widget),0 0 0 1px rgba(255,255,255,.06) inset;transform:translateY(-2px);
 }
 .card{border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow-widget-sm)}
 .card-flat{
@@ -671,8 +662,15 @@ tr.cal-row:nth-child(odd) .cal-cell{background:rgba(128,128,128,.02)}
 .tpl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
 .tpl-card{
   display:flex;align-items:center;gap:10px;border-radius:14px;padding:11px 12px;text-align:left;box-shadow:var(--shadow-widget-sm);
+  cursor:pointer;transition:transform .22s cubic-bezier(.2,.8,.2,1),box-shadow .22s ease,border-color .22s ease;
 }
-.tpl-card:hover{transform:translateY(-1px)}
+/* animated diagonal sheen + lift — reserved for cards that are actually clickable */
+.tpl-card::after{
+  content:'';position:absolute;inset:0;background:var(--glass-shine);mix-blend-mode:overlay;
+  transform:translateX(-120%);pointer-events:none;z-index:1;transition:transform .7s ease;
+}
+.tpl-card:hover::after{transform:translateX(120%)}
+.tpl-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-widget),0 0 0 1px rgba(255,255,255,.06) inset}
 .tpl-icon{width:34px;height:34px;border-radius:10px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
 .tpl-name{font-size:12px;font-weight:700}
 .tpl-freq{font-size:9.5px;color:var(--text2)}
