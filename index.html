@@ -232,7 +232,7 @@ a{color:inherit}
 }
 .streak-pill:hover{border-color:var(--border2)}
 
-.date-strip{display:flex;gap:7px;overflow-x:auto;padding:2px 2px 14px;margin-bottom:4px;scrollbar-width:none}
+.date-strip{display:flex;gap:7px;overflow-x:auto;padding:2px 2px 14px;margin-bottom:4px;scrollbar-width:none;justify-content:center}
 .date-strip::-webkit-scrollbar{display:none}
 .date-pill{
   flex-shrink:0;min-width:46px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
@@ -247,6 +247,8 @@ a{color:inherit}
   box-shadow:0 6px 18px var(--accent-soft);transform:scale(1.06);
 }
 .date-pill.is-today .date-pill-num{color:#fff}
+.date-pill.is-real-today:not(.is-today){border-color:var(--accent)}
+.date-pill-dot{width:4px;height:4px;border-radius:50%;background:var(--accent);margin-top:1px}
 
 .greet-block{margin-bottom:20px}
 .greet-headline{font-size:26px;font-weight:600;letter-spacing:-.02em;line-height:1.2}
@@ -485,6 +487,7 @@ a{color:inherit}
   display:flex;align-items:center;justify-content:center;transition:all .18s cubic-bezier(.34,1.56,.64,1);
   background:var(--surface2);
 }
+.hab-check.disabled{opacity:.35;cursor:not-allowed}
 .hab-check svg{width:15px;height:15px;opacity:0;transition:opacity .12s}
 .hab-item.done .hab-check{background:var(--ok);border-color:var(--ok);transform:scale(1.06)}
 .hab-item.done .hab-check svg{opacity:1;color:#fff}
@@ -1066,6 +1069,7 @@ var S = {
   habits:[]
 };
 var _todayStr = '';
+var _dashDate = ''; // date currently shown on the dashboard (defaults to today, changeable via date strip)
 var _curPage = 'dashboard';
 var _calMonth = ''; // 'YYYY-MM'
 
@@ -1296,9 +1300,10 @@ function totalCompletionsAll(){ return activeHabits().reduce(function(s,h){ retu
 function bestStreakGlobal(){ return activeHabits().reduce(function(m,h){ return Math.max(m,bestStreak(h)); },0); }
 
 /* today's aggregate stats across active, scheduled habits */
-function todayStats(){
-  var list = activeHabits().filter(function(h){ return isScheduledOn(h,_todayStr); });
-  var done = list.filter(function(h){ return getStatus(h,_todayStr)==='done'; }).length;
+function todayStats(dStr){
+  dStr = dStr || _todayStr;
+  var list = activeHabits().filter(function(h){ return isScheduledOn(h,dStr); });
+  var done = list.filter(function(h){ return getStatus(h,dStr)==='done'; }).length;
   return {done:done, total:list.length, pct: list.length ? done/list.length : 0};
 }
 function dayCompletionPct(dStr){
@@ -1472,20 +1477,25 @@ function dateStripHTML(){
   for(var i=0;i<7;i++){
     var d = addDays(start,i);
     var ds = dateStr(d);
-    var isToday = ds===_todayStr;
+    var isRealToday = ds===_todayStr;
+    var isSelected = ds===_dashDate;
     var wd = d.toLocaleDateString('en-US',{weekday:'short'}).slice(0,2).toUpperCase();
-    out += '<button class="date-pill'+(isToday?' is-today':'')+'" onclick="'+(isToday?'':'goToCalendarDate(\''+ds+'\')')+'" title="'+niceDate(ds)+'">'+
-      '<span class="date-pill-wd">'+(isToday?'TDY':wd)+'</span>'+
+    out += '<button class="date-pill'+(isSelected?' is-today':'')+(isRealToday?' is-real-today':'')+'" onclick="selectDashDate(\''+ds+'\')" title="'+niceDate(ds)+'">'+
+      '<span class="date-pill-wd">'+(isRealToday?'TDY':wd)+'</span>'+
       '<span class="date-pill-num mono">'+d.getDate()+'</span>'+
+      (isRealToday && !isSelected ? '<span class="date-pill-dot"></span>' : '')+
     '</button>';
   }
   return '<div class="date-strip">'+out+'</div>';
 }
-function goToCalendarDate(ds){ _calMonth = ds.slice(0,7); go('calendar'); }
+function selectDashDate(ds){ _dashDate = ds; renderDashboard(); }
 
 function renderDashboard(){
   var el = document.getElementById('page-dashboard');
-  var ts = todayStats();
+  if(!_dashDate) _dashDate = _todayStr;
+  var viewDate = _dashDate;
+  var isToday = viewDate === _todayStr;
+  var ts = todayStats(viewDate);
   var best = bestStreakGlobal();
   var totalHabits = activeHabits().length;
   var perfectWeeks = perfectWeeksCount();
@@ -1494,13 +1504,14 @@ function renderDashboard(){
   var name = S.profile.name ? esc(S.profile.name) : '';
   var hr = new Date().getHours();
   var timeIcon = (hr<6||hr>=20) ? '🌙' : (hr<12 ? '☀️' : (hr<17 ? '🌤️' : '🌆'));
+  var shortViewDate = parseDate(viewDate).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
 
   var html = '';
   html += '<div class="today-utility">'+
       '<button class="streak-pill" onclick="go(\'stats\')" title="Best streak">'+
         '<span class="flame-pulse">🔥</span>'+best+
       '</button>'+
-      '<span class="today-pill">TODAY</span>'+
+      '<button class="today-pill" onclick="'+(isToday?'':'selectDashDate(\''+_todayStr+'\')')+'" title="'+(isToday?'Viewing today':'Back to today')+'">'+(isToday?'TODAY':esc(shortViewDate.toUpperCase()))+'</button>'+
       '<button class="icon-btn" onclick="toggleQuickTheme()" title="Toggle theme" style="width:34px;height:34px;border-radius:20px">'+
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>'+
       '</button>'+
@@ -1509,7 +1520,10 @@ function renderDashboard(){
   html += dateStripHTML();
 
   html += '<div class="greet-block"><div class="greet-headline">Hi'+(name?', '+name:' there')+'</div>'+
-    '<div class="greet-sub">'+timeIcon+' '+greeting+' · '+niceDate(_todayStr)+'</div></div>';
+    (isToday
+      ? '<div class="greet-sub">'+timeIcon+' '+greeting+' · '+niceDate(viewDate)+'</div>'
+      : '<div class="greet-sub">📅 Viewing '+niceDate(viewDate)+' · <a onclick="selectDashDate(\''+_todayStr+'\')" style="color:var(--accent);font-weight:600;cursor:pointer">Back to today</a></div>'
+    )+'</div>';
 
   html += '<div class="page-actions" style="margin-bottom:20px">'+
       '<button class="btn sm" onclick="openTemplateModal()">'+ICONS.sparkle+' Habit Template</button>'+
@@ -1518,9 +1532,9 @@ function renderDashboard(){
 
   html += '<div class="hero">'+
     '<div class="ring-wrap">'+ringSVG(ts.pct,132,11)+
-      '<div class="ring-center"><div class="ring-pct mono">'+pct(ts.pct)+'%</div><div class="ring-lbl">Today</div></div></div>'+
+      '<div class="ring-center"><div class="ring-pct mono">'+pct(ts.pct)+'%</div><div class="ring-lbl">'+(isToday?'Today':shortViewDate)+'</div></div></div>'+
     '<div class="hero-side">'+
-      '<div class="hero-eyebrow">Today\'s momentum</div>'+
+      '<div class="hero-eyebrow">'+(isToday?'Today\'s':shortViewDate+'\'s')+' momentum</div>'+
       '<div class="hero-headline">'+momentumHeadline(ts)+'</div>'+
       '<div class="hero-stats">'+
         '<div class="hero-stat"><b class="mono">'+ts.done+'/'+ts.total+'</b><span>Completed</span></div>'+
@@ -1537,21 +1551,22 @@ function renderDashboard(){
     statCard(BADGES.filter(isBadgeEarned).length+'/'+BADGES.length,'Badges earned')+
   '</div>';
 
-  var all = activeHabits().filter(function(h){ return isScheduledOn(h,_todayStr); });
-  var pending = all.filter(function(h){ return getStatus(h,_todayStr)===null; });
-  var done2 = all.filter(function(h){ return getStatus(h,_todayStr)==='done'; });
-  var missed = all.filter(function(h){ return getStatus(h,_todayStr)==='missed'; });
+  var all = activeHabits().filter(function(h){ return isScheduledOn(h,viewDate); });
+  var pending = all.filter(function(h){ return getStatus(h,viewDate)===null; });
+  var done2 = all.filter(function(h){ return getStatus(h,viewDate)==='done'; });
+  var missed = all.filter(function(h){ return getStatus(h,viewDate)==='missed'; });
+  var listTitle = isToday ? 'Today\'s habits' : 'Habits — '+shortViewDate;
 
   if(!S.habits.length){
     html += emptyState('No habits yet','Start with a habit template, or create your own from scratch.','openHabitModal()','New Habit');
   } else if(!all.length){
-    html += '<div class="sec-title" style="margin-top:26px"><h3>Today\'s habits</h3></div>';
-    html += emptyState('Nothing scheduled today','Enjoy the rest, or add a habit for today.','openHabitModal()','New Habit');
+    html += '<div class="sec-title" style="margin-top:26px"><h3>'+esc(listTitle)+'</h3></div>';
+    html += emptyState(isToday?'Nothing scheduled today':'Nothing scheduled on this day', isToday?'Enjoy the rest, or add a habit for today.':'No habits were scheduled on '+niceDate(viewDate)+'.','openHabitModal()','New Habit');
   } else {
-    html += '<div class="sec-title" style="margin-top:26px"><h3>Today\'s habits</h3></div>';
-    if(pending.length) html += '<div class="sec-title" style="margin-top:0"><h3>To do — '+pending.length+'</h3></div><div class="hab-list">'+pending.map(habitItemHTML).join('')+'</div>';
-    if(done2.length) html += '<div class="sec-title"><h3>Done — '+done2.length+'</h3></div><div class="hab-list">'+done2.map(habitItemHTML).join('')+'</div>';
-    if(missed.length) html += '<div class="sec-title"><h3>Missed — '+missed.length+'</h3></div><div class="hab-list">'+missed.map(habitItemHTML).join('')+'</div>';
+    html += '<div class="sec-title" style="margin-top:26px"><h3>'+esc(listTitle)+'</h3></div>';
+    if(pending.length) html += '<div class="sec-title" style="margin-top:0"><h3>To do — '+pending.length+'</h3></div><div class="hab-list">'+pending.map(function(h){ return habitItemHTML(h,viewDate); }).join('')+'</div>';
+    if(done2.length) html += '<div class="sec-title"><h3>Done — '+done2.length+'</h3></div><div class="hab-list">'+done2.map(function(h){ return habitItemHTML(h,viewDate); }).join('')+'</div>';
+    if(missed.length) html += '<div class="sec-title"><h3>Missed — '+missed.length+'</h3></div><div class="hab-list">'+missed.map(function(h){ return habitItemHTML(h,viewDate); }).join('')+'</div>';
   }
 
   var archived = S.habits.filter(function(h){ return h.archived; });
@@ -1607,16 +1622,18 @@ function freqLabel(h){
   if(days.length===7) return 'Every day';
   return days.map(function(d){ return DAY_LABELS_FULL[d].slice(0,3); }).join(' · ');
 }
-function habitItemHTML(h){
-  var st = getStatus(h,_todayStr);
+function habitItemHTML(h, dStr){
+  dStr = dStr || _todayStr;
+  var st = getStatus(h,dStr);
   var streak = currentStreak(h);
   var cls = st==='done' ? 'done' : (st==='missed' ? 'missed' : '');
   var checkIcon = st==='done' ? ICONS.check : (st==='missed' ? ICONS.x : '');
+  var checkTitle = isFuture(dStr) ? 'Future day' : 'Tap to mark done, tap again to mark missed';
   return '<div class="hab-item '+cls+'" style="--hc:'+h.color+';--hc-soft:'+h.color+'26" onclick="openHabitAction(\''+h.id+'\')">'+
     '<div class="hab-icon" style="background:'+h.color+'26">'+h.icon+'</div>'+
     '<div class="hab-info"><div class="hab-name">'+esc(h.name)+'</div>'+
       '<div class="hab-meta">'+(streak>0?'<span class="flame">🔥 '+streak+'</span> · ':'')+esc(freqLabel(h))+(h.reminder?' · ⏰ '+fmtTime(h.reminder):'')+'</div></div>'+
-    '<button class="hab-check" onclick="event.stopPropagation();cycleStatus(\''+h.id+'\',\''+_todayStr+'\');reRenderCurrent()" title="Tap to mark done, tap again to mark missed">'+checkIcon+'</button>'+
+    '<button class="hab-check'+(isFuture(dStr)?' disabled':'')+'" onclick="event.stopPropagation();cycleStatus(\''+h.id+'\',\''+dStr+'\');reRenderCurrent()" title="'+checkTitle+'">'+checkIcon+'</button>'+
   '</div>';
 }
 function reRenderCurrent(){
@@ -2676,6 +2693,7 @@ function checkReminders(){
 function refreshTodayIfChanged(){
   var real = dateStr(new Date());
   if(real !== _todayStr){
+    if(_dashDate === _todayStr) _dashDate = real; // only follow along if user was viewing "today"
     _todayStr = real;
     _remindersFiredToday = {};
     go(_curPage);
@@ -2687,6 +2705,7 @@ document.addEventListener('keydown', function(e){
   if(e.key==='Escape'){ closeHabitModal(); closeMore(); closeTemplateModal(); closeHabitAction(); closeHabitStats(); if(_aiOpen) toggleAI(); }
 });
 _todayStr = dateStr(new Date());
+_dashDate = _todayStr;
 _calMonth = _todayStr.slice(0,7);
 /* called once, right after the first Firestore snapshot for the signed-in user arrives */
 function initApp(){
