@@ -1084,13 +1084,29 @@ tr.cal-row:nth-child(odd) .cal-cell{background:rgba(128,128,128,.02)}
       <button class="date-nav-btn" onclick="shiftDashDate(-1)" aria-label="Previous day">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
       </button>
-      <button class="date-nav-current" onclick="openDatePicker()" title="Pick a date">
+      <button class="date-nav-current" onclick="toggleDatePicker(event)" title="Pick a date">
         <span id="dateNavLabel">Today</span>
       </button>
       <button class="date-nav-btn" onclick="shiftDashDate(1)" aria-label="Next day">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
       </button>
-      <input type="date" id="dateNavPicker" onchange="selectDashDate(this.value)" aria-hidden="true">
+      <input type="date" id="dateNavPicker" onchange="selectDashDate(this.value)" aria-hidden="true" tabindex="-1">
+      <div id="datePickerDropdown" class="date-picker-dd">
+        <div class="date-picker-inner">
+          <div class="dp-head">
+            <button class="dp-nav-btn" onclick="dpNav(-1)" aria-label="Previous month">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <b id="dpMonthLabel">Month Year</b>
+            <button class="dp-nav-btn" onclick="dpNav(1)" aria-label="Next month">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+          </div>
+          <div class="dp-weekdays" id="dpWeekdays"></div>
+          <div class="dp-grid" id="dpGrid"></div>
+          <button class="dp-today-btn" onclick="dpJumpToday()">Jump to today</button>
+        </div>
+      </div>
     </div>
     <button id="profileBtn" onclick="toggleProfileMenu(event)" title="Account"></button>
     <div id="profileDropdown">
