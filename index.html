@@ -321,6 +321,19 @@ a{color:inherit}
 }
 .chip.on{background:var(--accent-soft);color:var(--accent);border-color:transparent}
 
+/* ---- segmented view tabs (Habits: Daily / Calendar) ---- */
+.seg-tabs{
+  display:inline-flex;gap:3px;padding:3px;border-radius:13px;margin-bottom:20px;
+  background:var(--glass-bg);border:1px solid var(--glass-border);
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+}
+.seg-tab{
+  padding:8px 16px;border-radius:10px;font-size:12.5px;font-weight:700;color:var(--text2);
+  transition:background .15s,color .15s;
+}
+.seg-tab:hover{color:var(--text)}
+.seg-tab.active{background:var(--accent-soft);color:var(--accent)}
+
 /* ---- forms ---- */
 .field{margin-bottom:14px}
 .field-label{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--text2);margin-bottom:7px;display:block}
@@ -833,8 +846,9 @@ tr.cal-row:nth-child(odd) .cal-cell{background:rgba(128,128,128,.02)}
 /* ============================================================
    PROFILE MENU (top-right corner)
    ============================================================ */
-#profileWrap{position:fixed;top:16px;right:18px;z-index:170}
+#profileWrap{position:fixed;top:16px;right:18px;z-index:170;display:flex;align-items:center;gap:9px}
 @media(max-width:880px){#profileWrap{top:12px;right:14px}}
+#quickThemeBtn{width:40px;height:40px;border-radius:50%;flex-shrink:0}
 #profileBtn{
   width:40px;height:40px;border-radius:50%;flex-shrink:0;overflow:hidden;
   border:1.5px solid var(--glass-border);background:var(--glass-bg-strong);
@@ -915,6 +929,9 @@ tr.cal-row:nth-child(odd) .cal-cell{background:rgba(128,128,128,.02)}
 
   <!-- ============ PROFILE MENU (top-right) ============ -->
   <div id="profileWrap">
+    <button id="quickThemeBtn" class="icon-btn" onclick="toggleQuickTheme()" title="Toggle theme">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+    </button>
     <button id="profileBtn" onclick="toggleProfileMenu(event)" title="Account"></button>
     <div id="profileDropdown">
       <div class="profile-dd-head" id="profileDdHead"></div>
@@ -1121,6 +1138,7 @@ var _todayStr = '';
 var _dashDate = ''; // date currently shown on the dashboard (defaults to today, changeable via date strip)
 var _curPage = 'dashboard';
 var _calMonth = ''; // 'YYYY-MM'
+var _habitsView = 'daily'; // 'daily' | 'calendar' — which sub-view the Habits page shows
 
 /* ==================================================================
    FIREBASE — paste your own project's config below (Firebase Console
@@ -1414,7 +1432,7 @@ var ICONS = {
 };
 var NAV = [
   {id:'dashboard', label:'Dashboard', icon:ICONS.home},
-  {id:'calendar', label:'Calendar', icon:ICONS.calendar},
+  {id:'calendar', label:'Habits', icon:ICONS.calendar},
   {id:'stats', label:'Stats', icon:ICONS.stats},
   {id:'achievements', label:'Achievements', icon:ICONS.trophy},
   {id:'settings', label:'Settings', icon:ICONS.settings}
@@ -1580,7 +1598,7 @@ function dateStripHTML(){
   }
   return '<div class="date-strip">'+out+'</div>';
 }
-function selectDashDate(ds){ _dashDate = ds; renderDashboard(); }
+function selectDashDate(ds){ _dashDate = ds; reRenderCurrent(); }
 
 function renderDashboard(){
   var el = document.getElementById('page-dashboard');
@@ -1602,9 +1620,6 @@ function renderDashboard(){
   html += '<div class="today-utility">'+
       '<button class="streak-pill" onclick="go(\'stats\')" title="Best streak">'+
         '<span class="flame-pulse">🔥</span>'+best+
-      '</button>'+
-      '<button class="icon-btn" onclick="toggleQuickTheme()" title="Toggle theme" style="width:34px;height:34px;border-radius:20px">'+
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>'+
       '</button>'+
     '</div>';
 
@@ -1642,11 +1657,22 @@ function renderDashboard(){
     statCard(BADGES.filter(isBadgeEarned).length+'/'+BADGES.length,'Badges earned')+
   '</div>';
 
+  html += dailyHabitListHTML(viewDate);
+
+  el.innerHTML = html;
+  updateSideRing();
+}
+
+/* Shared habit checklist for a given date — used by Dashboard and the Habits→Daily View tab */
+function dailyHabitListHTML(viewDate){
+  var isToday = viewDate === _todayStr;
+  var shortViewDate = parseDate(viewDate).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
   var all = activeHabits().filter(function(h){ return isScheduledOn(h,viewDate); });
   var pending = all.filter(function(h){ return getStatus(h,viewDate)===null; });
   var done2 = all.filter(function(h){ return getStatus(h,viewDate)==='done'; });
   var missed = all.filter(function(h){ return getStatus(h,viewDate)==='missed'; });
   var listTitle = isToday ? 'Today\'s habits' : 'Habits — '+shortViewDate;
+  var html = '';
 
   if(!S.habits.length){
     html += emptyState('No habits yet','Start with a habit template, or create your own from scratch.','openHabitModal()','New Habit');
@@ -1669,9 +1695,7 @@ function renderDashboard(){
       '</div>';
     }).join('')+'</div>';
   }
-
-  el.innerHTML = html;
-  updateSideRing();
+  return html;
 }
 
 function greetingText(){
@@ -1937,11 +1961,36 @@ function calNav(dir){
   _calMonth = d.getFullYear()+'-'+pad2(d.getMonth()+1);
   renderCalendar();
 }
+function switchHabitsView(v){ _habitsView = v; renderCalendar(); }
+function habitsViewTabsHTML(){
+  return '<div class="seg-tabs">'+
+    '<button class="seg-tab'+(_habitsView==='daily'?' active':'')+'" onclick="switchHabitsView(\'daily\')">Daily View</button>'+
+    '<button class="seg-tab'+(_habitsView==='calendar'?' active':'')+'" onclick="switchHabitsView(\'calendar\')">Calendar View</button>'+
+  '</div>';
+}
 function renderCalendar(){
   if(!_calMonth) _calMonth = _todayStr.slice(0,7);
+  if(!_habitsView) _habitsView = 'daily';
   var el = document.getElementById('page-calendar');
-  var html = '<div class="page-head"><div><div class="page-title">Calendar</div><div class="page-sub">Monthly consistency tracker</div></div>'+
+  var html = '<div class="page-head"><div><div class="page-title">Habits</div><div class="page-sub">'+
+    (_habitsView==='daily' ? 'Your day, one habit at a time' : 'Monthly consistency tracker')+'</div></div>'+
     '<div class="page-actions"><button class="btn primary" onclick="openHabitModal()">'+ICONS.plus+' New Habit</button></div></div>';
+  html += habitsViewTabsHTML();
+
+  if(_habitsView==='daily'){
+    if(!_dashDate) _dashDate = _todayStr;
+    var viewDate = _dashDate;
+    var isTodayDaily = viewDate === _todayStr;
+    html += dateStripHTML();
+    html += '<div class="greet-sub" style="margin-bottom:14px">'+
+      (isTodayDaily ? niceDate(viewDate) : '📅 Viewing '+niceDate(viewDate)+' · <a onclick="selectDashDate(\''+_todayStr+'\')" style="color:var(--accent);font-weight:600;cursor:pointer">Back to today</a>')+
+    '</div>';
+    html += dailyHabitListHTML(viewDate);
+    el.innerHTML = html;
+    updateSideRing();
+    return;
+  }
+
   html += '<div class="cal-nav"><button class="btn icon-only" onclick="calNav(-1)">'+ICONS.chevL+'</button><b>'+monthLabel(_calMonth)+'</b><button class="btn icon-only" onclick="calNav(1)">'+ICONS.chevR+'</button>'+
     '<button class="btn sm ghost" style="margin-left:auto" onclick="_calMonth=_todayStr.slice(0,7);renderCalendar()">Today</button></div>';
 
