@@ -258,10 +258,7 @@ a{color:inherit}
 #topbar .brand-text{font-size:15px}
 #topbar{justify-content:space-between}
 #addWrap{position:relative}
-#addWrapDesktop{
-  position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:170;flex-shrink:0;
-}
-@media(max-width:880px){#addWrapDesktop{top:12px}}
+#addWrapDesktop{position:relative;flex-shrink:0}
 #addDropdown{
   position:absolute;top:calc(100% + 10px);right:0;min-width:190px;
   border-radius:16px;border:1.5px solid var(--glass-border);background:var(--glass-bg-strong);
@@ -271,15 +268,15 @@ a{color:inherit}
   transition:opacity .16s ease,transform .16s cubic-bezier(.2,.8,.2,1);
 }
 #addDropdownDesktop{
-  position:absolute;top:calc(100% + 10px);left:50%;min-width:190px;
+  position:absolute;top:calc(100% + 10px);right:0;min-width:190px;
   border-radius:16px;border:1.5px solid var(--glass-border);background:var(--glass-bg-strong);
   -webkit-backdrop-filter:blur(28px) saturate(180%);backdrop-filter:blur(28px) saturate(180%);
   box-shadow:var(--shadow-widget);padding:8px;z-index:60;
-  opacity:0;pointer-events:none;transform:translate(-50%,-6px) scale(.98);transform-origin:top center;
+  opacity:0;pointer-events:none;transform:translateY(-6px) scale(.98);transform-origin:top right;
   transition:opacity .16s ease,transform .16s cubic-bezier(.2,.8,.2,1);
 }
 #addDropdown.open{opacity:1;pointer-events:auto;transform:translateY(0) scale(1)}
-#addDropdownDesktop.open{opacity:1;pointer-events:auto;transform:translate(-50%,0) scale(1)}
+#addDropdownDesktop.open{opacity:1;pointer-events:auto;transform:translateY(0) scale(1)}
 .icon-btn{
   width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;
   background:var(--glass-bg-strong);border:1px solid var(--glass-border);color:var(--text2);flex-shrink:0;transition:all .15s;
@@ -939,7 +936,7 @@ tr.cal-row:nth-child(odd) .cal-cell{background:rgba(128,128,128,.02)}
 #quickThemeWrap{position:relative}
 #quickThemeBtn{width:40px;height:40px;border-radius:50%;flex-shrink:0}
 .date-nav-mini{
-  display:flex;align-items:center;gap:2px;flex-shrink:0;height:40px;padding:0 4px;border-radius:20px;
+  position:relative;display:flex;align-items:center;gap:2px;flex-shrink:0;height:40px;padding:0 4px;border-radius:20px;
   background:var(--glass-bg-strong);border:1px solid var(--glass-border);
   -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(180%);backdrop-filter:blur(var(--glass-blur)) saturate(180%);
   box-shadow:var(--shadow-widget-sm);
@@ -957,6 +954,10 @@ tr.cal-row:nth-child(odd) .cal-cell{background:rgba(128,128,128,.02)}
 }
 .date-nav-current:hover{background:var(--surface3)}
 .date-nav-mini.is-today .date-nav-current{color:var(--accent)}
+#dateNavPicker{
+  position:absolute;left:50%;bottom:-4px;transform:translateX(-50%);
+  width:1px;height:1px;padding:0;margin:0;border:none;opacity:0;pointer-events:none;
+}
 .quick-theme-dd{
   position:absolute;top:100%;right:0;padding-top:12px;min-width:216px;z-index:150;
   opacity:0;pointer-events:none;transform:translateY(-6px) scale(.98);transform-origin:top right;
@@ -1051,23 +1052,6 @@ tr.cal-row:nth-child(odd) .cal-cell{background:rgba(128,128,128,.02)}
 
 <div id="app" style="display:none">
 
-  <!-- ============ ADD BUTTON (top-center) ============ -->
-  <div id="addWrapDesktop">
-    <button id="addBtnDesktop" class="icon-btn" onclick="toggleAddMenu(event,true)" title="Add">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-    </button>
-    <div id="addDropdownDesktop">
-      <button class="profile-item" onclick="closeAddMenu();openHabitModal()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-        New Habit
-      </button>
-      <button class="profile-item" onclick="closeAddMenu();openTemplateModal()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8"/></svg>
-        Habit Template
-      </button>
-    </div>
-  </div>
-
   <!-- ============ PROFILE MENU (top-right) ============ -->
   <div id="profileWrap">
     <div id="quickThemeWrap">
@@ -1081,16 +1065,32 @@ tr.cal-row:nth-child(odd) .cal-cell{background:rgba(128,128,128,.02)}
         </div>
       </div>
     </div>
+    <div id="addWrapDesktop">
+      <button id="addBtnDesktop" class="icon-btn" onclick="toggleAddMenu(event,true)" title="Add">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+      <div id="addDropdownDesktop">
+        <button class="profile-item" onclick="closeAddMenu();openHabitModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+          New Habit
+        </button>
+        <button class="profile-item" onclick="closeAddMenu();openTemplateModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8"/></svg>
+          Habit Template
+        </button>
+      </div>
+    </div>
     <div id="dateNavWrap" class="date-nav-mini">
       <button class="date-nav-btn" onclick="shiftDashDate(-1)" aria-label="Previous day">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
       </button>
-      <button class="date-nav-current" onclick="selectDashDate(_todayStr)" title="Jump to today">
+      <button class="date-nav-current" onclick="openDatePicker()" title="Pick a date">
         <span id="dateNavLabel">Today</span>
       </button>
       <button class="date-nav-btn" onclick="shiftDashDate(1)" aria-label="Next day">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
       </button>
+      <input type="date" id="dateNavPicker" onchange="selectDashDate(this.value)" aria-hidden="true">
     </div>
     <button id="profileBtn" onclick="toggleProfileMenu(event)" title="Account"></button>
     <div id="profileDropdown">
@@ -1781,6 +1781,14 @@ function shiftDashDate(n){
   if(!_dashDate) _dashDate = _todayStr;
   selectDashDate(dateStr(addDays(parseDate(_dashDate), n)));
 }
+function openDatePicker(){
+  var inp = document.getElementById('dateNavPicker');
+  if(!inp) return;
+  inp.value = _dashDate || _todayStr;
+  if(inp.showPicker){ try{ inp.showPicker(); return; }catch(e){} }
+  inp.focus();
+  inp.click();
+}
 function renderDateNav(){
   if(!_dashDate) _dashDate = _todayStr;
   var lbl = document.getElementById('dateNavLabel');
@@ -1789,7 +1797,7 @@ function renderDateNav(){
   var isToday = _dashDate === _todayStr;
   lbl.textContent = isToday ? 'Today' : parseDate(_dashDate).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
   wrap.classList.toggle('is-today', isToday);
-  wrap.querySelector('.date-nav-current').title = isToday ? niceDate(_dashDate) : niceDate(_dashDate)+' · click to jump to today';
+  wrap.querySelector('.date-nav-current').title = niceDate(_dashDate)+' · click to pick a date';
 }
 function selectDashDate(ds){ _dashDate = ds; reRenderCurrent(); renderDateNav(); }
 
