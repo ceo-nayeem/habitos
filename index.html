@@ -204,6 +204,18 @@ a{color:inherit}
 }
 #topbar .brand{padding:0}
 #topbar .brand-text{font-size:15px}
+#topbar{justify-content:space-between}
+#addWrap,#addWrapDesktop{position:relative}
+#addWrapDesktop{flex-shrink:0}
+#addDropdown,#addDropdownDesktop{
+  position:absolute;top:calc(100% + 10px);right:0;min-width:190px;
+  border-radius:16px;border:1.5px solid var(--glass-border);background:var(--glass-bg-strong);
+  -webkit-backdrop-filter:blur(28px) saturate(180%);backdrop-filter:blur(28px) saturate(180%);
+  box-shadow:var(--shadow-widget);padding:8px;z-index:60;
+  opacity:0;pointer-events:none;transform:translateY(-6px) scale(.98);transform-origin:top right;
+  transition:opacity .16s ease,transform .16s cubic-bezier(.2,.8,.2,1);
+}
+#addDropdown.open,#addDropdownDesktop.open{opacity:1;pointer-events:auto;transform:translateY(0) scale(1)}
 .icon-btn{
   width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;
   background:var(--glass-bg-strong);border:1px solid var(--glass-border);color:var(--text2);flex-shrink:0;transition:all .15s;
@@ -969,9 +981,26 @@ tr.cal-row:nth-child(odd) .cal-cell{background:rgba(128,128,128,.02)}
 
   <!-- ============ SIDEBAR (desktop) ============ -->
   <aside id="sidebar">
-    <div class="brand">
-      <div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg></div>
-      <div class="brand-text">HabitOS<span>Build Better Days</span></div>
+    <div class="brand" style="justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:10px;min-width:0">
+        <div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg></div>
+        <div class="brand-text">HabitOS<span>Build Better Days</span></div>
+      </div>
+      <div id="addWrapDesktop">
+        <button id="addBtnDesktop" class="icon-btn" onclick="toggleAddMenu(event,true)" title="Add">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+        <div id="addDropdownDesktop">
+          <button class="profile-item" onclick="closeAddMenu();openHabitModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+            New Habit
+          </button>
+          <button class="profile-item" onclick="closeAddMenu();openTemplateModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8"/></svg>
+            Habit Template
+          </button>
+        </div>
+      </div>
     </div>
     <nav class="nav-group" id="sideNav"></nav>
     <div class="nav-spacer"></div>
@@ -993,6 +1022,21 @@ tr.cal-row:nth-child(odd) .cal-cell{background:rgba(128,128,128,.02)}
       <div class="brand">
         <div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg></div>
         <div class="brand-text">HabitOS</div>
+      </div>
+      <div id="addWrap">
+        <button id="addBtn" class="icon-btn" onclick="toggleAddMenu(event)" title="Add">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+        <div id="addDropdown">
+          <button class="profile-item" onclick="closeAddMenu();openHabitModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+            New Habit
+          </button>
+          <button class="profile-item" onclick="closeAddMenu();openTemplateModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M18.4 5.6l-2.8 2.8M8.4 15.6l-2.8 2.8"/></svg>
+            Habit Template
+          </button>
+        </div>
       </div>
     </header>
 
@@ -1577,6 +1621,22 @@ function goToSettingsSection(anchorId){
     if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
   });
 }
+function toggleAddMenu(e,isDesktop){
+  if(e) e.stopPropagation();
+  var dd = document.getElementById(isDesktop ? 'addDropdownDesktop' : 'addDropdown');
+  if(dd) dd.classList.toggle('open');
+}
+function closeAddMenu(){
+  var dd1 = document.getElementById('addDropdown');
+  var dd2 = document.getElementById('addDropdownDesktop');
+  if(dd1) dd1.classList.remove('open');
+  if(dd2) dd2.classList.remove('open');
+}
+document.addEventListener('click', function(e){
+  var w1 = document.getElementById('addWrap');
+  var w2 = document.getElementById('addWrapDesktop');
+  if((!w1 || !w1.contains(e.target)) && (!w2 || !w2.contains(e.target))) closeAddMenu();
+});
 
 /* ==================================================================
    RING SVG HELPER
