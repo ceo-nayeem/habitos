@@ -2158,10 +2158,12 @@ function currentWeekProgress(){
   return p===null ? 0 : p;
 }
 /* monthly progress = average of the last N week-blocks (default 4), each block being
-   7 days counted from the configured week-start weekday - not the calendar month. */
-function monthlyProgressFromWeeks(numWeeks){
+   7 days counted from the configured week-start weekday - not the calendar month.
+   anchorWk lets the caller pick which week to count backward from (defaults to the
+   real current week). */
+function monthlyProgressFromWeeks(numWeeks, anchorWk){
   numWeeks = numWeeks || 4;
-  var wk = weekStartDate(_todayStr); var sum=0,cnt=0;
+  var wk = anchorWk || weekStartDate(_todayStr); var sum=0,cnt=0;
   for(var i=0;i<numWeeks;i++){
     var p = weekProgressPct(wk);
     if(p!==null){ sum+=p; cnt++; }
@@ -2172,14 +2174,29 @@ function monthlyProgressFromWeeks(numWeeks){
 function weekRangeLabel(wkStart){
   return shortDate(dateStr(wkStart))+' – '+shortDate(dateStr(addDays(wkStart,6)));
 }
+/* The Progress widget tracks whatever month is currently browsed on the calendar
+   (_calMonth), not just "today". Navigating the calendar to a different month
+   (e.g. September -> August) re-anchors the week/month progress bars to that month:
+   - viewing the real current month: anchor on today (weeks roll forward live)
+   - viewing a past month: anchor on that month's last day
+   - viewing a future month: anchor on that month's first day (shows 0% - no data yet) */
+function calProgressAnchorWeekStart(){
+  var p = _calMonth.split('-').map(Number); var yr=p[0], mo=p[1];
+  var daysInMonth = new Date(yr,mo,0).getDate();
+  var monthStart = yr+'-'+pad2(mo)+'-01';
+  var monthEnd = yr+'-'+pad2(mo)+'-'+pad2(daysInMonth);
+  var refStr = (_todayStr < monthStart) ? monthStart : (_todayStr > monthEnd ? monthEnd : _todayStr);
+  return weekStartDate(refStr);
+}
 function calProgressWidgetHTML(){
-  var wkStart0 = weekStartDate(_todayStr);
+  var wkStart0 = calProgressAnchorWeekStart();
+  var todayWeekStr = dateStr(weekStartDate(_todayStr));
   var weeks = []; for(var i=3;i>=0;i--){ weeks.push(addDays(wkStart0,-7*i)); } // oldest -> current (last)
-  var monthly = monthlyProgressFromWeeks(4);
+  var monthly = monthlyProgressFromWeeks(4, wkStart0);
 
   var weeklyHTML = weeks.map(function(wk){
     var p = weekProgressPct(wk); if(p===null) p=0;
-    var isCurrent = dateStr(wk) === dateStr(wkStart0);
+    var isCurrent = dateStr(wk) === todayWeekStr;
     return '<div class="mini-ring-row">'+
         '<div class="ring-wrap" style="width:76px;height:76px">'+ringSVG(p,76,7)+
           '<div class="ring-center"><div class="ring-pct mono" style="font-size:15px">'+pct(p)+'%</div></div>'+
@@ -2189,7 +2206,7 @@ function calProgressWidgetHTML(){
   }).join('');
 
   return '<div class="card" style="margin-bottom:16px">'+
-    '<div class="sec-title" style="margin-top:0"><h3>Progress</h3></div>'+
+    '<div class="sec-title" style="margin-top:0"><h3>Progress</h3><span class="faint mono" style="font-size:11px">'+monthLabel(_calMonth)+'</span></div>'+
     '<div style="display:flex;flex-direction:column;align-items:center;gap:2px;margin-bottom:24px">'+
       '<div class="ring-wrap" style="width:156px;height:156px">'+ringSVG(monthly,156,14)+
         '<div class="ring-center"><div class="ring-pct mono" style="font-size:32px">'+pct(monthly)+'%</div><div class="ring-lbl" style="font-size:10.5px">Monthly</div></div>'+
