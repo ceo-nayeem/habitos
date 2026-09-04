@@ -2173,24 +2173,31 @@ function weekRangeLabel(wkStart){
   return shortDate(dateStr(wkStart))+' – '+shortDate(dateStr(addDays(wkStart,6)));
 }
 function calProgressWidgetHTML(){
-  var wkStart = weekStartDate(_todayStr);
-  var weekly = currentWeekProgress();
+  var wkStart0 = weekStartDate(_todayStr);
+  var weeks = []; for(var i=3;i>=0;i--){ weeks.push(addDays(wkStart0,-7*i)); } // oldest -> current (last)
   var monthly = monthlyProgressFromWeeks(4);
+
+  var weeklyHTML = weeks.map(function(wk){
+    var p = weekProgressPct(wk); if(p===null) p=0;
+    var isCurrent = dateStr(wk) === dateStr(wkStart0);
+    return '<div class="mini-ring-row">'+
+        '<div class="ring-wrap" style="width:76px;height:76px">'+ringSVG(p,76,7)+
+          '<div class="ring-center"><div class="ring-pct mono" style="font-size:15px">'+pct(p)+'%</div></div>'+
+        '</div>'+
+        '<div class="mini-ring-text"><b>'+(isCurrent?'This week':weekRangeLabel(wk))+'</b>'+(isCurrent?weekRangeLabel(wk):'')+'</div>'+
+      '</div>';
+  }).join('');
+
   return '<div class="card" style="margin-bottom:16px">'+
-    '<div class="sec-title" style="margin-top:0"><h3>Progress</h3><span class="faint mono" style="font-size:11px">4-week average</span></div>'+
-    '<div style="display:flex;gap:32px;flex-wrap:wrap;justify-content:center;padding:6px 0 2px">'+
-      '<div class="mini-ring-row">'+
-        '<div class="ring-wrap" style="width:92px;height:92px">'+ringSVG(weekly,92,9)+
-          '<div class="ring-center"><div class="ring-pct mono" style="font-size:18px">'+pct(weekly)+'%</div><div class="ring-lbl" style="font-size:8.5px">This week</div></div>'+
-        '</div>'+
-        '<div class="mini-ring-text"><b>Weekly progress</b>'+weekRangeLabel(wkStart)+'</div>'+
+    '<div class="sec-title" style="margin-top:0"><h3>Progress</h3></div>'+
+    '<div style="display:flex;flex-direction:column;align-items:center;gap:2px;margin-bottom:24px">'+
+      '<div class="ring-wrap" style="width:156px;height:156px">'+ringSVG(monthly,156,14)+
+        '<div class="ring-center"><div class="ring-pct mono" style="font-size:32px">'+pct(monthly)+'%</div><div class="ring-lbl" style="font-size:10.5px">Monthly</div></div>'+
       '</div>'+
-      '<div class="mini-ring-row">'+
-        '<div class="ring-wrap" style="width:92px;height:92px">'+ringSVG(monthly,92,9)+
-          '<div class="ring-center"><div class="ring-pct mono" style="font-size:18px">'+pct(monthly)+'%</div><div class="ring-lbl" style="font-size:8.5px">4-wk avg</div></div>'+
-        '</div>'+
-        '<div class="mini-ring-text"><b>Monthly progress</b>Avg of last 4 weeks</div>'+
-      '</div>'+
+    '</div>'+
+    '<div class="field-label" style="text-align:center;margin-bottom:12px">Last 4 weeks</div>'+
+    '<div style="display:flex;gap:22px;flex-wrap:wrap;justify-content:center">'+
+      weeklyHTML+
     '</div>'+
   '</div>';
 }
