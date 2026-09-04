@@ -1720,7 +1720,6 @@ function renderNav(){
     var dot = (n.id==='calendar' && pending>0) ? '<span class="bn-dot"></span>' : '';
     return '<button class="bn-item'+(n.id===_curPage?' active':'')+'" onclick="go(\''+n.id+'\')">'+dot+n.icon+'<span>'+n.label+'</span></button>';
   });
-  html.splice(1, 0, '<button class="bn-fab" onclick="openHabitModal()" title="New habit">'+ICONS.plus+'</button>');
   html = html.join('');
   var moreActive = (_curPage==='achievements'||_curPage==='settings');
   html += '<button class="bn-item'+(moreActive?' active':'')+'" onclick="openMore()">'+ICONS.more+'<span>More</span></button>';
@@ -2000,11 +1999,6 @@ function renderDashboard(){
       : '<div class="greet-sub">📅 Viewing '+niceDate(viewDate)+' · <a onclick="selectDashDate(\''+_todayStr+'\')" style="color:var(--accent);font-weight:600;cursor:pointer">Back to today</a></div>'
     )+'</div>';
 
-  html += '<div class="page-actions" style="margin-bottom:20px">'+
-      '<button class="btn sm" onclick="openTemplateModal()">'+ICONS.sparkle+' Habit Template</button>'+
-      '<button class="btn sm primary" onclick="openHabitModal()">'+ICONS.plus+' New Habit</button>'+
-    '</div>';
-
   html += '<div class="hero">'+
     '<div class="ring-wrap">'+ringSVG(ts.pct,132,11)+
       '<div class="ring-center"><div class="ring-pct mono">'+pct(ts.pct)+'%</div><div class="ring-lbl">'+(isToday?'Today':shortViewDate)+'</div></div></div>'+
@@ -2043,7 +2037,7 @@ function dashboardSummaryWidgets(viewDate){
   var pendingN = all.length - doneN - missedN;
 
   if(!S.habits.length){
-    return emptyState('No habits yet','Start with a habit template, or create your own from scratch.','openHabitModal()','New Habit');
+    return emptyState('No habits yet','Tap the + button above to start with a habit template, or create your own from scratch.');
   }
 
   var html = '<div class="widget-grid" style="margin-top:22px">';
@@ -2101,10 +2095,10 @@ function dailyHabitListHTML(viewDate){
   var html = '';
 
   if(!S.habits.length){
-    html += emptyState('No habits yet','Start with a habit template, or create your own from scratch.','openHabitModal()','New Habit');
+    html += emptyState('No habits yet','Tap the + button above to start with a habit template, or create your own from scratch.');
   } else if(!all.length){
     html += '<div class="sec-title" style="margin-top:26px"><h3>'+esc(listTitle)+'</h3></div>';
-    html += emptyState(isToday?'Nothing scheduled today':'Nothing scheduled on this day', isToday?'Enjoy the rest, or add a habit for today.':'No habits were scheduled on '+niceDate(viewDate)+'.','openHabitModal()','New Habit');
+    html += emptyState(isToday?'Nothing scheduled today':'Nothing scheduled on this day', isToday?'Enjoy the rest, or add a habit for today.':'No habits were scheduled on '+niceDate(viewDate)+'.');
   } else {
     html += '<div class="sec-title" style="margin-top:26px"><h3>'+esc(listTitle)+'</h3></div>';
     if(pending.length) html += '<div class="sec-title" style="margin-top:0"><h3>To do — '+pending.length+'</h3></div><div class="hab-list">'+pending.map(function(h){ return habitItemHTML(h,viewDate); }).join('')+'</div>';
@@ -2403,8 +2397,7 @@ function renderCalendar(){
   var html = '<div class="page-head"><div><div class="page-title" style="display:flex;align-items:center;gap:10px">Habits'+
     (pendingCount>0 ? '<span class="page-title-badge" title="'+pendingCount+' pending today">'+pendingCount+'</span>' : '')+
     '</div><div class="page-sub">'+
-    (_habitsView==='daily' ? 'Your day, one habit at a time' : 'Monthly consistency tracker')+'</div></div>'+
-    '<div class="page-actions"><button class="btn primary" onclick="openHabitModal()">'+ICONS.plus+' New Habit</button></div></div>';
+    (_habitsView==='daily' ? 'Your day, one habit at a time' : 'Monthly consistency tracker')+'</div></div></div>';
   html += habitsViewTabsHTML();
 
   if(_habitsView==='daily'){
@@ -2425,7 +2418,7 @@ function renderCalendar(){
 
   var list = activeHabits();
   if(!list.length){
-    html += emptyState('No habits to show','Add a habit to see it appear on the calendar.','openHabitModal()','New Habit');
+    html += emptyState('No habits to show','Tap the + button above to add a habit and see it appear on the calendar.');
     el.innerHTML = html; return;
   }
 
@@ -2666,7 +2659,7 @@ function renderStats(){
   var list = activeHabits();
   var html = '<div class="page-head"><div><div class="page-title">Stats & Progress</div><div class="page-sub">How consistent you\'ve really been</div></div></div>';
 
-  if(!list.length){ html += emptyState('No data yet','Add a habit and start checking in to see your stats.','openHabitModal()','New Habit'); el.innerHTML=html; return; }
+  if(!list.length){ html += emptyState('No data yet','Tap the + button above to add a habit and start checking in to see your stats.'); el.innerHTML=html; return; }
 
   var score = momentumScore();
   var t = todayStats().pct, w7 = rateOverLastNDays(7), w30 = rateOverLastNDays(30);
@@ -2794,8 +2787,7 @@ function renderSettings(){
 
   html += '<div class="card" style="margin-bottom:16px">'+
     '<div class="sec-title" style="margin-top:0"><h3>Manage habits</h3><span class="faint mono" style="font-size:11px">'+S.habits.length+' total</span></div>'+
-    (S.habits.length ? '<div class="hab-list">'+S.habits.map(manageHabitRowHTML).join('')+'</div>' : '<div class="hint">No habits yet — create one from any page.</div>')+
-    '<button class="btn block" style="margin-top:12px" onclick="openHabitModal()">'+ICONS.plus+' New Habit</button>'+
+    (S.habits.length ? '<div class="hab-list">'+S.habits.map(manageHabitRowHTML).join('')+'</div>' : '<div class="hint">No habits yet — tap the + button above to create one.</div>')+
   '</div>';
 
   html += '<div class="card" id="settingsAppearanceCard" style="margin-bottom:16px">'+
