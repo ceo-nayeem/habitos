@@ -1676,7 +1676,7 @@ function renderDashboard(){
 
 /* Compact summary row — replaces the full habit checklist on the Dashboard
    (checklist itself now lives only on the Habits tab, to cut scrolling here).
-   Three cards: completion summary, assignment (=habit) summary, leaderboard rank. */
+   Three cards: completion summary, recently earned achievements, leaderboard rank. */
 function dashboardSummaryWidgets(viewDate){
   var isToday = viewDate === _todayStr;
   var all = activeHabits().filter(function(h){ return isScheduledOn(h,viewDate); });
@@ -1701,18 +1701,20 @@ function dashboardSummaryWidgets(viewDate){
     (all.length ? '<button class="btn sm" style="width:100%;margin-top:14px" onclick="go(\'calendar\')">View habits</button>' : '')+
   '</div>';
 
-  // Card 2 — assignment summary (habits framed as assignments)
+  // Card 2 — recently earned achievements summary
+  var earnedBadges = BADGES.filter(isBadgeEarned);
+  var recentBadges = earnedBadges.slice(-3).reverse();
   html += '<div class="widget w-4">'+
-    '<div class="widget-head"><div><div class="widget-eyebrow">Assignments</div><div class="widget-headline">What\'s on your plate</div></div>'+
-      '<div class="widget-pill'+(pendingN>0?'':' ok')+'">'+(pendingN>0?pendingN+' left':'All clear')+'</div></div>'+
-    '<p class="muted" style="font-size:12.5px;line-height:1.5">'+
-      (all.length===0
-        ? 'Nothing assigned for '+(isToday?'today':'this day')+'.'
-        : (pendingN>0
-            ? 'You have '+pendingN+' habit'+(pendingN===1?'':'s')+' still waiting out of '+all.length+' assigned '+(isToday?'today':'on this day')+'.'
-            : 'All '+all.length+' assigned habit'+(all.length===1?'':'s')+' '+(isToday?'today are':'on this day were')+' handled.'))+
-    '</p>'+
-    (pendingN>0 ? '<button class="btn sm primary" style="width:100%;margin-top:14px" onclick="go(\'calendar\')">Go check them off</button>' : '')+
+    '<div class="widget-head"><div><div class="widget-eyebrow">Achievements</div><div class="widget-headline">Recently earned</div></div>'+
+      '<div class="widget-pill'+(earnedBadges.length>0?' ok':'')+'">'+earnedBadges.length+'/'+BADGES.length+'</div></div>'+
+    (recentBadges.length
+      ? '<div class="summary-row-3">'+recentBadges.concat(recentBadges.length<3?new Array(3-recentBadges.length).fill(null):[]).slice(0,3).map(function(b){
+          return b
+            ? '<div class="summary-mini" title="'+esc(b.desc)+'"><b style="font-size:19px">'+b.icon+'</b><span>'+esc(b.name)+'</span></div>'
+            : '<div class="summary-mini" style="opacity:.35"><b style="font-size:19px">—</b><span>Locked</span></div>';
+        }).join('')+'</div>'
+      : '<p class="muted" style="font-size:12.5px;line-height:1.5">No achievements unlocked yet — keep checking in to earn your first badge.</p>')+
+    '<button class="btn sm" style="width:100%;margin-top:14px" onclick="go(\'achievements\')">View all achievements</button>'+
   '</div>';
 
   // Card 3 — leaderboard rank (placeholder until global leaderboard ships)
