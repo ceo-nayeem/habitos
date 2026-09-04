@@ -2174,17 +2174,6 @@ function monthlyProgressFromWeeks(numWeeks, anchorWk){
 function weekRangeLabel(wkStart){
   return shortDate(dateStr(wkStart))+' – '+shortDate(dateStr(addDays(wkStart,6)));
 }
-/* true if the 7-day block starting at wkStart shares at least one calendar day with
-   month ym ('YYYY-MM'). Weeks that don't touch the selected month at all should never
-   surface that other month's numbers - they're left blank instead. */
-function weekOverlapsMonth(wkStart, ym){
-  var p = ym.split('-').map(Number); var yr=p[0], mo=p[1];
-  var daysInMonth = new Date(yr,mo,0).getDate();
-  var monthStart = yr+'-'+pad2(mo)+'-01';
-  var monthEnd = yr+'-'+pad2(mo)+'-'+pad2(daysInMonth);
-  var wkStartStr = dateStr(wkStart), wkEndStr = dateStr(addDays(wkStart,6));
-  return wkStartStr <= monthEnd && wkEndStr >= monthStart;
-}
 /* The Progress widget tracks whatever month is currently browsed on the calendar
    (_calMonth), not just "today". Navigating the calendar to a different month
    (e.g. September -> August) re-anchors the week/month progress bars to that month:
@@ -2203,44 +2192,29 @@ function calProgressWidgetHTML(){
   var wkStart0 = calProgressAnchorWeekStart();
   var todayWeekStr = dateStr(weekStartDate(_todayStr));
   var weeks = []; for(var i=3;i>=0;i--){ weeks.push(addDays(wkStart0,-7*i)); } // oldest -> current (last)
+  var monthly = monthlyProgressFromWeeks(4, wkStart0);
 
-  var monthlySum=0, monthlyCnt=0;
   var weeklyHTML = weeks.map(function(wk){
-    var inMonth = weekOverlapsMonth(wk,_calMonth);
-    var isCurrent = inMonth && dateStr(wk) === todayWeekStr;
-    var compactLbl = shortDate(dateStr(wk)).replace(' ','\u00A0');
-    if(!inMonth){
-      return '<div class="mini-ring-row" style="flex-direction:column;gap:3px;opacity:.4;min-width:0">'+
-          '<div class="ring-wrap" style="width:44px;height:44px">'+ringSVG(0,44,4)+
-            '<div class="ring-center"><div class="ring-pct mono" style="font-size:10px;color:var(--text3)">–</div></div>'+
-          '</div>'+
-          '<div class="mini-ring-text" style="text-align:center;font-size:8px">'+compactLbl+'</div>'+
-        '</div>';
-    }
     var p = weekProgressPct(wk); if(p===null) p=0;
-    monthlySum += p; monthlyCnt++;
-    return '<div class="mini-ring-row" style="flex-direction:column;gap:3px;min-width:0">'+
-        '<div class="ring-wrap" style="width:44px;height:44px">'+ringSVG(p,44,4)+
-          '<div class="ring-center"><div class="ring-pct mono" style="font-size:10.5px">'+pct(p)+'%</div></div>'+
+    var isCurrent = dateStr(wk) === todayWeekStr;
+    return '<div class="mini-ring-row">'+
+        '<div class="ring-wrap" style="width:76px;height:76px">'+ringSVG(p,76,7)+
+          '<div class="ring-center"><div class="ring-pct mono" style="font-size:15px">'+pct(p)+'%</div></div>'+
         '</div>'+
-        '<div class="mini-ring-text" style="text-align:center;font-size:8px"><b style="display:inline">'+(isCurrent?'This wk':compactLbl)+'</b></div>'+
+        '<div class="mini-ring-text"><b>'+(isCurrent?'This week':weekRangeLabel(wk))+'</b>'+(isCurrent?weekRangeLabel(wk):'')+'</div>'+
       '</div>';
   }).join('');
 
-  var monthly = monthlyCnt ? monthlySum/monthlyCnt : 0;
-
-  return '<div class="card" style="margin-bottom:16px;padding:14px 16px">'+
-    '<div class="sec-title" style="margin:0 0 10px"><h3>Progress</h3><span class="faint mono" style="font-size:10.5px">'+monthLabel(_calMonth)+'</span></div>'+
-    '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">'+
-      '<div class="mini-ring-row" style="gap:9px;flex-shrink:0">'+
-        '<div class="ring-wrap" style="width:64px;height:64px">'+ringSVG(monthly,64,6)+
-          '<div class="ring-center"><div class="ring-pct mono" style="font-size:14px">'+pct(monthly)+'%</div><div class="ring-lbl" style="font-size:6.5px">Monthly</div></div>'+
-        '</div>'+
+  return '<div class="card" style="margin-bottom:16px">'+
+    '<div class="sec-title" style="margin-top:0"><h3>Progress</h3><span class="faint mono" style="font-size:11px">'+monthLabel(_calMonth)+'</span></div>'+
+    '<div style="display:flex;flex-direction:column;align-items:center;gap:2px;margin-bottom:24px">'+
+      '<div class="ring-wrap" style="width:156px;height:156px">'+ringSVG(monthly,156,14)+
+        '<div class="ring-center"><div class="ring-pct mono" style="font-size:32px">'+pct(monthly)+'%</div><div class="ring-lbl" style="font-size:10.5px">Monthly</div></div>'+
       '</div>'+
-      '<div style="width:1px;align-self:stretch;background:var(--glass-border);flex-shrink:0"></div>'+
-      '<div style="display:flex;gap:9px;flex:1;justify-content:space-between;min-width:0">'+
-        weeklyHTML+
-      '</div>'+
+    '</div>'+
+    '<div class="field-label" style="text-align:center;margin-bottom:12px">Last 4 weeks</div>'+
+    '<div style="display:flex;gap:22px;flex-wrap:wrap;justify-content:center">'+
+      weeklyHTML+
     '</div>'+
   '</div>';
 }
