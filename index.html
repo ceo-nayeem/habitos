@@ -168,45 +168,7 @@ a{color:inherit}
   box-shadow:0 20px 50px rgba(0,0,0,.3);pointer-events:none;
 }
 #sidebar > *{position:relative}
-#main{margin-left:216px;transition:margin-left .32s cubic-bezier(.34,1.1,.4,1)}
-
-/* ---- sidebar expand/hide toggle (top-left, always present) ---- */
-#sideToggleBtn{
-  position:fixed;top:18px;left:18px;z-index:200;
-  width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;
-  background:var(--glass-bg-strong);border:1px solid var(--glass-border);color:var(--text2);
-  -webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);
-  box-shadow:var(--shadow-widget-sm);transition:all .18s cubic-bezier(.2,.8,.2,1);
-}
-#sideToggleBtn:hover{color:var(--text);border-color:var(--border2);transform:scale(1.06)}
-#sideToggleBtn:active{transform:scale(.94)}
-#sideToggleBtn svg{width:17px;height:17px;transition:transform .32s cubic-bezier(.34,1.56,.64,1)}
-#app.sidebar-collapsed #sideToggleBtn svg{transform:rotate(180deg)}
-@media(max-width:880px){#sideToggleBtn{display:none}}
-
-/* ---- collapsed state: sidebar "chrome" (glass panel, brand, momentum widget) is removed;
-   the nav buttons + theme button remain, unboxed, floating over the content ---- */
-#app.sidebar-collapsed #main{margin-left:0}
-#app.sidebar-collapsed #sidebar{
-  padding:66px 10px 18px;background:transparent;box-shadow:none;
-}
-#app.sidebar-collapsed #sidebar::before{opacity:0;pointer-events:none}
-#app.sidebar-collapsed .brand,
-#app.sidebar-collapsed .mini-ring-row{
-  display:none;
-}
-#app.sidebar-collapsed .nav-item,
-#app.sidebar-collapsed #sideThemeBtn{
-  background:var(--glass-bg);border-color:var(--glass-border);
-  -webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%);
-  box-shadow:var(--shadow-widget-sm);
-}
-#app.sidebar-collapsed .nav-item.active{background:var(--accent-soft);border-color:transparent}
-#app.sidebar-collapsed .side-foot{padding-top:0;margin-top:8px}
-#sidebar,#sidebar::before,.brand,.mini-ring-row,.nav-item,#sideThemeBtn{
-  transition:background .28s ease,opacity .28s ease,padding .32s cubic-bezier(.34,1.1,.4,1),
-    border-color .28s ease,box-shadow .28s ease,transform .22s cubic-bezier(.34,1.56,.64,1);
-}
+#main{margin-left:216px}
 .brand{display:flex;align-items:center;gap:10px;padding:4px 10px 26px;justify-content:flex-start}
 .brand-mark{
   width:36px;height:36px;border-radius:11px;background:linear-gradient(150deg,var(--accent),var(--accent2));
@@ -1061,11 +1023,6 @@ tr.cal-row:nth-child(odd) .cal-cell{background:rgba(128,128,128,.02)}
     </div>
   </div>
 
-  <!-- ============ SIDEBAR EXPAND/HIDE TOGGLE (desktop, always visible top-left) ============ -->
-  <button id="sideToggleBtn" onclick="toggleSidebar()" title="Toggle sidebar">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-  </button>
-
   <!-- ============ SIDEBAR (desktop) ============ -->
   <aside id="sidebar">
     <div class="brand">
@@ -1241,7 +1198,7 @@ var BADGES = [
    STATE
    ================================================================== */
 var S = {
-  profile:{ name:'', theme:'night', accent:'indigo', weekStart:1, notif:false, sidebarExpanded:true },
+  profile:{ name:'', theme:'night', accent:'indigo', weekStart:1, notif:false },
   habits:[]
 };
 var _todayStr = '';
@@ -1307,7 +1264,7 @@ function startRealtimeSync(){
       // a genuine remote update (another device/tab on the same account) —
       // our own local writes also fire this listener, so we skip those
       // (hasPendingWrites=true) to avoid re-rendering mid-keystroke.
-      applyTheme(); applySidebarState(); renderNav(); updateProfileMenu(); reRenderCurrent();
+      applyTheme(); renderNav(); updateProfileMenu(); reRenderCurrent();
     }
   }, function(err){
     console.error('sync error', err);
@@ -1633,18 +1590,6 @@ function toggleQuickTheme(){
 function setTheme(t){ S.profile.theme=t; applyTheme(); save(); renderSettings(); }
 function setAccent(id){ S.profile.accent=id; applyTheme(); save(); renderSettings(); }
 function setWeekStart(v){ S.profile.weekStart = v; save(); renderSettings(); if(_curPage==='calendar') renderCalendar(); }
-
-/* ==================================================================
-   SIDEBAR EXPAND / HIDE (per-user, persisted like any other profile setting)
-   ================================================================== */
-function applySidebarState(){
-  document.getElementById('app').classList.toggle('sidebar-collapsed', S.profile.sidebarExpanded===false);
-}
-function toggleSidebar(){
-  S.profile.sidebarExpanded = S.profile.sidebarExpanded===false ? true : false;
-  applySidebarState();
-  save();
-}
 
 /* ==================================================================
    PROFILE MENU (top-right)
@@ -3049,7 +2994,6 @@ _calMonth = _todayStr.slice(0,7);
 /* called once, right after the first Firestore snapshot for the signed-in user arrives */
 function initApp(){
   applyTheme();
-  applySidebarState();
   renderNav();
   updateProfileMenu();
   go('dashboard');
