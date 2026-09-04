@@ -2174,6 +2174,17 @@ function monthlyProgressFromWeeks(numWeeks, anchorWk){
 function weekRangeLabel(wkStart){
   return shortDate(dateStr(wkStart))+' – '+shortDate(dateStr(addDays(wkStart,6)));
 }
+/* true if the 7-day block starting at wkStart shares at least one calendar day with
+   month ym ('YYYY-MM'). Weeks that don't touch the selected month at all should never
+   surface that other month's numbers - they're left blank instead. */
+function weekOverlapsMonth(wkStart, ym){
+  var p = ym.split('-').map(Number); var yr=p[0], mo=p[1];
+  var daysInMonth = new Date(yr,mo,0).getDate();
+  var monthStart = yr+'-'+pad2(mo)+'-01';
+  var monthEnd = yr+'-'+pad2(mo)+'-'+pad2(daysInMonth);
+  var wkStartStr = dateStr(wkStart), wkEndStr = dateStr(addDays(wkStart,6));
+  return wkStartStr <= monthEnd && wkEndStr >= monthStart;
+}
 /* The Progress widget tracks whatever month is currently browsed on the calendar
    (_calMonth), not just "today". Navigating the calendar to a different month
    (e.g. September -> August) re-anchors the week/month progress bars to that month:
@@ -2192,18 +2203,30 @@ function calProgressWidgetHTML(){
   var wkStart0 = calProgressAnchorWeekStart();
   var todayWeekStr = dateStr(weekStartDate(_todayStr));
   var weeks = []; for(var i=3;i>=0;i--){ weeks.push(addDays(wkStart0,-7*i)); } // oldest -> current (last)
-  var monthly = monthlyProgressFromWeeks(4, wkStart0);
 
+  var monthlySum=0, monthlyCnt=0;
   var weeklyHTML = weeks.map(function(wk){
+    var inMonth = weekOverlapsMonth(wk,_calMonth);
+    var isCurrent = inMonth && dateStr(wk) === todayWeekStr;
+    var ringInner, labelHTML;
+    if(!inMonth){
+      // this week-block doesn't touch the selected month at all - leave it blank
+      ringInner = ringSVG(0,76,7)+'<div class="ring-center"><div class="ring-pct mono" style="font-size:15px;color:var(--text3)">–</div></div>';
+      labelHTML = '<div class="mini-ring-text" style="opacity:.5"><b>'+weekRangeLabel(wk)+'</b>No data this month</div>';
+      return '<div class="mini-ring-row" style="opacity:.5">'+
+          '<div class="ring-wrap" style="width:76px;height:76px">'+ringInner+'</div>'+labelHTML+
+        '</div>';
+    }
     var p = weekProgressPct(wk); if(p===null) p=0;
-    var isCurrent = dateStr(wk) === todayWeekStr;
+    monthlySum += p; monthlyCnt++;
+    ringInner = ringSVG(p,76,7)+'<div class="ring-center"><div class="ring-pct mono" style="font-size:15px">'+pct(p)+'%</div></div>';
+    labelHTML = '<div class="mini-ring-text"><b>'+(isCurrent?'This week':weekRangeLabel(wk))+'</b>'+(isCurrent?weekRangeLabel(wk):'')+'</div>';
     return '<div class="mini-ring-row">'+
-        '<div class="ring-wrap" style="width:76px;height:76px">'+ringSVG(p,76,7)+
-          '<div class="ring-center"><div class="ring-pct mono" style="font-size:15px">'+pct(p)+'%</div></div>'+
-        '</div>'+
-        '<div class="mini-ring-text"><b>'+(isCurrent?'This week':weekRangeLabel(wk))+'</b>'+(isCurrent?weekRangeLabel(wk):'')+'</div>'+
+        '<div class="ring-wrap" style="width:76px;height:76px">'+ringInner+'</div>'+labelHTML+
       '</div>';
   }).join('');
+
+  var monthly = monthlyCnt ? monthlySum/monthlyCnt : 0;
 
   return '<div class="card" style="margin-bottom:16px">'+
     '<div class="sec-title" style="margin-top:0"><h3>Progress</h3><span class="faint mono" style="font-size:11px">'+monthLabel(_calMonth)+'</span></div>'+
@@ -2212,7 +2235,7 @@ function calProgressWidgetHTML(){
         '<div class="ring-center"><div class="ring-pct mono" style="font-size:32px">'+pct(monthly)+'%</div><div class="ring-lbl" style="font-size:10.5px">Monthly</div></div>'+
       '</div>'+
     '</div>'+
-    '<div class="field-label" style="text-align:center;margin-bottom:12px">Last 4 weeks</div>'+
+    '<div class="field-label" style="text-align:center;margin-bottom:12px">Weeks in '+monthLabel(_calMonth)+'</div>'+
     '<div style="display:flex;gap:22px;flex-wrap:wrap;justify-content:center">'+
       weeklyHTML+
     '</div>'+
