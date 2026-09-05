@@ -992,34 +992,67 @@ tr.cal-row:nth-child(odd) .cal-cell{background:rgba(128,128,128,.02)}
 .goals-view-toggle button:hover:not(.active){color:var(--text)}
 
 /* ---- brain universe (collapsed smart view) ---- */
+/* sized to 80% of the original footprint, and clipped into an actual
+   two-hemisphere brain silhouette (see #brainClipShape defs in <body>) */
 .brain-shell{
-  position:relative;margin:8px auto 10px;width:100%;max-width:760px;aspect-ratio:1/1;max-height:640px;
-  border-radius:42% 58% 55% 45%/50% 45% 55% 50%;
+  position:relative;margin:8px auto 10px;width:100%;max-width:608px;aspect-ratio:1/1;max-height:512px;
+  clip-path:url(#brainClipShape);-webkit-clip-path:url(#brainClipShape);
   background:
-    radial-gradient(circle at 30% 25%, var(--accent-soft), transparent 55%),
-    radial-gradient(circle at 75% 72%, var(--ember-soft), transparent 50%),
-    var(--surface);
+    radial-gradient(circle at 30% 22%, var(--accent-soft), transparent 55%),
+    radial-gradient(circle at 76% 68%, var(--ember-soft), transparent 52%),
+    radial-gradient(ellipse at 50% 48%, color-mix(in srgb, var(--accent) 7%, var(--surface)) 0%, var(--surface) 72%);
   border:1px solid var(--glass-border);
   box-shadow:var(--shadow-widget),0 0 0 1px rgba(255,255,255,.03) inset;
   overflow:hidden;isolation:isolate;
-  animation:brainMorph 22s ease-in-out infinite alternate;
+  animation:brainPulse 5.5s ease-in-out infinite;
+  transition:filter .25s ease;
 }
-@keyframes brainMorph{
-  0%{border-radius:42% 58% 55% 45%/50% 45% 55% 50%}
-  50%{border-radius:55% 45% 48% 52%/45% 55% 45% 55%}
-  100%{border-radius:48% 52% 60% 40%/55% 45% 50% 50%}
+@keyframes brainPulse{
+  0%,100%{filter:brightness(1) saturate(1)}
+  50%{filter:brightness(1.045) saturate(1.08)}
 }
+.brain-shell:hover{filter:brightness(1.06)}
 @media(prefers-reduced-motion:reduce){.brain-shell{animation:none}}
-.brain-aura{position:absolute;inset:0;background:radial-gradient(circle at 50% 45%,transparent 55%,var(--bg) 105%);opacity:.55;pointer-events:none;z-index:1}
+.brain-aura{position:absolute;inset:0;background:radial-gradient(circle at 50% 45%,transparent 55%,var(--bg) 105%);opacity:.5;pointer-events:none;z-index:1}
 .brain-grid{
-  position:absolute;inset:0;opacity:.45;pointer-events:none;z-index:1;
-  background-image:radial-gradient(var(--border2) 1px,transparent 1px);background-size:26px 26px;
-  -webkit-mask-image:radial-gradient(circle at 50% 50%,black 60%,transparent 92%);mask-image:radial-gradient(circle at 50% 50%,black 60%,transparent 92%);
+  position:absolute;inset:0;opacity:.4;pointer-events:none;z-index:1;
+  background-image:radial-gradient(var(--border2) 1px,transparent 1px);background-size:24px 24px;
+  -webkit-mask-image:radial-gradient(circle at 50% 50%,black 55%,transparent 90%);mask-image:radial-gradient(circle at 50% 50%,black 55%,transparent 90%);
 }
-html.day .brain-grid{opacity:.3}
+html.day .brain-grid{opacity:.26}
+/* subtle gyri/sulci folds texture so the shell reads as brain tissue, not a flat blob */
+.brain-folds{
+  position:absolute;inset:0;z-index:1;pointer-events:none;mix-blend-mode:overlay;opacity:.85;
+  background-image:
+    repeating-radial-gradient(circle at 32% 28%, transparent 0 9px, rgba(255,255,255,.05) 9px 11px, transparent 11px 20px),
+    repeating-radial-gradient(circle at 70% 66%, transparent 0 8px, rgba(255,255,255,.045) 8px 10px, transparent 10px 18px),
+    repeating-radial-gradient(circle at 50% 82%, transparent 0 7px, rgba(0,0,0,.05) 7px 9px, transparent 9px 16px);
+}
+html.day .brain-folds{opacity:.5;mix-blend-mode:multiply}
+/* longitudinal fissure — the groove separating the two hemispheres */
+.brain-fissure{
+  position:absolute;top:5%;bottom:9%;left:50%;width:2px;transform:translateX(-50%);
+  background:linear-gradient(to bottom, transparent, var(--border2) 14%, var(--border2) 86%, transparent);
+  opacity:.55;z-index:1;pointer-events:none;
+}
+/* thin animated "blood vessels" + pulsing "synapse" nodes drifting inside the brain */
+.brain-vessels{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:visible}
+.brain-vein{fill:none;stroke:var(--accent);stroke-width:.4;opacity:.32;stroke-linecap:round;stroke-dasharray:5 4;animation-name:veinFlow;animation-timing-function:linear;animation-iteration-count:infinite}
+@keyframes veinFlow{to{stroke-dashoffset:-18}}
+.brain-neuron{fill:var(--accent);opacity:.5;animation-name:neuronPulse;animation-timing-function:ease-in-out;animation-iteration-count:infinite;transform-box:fill-box;transform-origin:center}
+@keyframes neuronPulse{0%,100%{opacity:.2;transform:scale(.7)}50%{opacity:.95;transform:scale(1.6)}}
+.brain-shell:hover .brain-vein{opacity:.6}
+.brain-shell:hover .brain-neuron{opacity:.85}
+@media(prefers-reduced-motion:reduce){.brain-vein,.brain-neuron{animation:none}}
+/* each orb sits in a static-position slot (percent-based) that JS nudges away
+   from the cursor; the orb itself keeps its own faster ambient float so the
+   two motions compose without fighting each other */
+.brain-orb-slot{
+  position:absolute;z-index:3;transform:translate(-50%,-50%);
+  transition:transform .45s cubic-bezier(.2,.8,.2,1);will-change:transform;
+}
 .brain-orb{
-  position:absolute;width:var(--size);height:var(--size);z-index:3;
-  transform:translate(-50%,-50%);border-radius:50%;cursor:pointer;
+  position:relative;width:var(--size);height:var(--size);border-radius:50%;cursor:pointer;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:8px;text-align:center;
   background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.4),transparent 46%),var(--gc,var(--accent));
   box-shadow:0 0 0 1px rgba(255,255,255,.14) inset,0 8px 22px rgba(0,0,0,.35),0 0 26px var(--gc-soft,var(--accent-soft));
@@ -1029,16 +1062,16 @@ html.day .brain-grid{opacity:.3}
 .brain-orb.is-done{filter:saturate(.65) brightness(.9)}
 .brain-orb:hover{box-shadow:0 0 0 1px rgba(255,255,255,.24) inset,0 10px 26px rgba(0,0,0,.4),0 0 42px var(--gc-soft,var(--accent-soft));z-index:4}
 @keyframes orbFloat{
-  from{transform:translate(-50%,-50%) translate(calc(var(--dx) * -1),calc(var(--dy) * -1))}
-  to{transform:translate(-50%,-50%) translate(var(--dx),var(--dy))}
+  from{transform:translate(calc(var(--dx) * -1),calc(var(--dy) * -1))}
+  to{transform:translate(var(--dx),var(--dy))}
 }
-@media(prefers-reduced-motion:reduce){.brain-orb{animation:none}}
+@media(prefers-reduced-motion:reduce){.brain-orb{animation:none}.brain-orb-slot{transition:none}}
 .brain-orb-icon{font-size:22px;line-height:1}
 .brain-orb-title{font-size:10.5px;font-weight:700;color:#fff;line-height:1.15;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-shadow:0 1px 3px rgba(0,0,0,.35)}
 .brain-orb-pct{font-family:var(--f-mono);font-size:9.5px;font-weight:700;color:rgba(255,255,255,.85)}
 .brain-hint{text-align:center;font-size:11.5px;color:var(--text3);margin-top:4px;display:flex;align-items:center;justify-content:center;gap:6px}
 .brain-hint svg{width:13px;height:13px}
-@media(max-width:640px){.brain-shell{max-height:480px}.brain-orb-title{font-size:9.5px}}
+@media(max-width:640px){.brain-shell{max-height:384px}.brain-orb-title{font-size:9.5px}}
 
 /* ---- expanded goal / milestone "road" ---- */
 .smart-road-wrap{animation:pageIn .25s ease}
@@ -1386,6 +1419,30 @@ html.day .brain-grid{opacity:.3}
 <body>
 <!-- ============ AMBIENT BACKGROUND ============ -->
 <div id="ambient"><span></span><span></span><span></span></div>
+
+<!-- Hidden SVG defs: brain-shaped clip path for the Goals "Smart View" (objectBoundingBox
+     units so this single path scales to whatever size .brain-shell renders at). -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <clipPath id="brainClipShape" clipPathUnits="objectBoundingBox">
+      <path d="M0.50,0.03
+        C0.63,0.03 0.72,0.02 0.80,0.08
+        C0.86,0.03 0.95,0.07 0.96,0.15
+        C1.02,0.20 1.00,0.30 0.96,0.35
+        C1.01,0.43 0.99,0.53 0.94,0.58
+        C0.98,0.66 0.93,0.75 0.86,0.77
+        C0.86,0.86 0.77,0.92 0.68,0.90
+        C0.64,0.97 0.54,0.99 0.50,0.94
+        C0.46,0.99 0.36,0.97 0.32,0.90
+        C0.23,0.92 0.14,0.86 0.14,0.77
+        C0.07,0.75 0.02,0.66 0.06,0.58
+        C0.01,0.53 -0.01,0.43 0.04,0.35
+        C0.00,0.30 -0.02,0.20 0.04,0.15
+        C0.05,0.07 0.14,0.03 0.20,0.08
+        C0.28,0.02 0.37,0.03 0.50,0.03 Z"/>
+    </clipPath>
+  </defs>
+</svg>
 
 <!-- ============ AUTH GATE ============ -->
 <div id="authGate">
@@ -3219,6 +3276,7 @@ function renderGoals(){
     html += _smartExpandedGoal ? smartExpandedHTML(_smartExpandedGoal) : brainUniverseHTML(goals);
     el.innerHTML = html;
     if(_smartExpandedGoal) requestAnimationFrame(initSmartRoadObservers);
+    else requestAnimationFrame(initBrainHoverEffect);
     return;
   }
 
@@ -3242,24 +3300,82 @@ function goalOrbPosition(i,n){
   var radius = Math.sqrt((i+0.5)/Math.max(n,1))*36;
   return { x: 50 + radius*Math.cos(angle), y: 50 + radius*Math.sin(angle) };
 }
+function brainVesselsSVG(n){
+  n = n || 16;
+  var pts = [];
+  for(var i=0;i<n;i++){ pts.push(goalOrbPosition(i,n)); }
+  var lines='', nodes='';
+  for(var i=0;i<pts.length;i++){
+    var a = pts[i], b = pts[(i+3)%pts.length];
+    var mx = (a.x+b.x)/2 + (i%2?5:-5), my = (a.y+b.y)/2 + (i%2?-5:5);
+    var dur = (3.2 + (i%5)*0.7).toFixed(1);
+    var delay = (-(i*0.55)).toFixed(1);
+    lines += '<path class="brain-vein" d="M'+a.x.toFixed(1)+' '+a.y.toFixed(1)+' Q '+mx.toFixed(1)+' '+my.toFixed(1)+' '+b.x.toFixed(1)+' '+b.y.toFixed(1)+'" style="animation-duration:'+dur+'s;animation-delay:'+delay+'s"/>';
+    nodes += '<circle class="brain-neuron" cx="'+a.x.toFixed(1)+'" cy="'+a.y.toFixed(1)+'" r="0.9" style="animation-duration:'+(1.8+(i%4)*0.4).toFixed(1)+'s;animation-delay:'+delay+'s"/>';
+  }
+  return '<svg class="brain-vessels" viewBox="0 0 100 100" preserveAspectRatio="none">'+lines+nodes+'</svg>';
+}
 function brainUniverseHTML(goals){
   var n = goals.length;
   var orbs = goals.map(function(g,i){
     var pos = goalOrbPosition(i,n);
     var pct = goalPct(g);
     var size = Math.round(92 + Math.min(30, pct*0.26));
-    var dur = (13 + (i%5)*3.1).toFixed(1);
-    var delay = (-(i*1.6)).toFixed(1);
+    var dur = (6 + (i%5)*1.5).toFixed(1);       // rapid ambient float
+    var delay = (-(i*0.9)).toFixed(1);
     var dx = 9 + (i%4)*4, dy = 7 + (i%3)*5;
     var isDone = g.status==='done';
-    return '<div class="brain-orb'+(isDone?' is-done':'')+'" style="left:'+pos.x+'%;top:'+pos.y+'%;--size:'+size+'px;--dur:'+dur+'s;--delay:'+delay+'s;--dx:'+dx+'px;--dy:'+dy+'px" onclick="smartOpenGoal(\''+g.id+'\')" title="'+esc(g.title)+'">'+
-      '<div class="brain-orb-icon">'+g.icon+'</div>'+
-      '<div class="brain-orb-title">'+esc(g.title)+'</div>'+
-      '<div class="brain-orb-pct">'+pct+'%</div>'+
+    return '<div class="brain-orb-slot" style="left:'+pos.x+'%;top:'+pos.y+'%" data-gid="'+g.id+'">'+
+      '<div class="brain-orb'+(isDone?' is-done':'')+'" style="--size:'+size+'px;--dur:'+dur+'s;--delay:'+delay+'s;--dx:'+dx+'px;--dy:'+dy+'px" onclick="smartOpenGoal(\''+g.id+'\')" title="'+esc(g.title)+'">'+
+        '<div class="brain-orb-icon">'+g.icon+'</div>'+
+        '<div class="brain-orb-title">'+esc(g.title)+'</div>'+
+        '<div class="brain-orb-pct">'+pct+'%</div>'+
+      '</div>'+
     '</div>';
   }).join('');
-  return '<div class="brain-shell"><div class="brain-aura"></div><div class="brain-grid"></div>'+orbs+'</div>'+
-    '<div class="brain-hint">'+ICONS.sparkle+' Tap a goal to follow its road</div>';
+  return '<div class="brain-shell"><div class="brain-aura"></div><div class="brain-grid"></div><div class="brain-folds"></div><div class="brain-fissure"></div>'+brainVesselsSVG(Math.max(10,n*2))+orbs+'</div>'+
+    '<div class="brain-hint">'+ICONS.sparkle+' Tap a goal to follow its road · hover to stir the mind</div>';
+}
+
+/* orbs drift away from the cursor (opposite direction), then ease back when it moves off */
+var _brainHoverRAF = null;
+function initBrainHoverEffect(){
+  var shell = document.querySelector('.brain-shell');
+  if(!shell) return;
+  var slots = Array.prototype.slice.call(shell.querySelectorAll('.brain-orb-slot'));
+  if(!slots.length) return;
+  var REPEL_RADIUS = 150, MAX_PUSH = 34;
+  var lastEvt = null;
+
+  function update(){
+    _brainHoverRAF = null;
+    if(!lastEvt) return;
+    var rect = shell.getBoundingClientRect();
+    var mx = lastEvt.clientX - rect.left, my = lastEvt.clientY - rect.top;
+    slots.forEach(function(slot){
+      var sx = (parseFloat(slot.style.left)/100) * rect.width;
+      var sy = (parseFloat(slot.style.top)/100) * rect.height;
+      var dx = sx - mx, dy = sy - my;
+      var dist = Math.sqrt(dx*dx + dy*dy) || 0.0001;
+      if(dist < REPEL_RADIUS){
+        var strength = (1 - dist/REPEL_RADIUS) * MAX_PUSH;
+        var px = (dx/dist) * strength, py = (dy/dist) * strength;
+        slot.style.transform = 'translate(-50%,-50%) translate('+px.toFixed(1)+'px,'+py.toFixed(1)+'px)';
+      } else {
+        slot.style.transform = 'translate(-50%,-50%)';
+      }
+    });
+  }
+  function onMove(e){
+    lastEvt = e;
+    if(!_brainHoverRAF) _brainHoverRAF = requestAnimationFrame(update);
+  }
+  function onLeave(){
+    lastEvt = null;
+    slots.forEach(function(slot){ slot.style.transform = 'translate(-50%,-50%)'; });
+  }
+  shell.addEventListener('mousemove', onMove);
+  shell.addEventListener('mouseleave', onLeave);
 }
 function smartOpenGoal(gid){
   _smartExpandedGoal = gid; _openMilestoneKey = null;
