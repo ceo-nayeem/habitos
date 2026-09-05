@@ -551,6 +551,7 @@ a{color:inherit}
 /* ---- empty state ---- */
 .empty{text-align:center;padding:44px 20px;color:var(--text2)}
 .empty-icon{width:52px;height:52px;margin:0 auto 14px;opacity:.5}
+.empty-icon svg{width:52px;height:52px}
 .empty h3{font-size:14.5px;color:var(--text);margin-bottom:5px}
 .empty p{font-size:12.5px;max-width:280px;margin:0 auto 16px;line-height:1.5}
 
@@ -896,6 +897,10 @@ tr.cal-row:nth-child(odd) .cal-cell{background:rgba(128,128,128,.02)}
 .goal-card-target{font-size:10.5px;color:var(--text3);margin-top:12px;display:flex;align-items:center;gap:5px;font-weight:600;position:relative;z-index:2}
 .goal-card-target svg{width:12px;height:12px}
 .goal-status-chip{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;background:var(--ok-soft);color:var(--ok);margin-top:12px}
+.goal-status-chip svg{width:10px;height:10px}
+@media(max-width:520px){
+  .goals-grid{grid-template-columns:1fr}
+}
 
 /* icon / color pickers reused from habit form but namespaced */
 .gf-emoji-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;max-height:150px;overflow-y:auto}
@@ -933,6 +938,7 @@ tr.cal-row:nth-child(odd) .cal-cell{background:rgba(128,128,128,.02)}
 .journey-node.done .journey-card-title{text-decoration:line-through;text-decoration-color:var(--text3)}
 .journey-card-date{font-size:10.5px;color:var(--text3);font-weight:600;white-space:nowrap}
 .journey-card-chev{width:16px;height:16px;color:var(--text3);flex-shrink:0;transition:transform .2s}
+.journey-card-chev svg{width:16px;height:16px}
 .journey-card.open .journey-card-chev{transform:rotate(90deg)}
 .journey-progress-row{display:flex;align-items:center;gap:8px;margin-top:9px}
 .journey-progress-bar{flex:1;height:5px;border-radius:3px;background:var(--surface3);overflow:hidden}
@@ -955,12 +961,26 @@ tr.cal-row:nth-child(odd) .cal-cell{background:rgba(128,128,128,.02)}
 .journey-milestone-toggle-done{margin-top:9px}
 .journey-add-node{position:relative}
 .journey-add-node .journey-node-dot{border-style:dashed;background:transparent}
-.journey-add-card{border:1.5px dashed var(--border2);border-radius:18px;padding:12px 16px;display:flex;align-items:center;gap:8px;color:var(--text2);font-weight:600;font-size:13px;background:transparent;box-shadow:none}
+.journey-add-card{
+  border:1.5px dashed var(--border2);border-radius:14px;padding:9px 14px;width:100%;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  color:var(--text2);font-weight:600;font-size:12.5px;background:transparent;box-shadow:none;
+}
+.journey-add-card svg{width:14px;height:14px;flex-shrink:0}
 .journey-add-card:hover{border-color:var(--gc,var(--accent));color:var(--gc,var(--accent))}
-.journey-add-form{border-radius:18px;padding:14px 16px;box-shadow:var(--shadow-widget-sm);display:flex;flex-direction:column;gap:8px}
+.journey-add-form{border-radius:16px;padding:12px 14px;box-shadow:var(--shadow-widget-sm);display:flex;flex-direction:column;gap:8px}
 .journey-add-form .field-row2{display:flex;gap:8px}
 .journey-add-form .field-row2 input:first-child{flex:1}
+.journey-add-form .field-row2 .btn{white-space:nowrap}
 .journey-empty{text-align:center;padding:36px 12px}
+
+@media(max-width:520px){
+  .journey-hero{flex-direction:column;text-align:center;padding:14px 4px 20px;gap:12px}
+  .journey-wrap{padding-left:30px}
+  .journey-line,.journey-line-fill{left:13px}
+  .journey-node-dot{left:-30px;width:28px;height:28px;font-size:11px}
+  .journey-add-form .field-row2{flex-direction:column;align-items:stretch}
+}
 
 /* ============================================================
    ACHIEVEMENTS
@@ -3032,12 +3052,7 @@ function renderGoals(){
   '</div>';
 
   if(!goals.length){
-    html += '<div class="card goal-empty" style="text-align:center;padding:44px 20px">'+
-      '<div style="font-size:40px;margin-bottom:10px">'+ICONS.rocket.replace('currentColor','var(--accent)')+'</div>'+
-      '<h3 style="margin-bottom:6px">No goals yet</h3>'+
-      '<p class="muted" style="max-width:380px;margin:0 auto 18px;font-size:13px;line-height:1.6">Set a big goal, break it into stages, and break each stage into small daily actions. Watch your journey light up as you go.</p>'+
-      '<button class="btn primary" onclick="openGoalModal()">'+ICONS.plus+' Set your first goal</button>'+
-    '</div>';
+    html += emptyState('No goals yet','Set a big goal, break it into milestones, and break each milestone into small daily tasks. Watch your journey light up as you go.','openGoalModal()','Set your first goal');
     el.innerHTML = html;
     return;
   }
@@ -3069,8 +3084,8 @@ function goalCardHTML(g){
     '<div class="goal-card-mid">'+
       '<div class="goal-mini-ring">'+goalMiniRingSVG(pct,52,5)+'</div>'+
       '<div class="goal-card-stats">'+
-        '<div class="goal-stat-line">'+pct+'% · '+msDone+'/'+ms.length+' stages'+(tc.total?' · '+tc.done+'/'+tc.total+' tasks':'')+'</div>'+
-        (ms.length ? '<div class="goal-dots">'+dots+'</div>' : '<div class="hint" style="margin-top:6px">No stages yet — tap to add some.</div>')+
+        '<div class="goal-stat-line">'+pct+'% · '+msDone+'/'+ms.length+' milestones'+(tc.total?' · '+tc.done+'/'+tc.total+' tasks':'')+'</div>'+
+        (ms.length ? '<div class="goal-dots">'+dots+'</div>' : '<div class="hint" style="margin-top:6px">No milestones yet — tap to add one.</div>')+
       '</div>'+
     '</div>'+
     (isDone ? '<div class="goal-status-chip">'+ICONS.check+' Achieved</div>' : targetHTML)+
@@ -3134,14 +3149,14 @@ function saveGoalForm(){
       id:uid(), title:title, icon:_formGoalIcon, color:_formGoalColor, note:note,
       targetDate:targetDate, createdAt:_todayStr, status:'active', milestones:[]
     });
-    toast('Goal created — now add some stages');
+    toast('Goal created — now add some milestones');
   }
   save(); closeGoalModal();
   if(_curPage==='goals') renderGoals();
 }
 function deleteGoalConfirm(id){
   var g = goalById(id);
-  if(!confirm('Delete "'+g.title+'" and all of its stages? This can\'t be undone.')) return;
+  if(!confirm('Delete "'+g.title+'" and all of its milestones? This can\'t be undone.')) return;
   S.goals = S.goals.filter(function(x){ return x.id!==id; });
   save(); closeGoalModal(); closeGoalDetail();
   if(_curPage==='goals') renderGoals();
@@ -3179,7 +3194,7 @@ function goalDetailHTML(gid){
     '<div class="journey-hero-ring">'+goalHeroRingSVG(pct,84,8)+'</div>'+
     '<div class="journey-hero-info">'+
       '<div class="journey-hero-pct" style="color:'+g.color+'">'+pct+'%</div>'+
-      '<div class="journey-hero-sub">'+msDone+' of '+ms.length+' stages complete'+(tc.total?' · '+tc.done+'/'+tc.total+' tasks':'')+'</div>'+
+      '<div class="journey-hero-sub">'+msDone+' of '+ms.length+' milestones complete'+(tc.total?' · '+tc.done+'/'+tc.total+' tasks':'')+'</div>'+
       (g.targetDate ? '<div class="journey-hero-sub">🎯 Target: '+niceDate(g.targetDate)+'</div>' : '')+
     '</div>'+
   '</div>';
@@ -3190,7 +3205,7 @@ function goalDetailHTML(gid){
   out += '<div class="journey-line"></div><div class="journey-line-fill" style="height:'+lineFillPct+'%"></div>';
 
   if(!ms.length){
-    out += '<div class="journey-milestone-empty-note" style="margin-left:0">No stages yet. Break this goal into a few milestones — each one can hold its own checklist of tasks.</div>';
+    out += '<div class="journey-milestone-empty-note" style="margin-left:0">No milestones yet. Break this goal into a few milestones — each one can hold its own checklist of tasks.</div>';
   }
 
   ms.forEach(function(m,i){
@@ -3229,7 +3244,7 @@ function goalDetailHTML(gid){
         out += '<div class="journey-milestone-toggle-done"><button class="btn sm'+(m.done?' primary':'')+'" onclick="toggleMilestoneDone(\''+g.id+'\',\''+m.id+'\')">'+
           (m.done ? ICONS.check+' Marked complete' : 'Mark stage complete')+'</button></div>';
       }
-      out += '<div style="margin-top:10px"><button class="btn sm danger ghost" onclick="deleteMilestone(\''+g.id+'\',\''+m.id+'\')">'+ICONS.trash+' Remove stage</button></div>';
+      out += '<div style="margin-top:10px"><button class="btn sm danger ghost" onclick="deleteMilestone(\''+g.id+'\',\''+m.id+'\')">'+ICONS.trash+' Remove milestone</button></div>';
       out += '</div>';
     }
     out += '</div></div>';
@@ -3239,17 +3254,17 @@ function goalDetailHTML(gid){
     out += '<div class="journey-node journey-add-node">'+
       '<div class="journey-node-dot">'+ICONS.plus+'</div>'+
       '<div class="journey-add-form">'+
-        '<input class="inp" id="nm-title" placeholder="Stage name, e.g. Run a 10k" autofocus/>'+
+        '<input class="inp" id="nm-title" placeholder="Milestone name, e.g. Run a 10k" autofocus/>'+
         '<div class="field-row2">'+
           '<input class="inp" id="nm-date" type="date"/>'+
-          '<button class="btn primary" onclick="saveNewMilestone(\''+g.id+'\')">'+ICONS.check+' Add</button>'+
+          '<button class="btn primary sm" onclick="saveNewMilestone(\''+g.id+'\')">'+ICONS.check+' Add</button>'+
         '</div>'+
       '</div>'+
     '</div>';
   } else {
     out += '<div class="journey-node journey-add-node">'+
       '<div class="journey-node-dot">'+ICONS.plus+'</div>'+
-      '<button class="journey-add-card" style="width:100%" onclick="_addingMilestoneFor=\''+g.id+'\';reRenderGoalDetail(\''+g.id+'\')">'+ICONS.plus+' Add a stage</button>'+
+      '<button class="journey-add-card" onclick="_addingMilestoneFor=\''+g.id+'\';reRenderGoalDetail(\''+g.id+'\')">'+ICONS.plus+' Add milestone</button>'+
     '</div>';
   }
   out += '</div>';
@@ -3262,7 +3277,7 @@ function toggleMilestoneExpand(gid,mid){
 }
 function saveNewMilestone(gid){
   var title = document.getElementById('nm-title').value.trim();
-  if(!title){ toast('Give the stage a name', true); return; }
+  if(!title){ toast('Give the milestone a name', true); return; }
   var targetDate = document.getElementById('nm-date').value || null;
   var g = goalById(gid);
   var m = {id:uid(), title:title, targetDate:targetDate, done:false, tasks:[]};
@@ -3271,16 +3286,16 @@ function saveNewMilestone(gid){
   _addingMilestoneFor = null;
   _openMilestoneKey = gid+'|'+m.id;
   syncGoalStatus(g); save(); reRenderGoalDetail(gid);
-  toast('Stage added');
+  toast('Milestone added');
 }
 function deleteMilestone(gid,mid){
   var g = goalById(gid);
   var m = milestoneById(g,mid);
-  if(!confirm('Remove stage "'+m.title+'" and its tasks?')) return;
+  if(!confirm('Remove milestone "'+m.title+'" and its tasks?')) return;
   g.milestones = g.milestones.filter(function(x){ return x.id!==mid; });
   if(_openMilestoneKey===gid+'|'+mid) _openMilestoneKey = null;
   syncGoalStatus(g); save(); reRenderGoalDetail(gid);
-  toast('Stage removed');
+  toast('Milestone removed');
 }
 function toggleMilestoneDone(gid,mid){
   var g = goalById(gid); var m = milestoneById(g,mid);
