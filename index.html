@@ -1747,7 +1747,7 @@ var _dashDate = ''; // date currently shown on the dashboard (defaults to today,
 var _curPage = 'dashboard';
 var _calMonth = ''; // 'YYYY-MM'
 var _dpViewMonth = ''; // 'YYYY-MM' currently shown in the top-bar mini date-picker dropdown
-var _habitsView = 'daily'; // 'daily' | 'calendar' — which sub-view the Habits page shows
+var _habitsView = 'daily'; // 'daily' | 'calendar' | 'manage' — which sub-view the Habits page shows
 
 /* ==================================================================
    FIREBASE — paste your own project's config below (Firebase Console
@@ -2818,9 +2818,12 @@ function calNav(dir){
 }
 function switchHabitsView(v){ _habitsView = v; renderCalendar(); }
 function habitsViewTabsHTML(){
-  return '<div class="seg-tabs">'+
-    '<button class="seg-tab'+(_habitsView==='daily'?' active':'')+'" onclick="switchHabitsView(\'daily\')">Daily View</button>'+
-    '<button class="seg-tab'+(_habitsView==='calendar'?' active':'')+'" onclick="switchHabitsView(\'calendar\')">Calendar View</button>'+
+  return '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:20px">'+
+    '<div class="seg-tabs" style="margin-bottom:0">'+
+      '<button class="seg-tab'+(_habitsView==='daily'?' active':'')+'" onclick="switchHabitsView(\'daily\')">Daily View</button>'+
+      '<button class="seg-tab'+(_habitsView==='calendar'?' active':'')+'" onclick="switchHabitsView(\'calendar\')">Calendar View</button>'+
+    '</div>'+
+    '<button class="btn sm'+(_habitsView==='manage'?' primary':' ghost')+'" onclick="switchHabitsView(\'manage\')">'+ICONS.settings+' Manage Habit</button>'+
   '</div>';
 }
 function renderCalendar(){
@@ -2831,7 +2834,7 @@ function renderCalendar(){
   var html = '<div class="page-head"><div><div class="page-title" style="display:flex;align-items:center;gap:10px">Habits'+
     (pendingCount>0 ? '<span class="page-title-badge" title="'+pendingCount+' pending today">'+pendingCount+'</span>' : '')+
     '</div><div class="page-sub">'+
-    (_habitsView==='daily' ? 'Your day, one habit at a time' : 'Monthly consistency tracker')+'</div></div></div>';
+    (_habitsView==='daily' ? 'Your day, one habit at a time' : _habitsView==='manage' ? 'View and customize every habit' : 'Monthly consistency tracker')+'</div></div></div>';
   html += habitsViewTabsHTML();
 
   if(_habitsView==='daily'){
@@ -2844,6 +2847,14 @@ function renderCalendar(){
     html += dailyHabitListHTML(viewDate);
     el.innerHTML = html;
     updateSideRing();
+    return;
+  }
+
+  if(_habitsView==='manage'){
+    html += '<div class="card"><div class="sec-title" style="margin-top:0"><h3>All habits</h3><span class="faint mono" style="font-size:11px">'+S.habits.length+' total</span></div>'+
+      (S.habits.length ? '<div class="hab-list">'+S.habits.map(manageHabitRowHTML).join('')+'</div>' : emptyState('No habits yet','Tap the + button above to create one.'))+
+    '</div>';
+    el.innerHTML = html;
     return;
   }
 
@@ -3801,11 +3812,6 @@ function renderSettings(){
     '<div class="field" style="margin:0;flex:1"><div class="field-label">Your name</div>'+
     '<input class="inp" id="set-name" value="'+esc(S.profile.name)+'" placeholder="What should we call you?" oninput="S.profile.name=this.value;save()" onblur="renderSettings();renderDashboard();updateProfileMenu()"/></div>'+
   '</div></div>';
-
-  html += '<div class="card" style="margin-bottom:16px">'+
-    '<div class="sec-title" style="margin-top:0"><h3>Manage habits</h3><span class="faint mono" style="font-size:11px">'+S.habits.length+' total</span></div>'+
-    (S.habits.length ? '<div class="hab-list">'+S.habits.map(manageHabitRowHTML).join('')+'</div>' : '<div class="hint">No habits yet — tap the + button above to create one.</div>')+
-  '</div>';
 
   html += '<div class="card" id="settingsAppearanceCard" style="margin-bottom:16px">'+
     '<div class="sec-title" style="margin-top:0"><h3>Appearance</h3></div>'+
