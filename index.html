@@ -912,7 +912,7 @@ tr.cal-row:nth-child(odd) .cal-cell{background:rgba(128,128,128,.02)}
 .journey-hero-ring .jhr-track{fill:none;stroke:var(--border);stroke-width:8}
 .journey-hero-ring .jhr-fill{fill:none;stroke:var(--gc,var(--accent));stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset .6s cubic-bezier(.2,.8,.2,1)}
 .journey-hero-info{flex:1;min-width:0}
-.journey-hero-pct{font-family:var(--f-mono);font-size:26px;font-weight:700}
+.journey-hero-pct{font-family:var(--f-mono);font-size:26px;font-weight:700;color:var(--accent)}
 .journey-hero-sub{font-size:12px;color:var(--text2);margin-top:2px}
 .journey-hero-note{font-size:12px;color:var(--text2);margin-top:8px;line-height:1.5}
 .journey-wrap{position:relative;padding:4px 0 4px 36px;margin-top:6px}
@@ -3252,7 +3252,7 @@ function brainUniverseHTML(goals){
     var delay = (-(i*1.6)).toFixed(1);
     var dx = 9 + (i%4)*4, dy = 7 + (i%3)*5;
     var isDone = g.status==='done';
-    return '<div class="brain-orb'+(isDone?' is-done':'')+'" style="left:'+pos.x+'%;top:'+pos.y+'%;--size:'+size+'px;--dur:'+dur+'s;--delay:'+delay+'s;--dx:'+dx+'px;--dy:'+dy+'px;--gc:'+g.color+';--gc-soft:'+g.color+'40" onclick="smartOpenGoal(\''+g.id+'\')" title="'+esc(g.title)+'">'+
+    return '<div class="brain-orb'+(isDone?' is-done':'')+'" style="left:'+pos.x+'%;top:'+pos.y+'%;--size:'+size+'px;--dur:'+dur+'s;--delay:'+delay+'s;--dx:'+dx+'px;--dy:'+dy+'px" onclick="smartOpenGoal(\''+g.id+'\')" title="'+esc(g.title)+'">'+
       '<div class="brain-orb-icon">'+g.icon+'</div>'+
       '<div class="brain-orb-title">'+esc(g.title)+'</div>'+
       '<div class="brain-orb-pct">'+pct+'%</div>'+
@@ -3394,7 +3394,7 @@ function goalCardHTML(g){
   var isDone = g.status==='done';
   var dots = ms.slice(0,12).map(function(m){ return '<div class="goal-dot'+(isMilestoneDone(m)?' done':'')+'"></div>'; }).join('');
   var targetHTML = g.targetDate ? '<div class="goal-card-target">'+ICONS.clock+' Target '+niceDate(g.targetDate)+'</div>' : '';
-  return '<div class="goal-card'+(isDone?' is-done':'')+'" style="--gc:'+g.color+';--gc2:'+g.color+';--gc-soft:'+g.color+'2A" onclick="openGoalDetail(\''+g.id+'\')">'+
+  return '<div class="goal-card'+(isDone?' is-done':'')+'" onclick="openGoalDetail(\''+g.id+'\')">'+
     '<div class="goal-card-top">'+
       '<div class="goal-icon-badge">'+g.icon+'</div>'+
       '<div style="flex:1;min-width:0">'+
@@ -3512,17 +3512,17 @@ function goalDetailHTML(gid){
     '<button class="icon-btn" onclick="openGoalModal(\''+g.id+'\')" title="Edit goal">'+ICONS.edit+'</button>'+
     '<button class="icon-btn" onclick="closeGoalDetail()">'+ICONS.x+'</button></div>';
 
-  out += '<div class="journey-hero" style="--gc:'+g.color+';--gc2:'+g.color+'">'+
+  out += '<div class="journey-hero">'+
     '<div class="journey-hero-ring">'+goalHeroRingSVG(pct,84,8)+'</div>'+
     '<div class="journey-hero-info">'+
-      '<div class="journey-hero-pct" style="color:'+g.color+'">'+pct+'%</div>'+
+      '<div class="journey-hero-pct">'+pct+'%</div>'+
       '<div class="journey-hero-sub">'+msDone+' of '+ms.length+' milestones complete'+(tc.total?' · '+tc.done+'/'+tc.total+' tasks':'')+'</div>'+
       (g.targetDate ? '<div class="journey-hero-sub">🎯 Target: '+niceDate(g.targetDate)+'</div>' : '')+
     '</div>'+
   '</div>';
   if(g.note) out += '<div class="journey-hero-note">'+esc(g.note)+'</div>';
 
-  out += '<div class="journey-wrap" style="--gc:'+g.color+';--gc2:'+g.color+';--gc-soft:'+g.color+'2A">';
+  out += '<div class="journey-wrap">';
   var lineFillPct = ms.length ? (msDone/ms.length)*100 : 0;
   out += '<div class="journey-line"></div><div class="journey-line-fill" style="height:'+lineFillPct+'%"></div>';
 
