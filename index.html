@@ -3288,7 +3288,7 @@ function smartExpandedHTML(gid){
   var tc = goalTaskCounts(g);
   var allDone = ms.length>0 && msDone===ms.length;
 
-  var out = '<div class="smart-road-wrap" style="--gc:'+g.color+';--gc2:'+g.color+';--gc-soft:'+g.color+'2A">';
+  var out = '<div class="smart-road-wrap">';
   out += '<div class="smart-road-head" onclick="smartCollapseGoal()" title="Tap to return to the mind view">'+
     '<button class="smart-back-btn" onclick="event.stopPropagation();smartCollapseGoal()" title="Back to universe">'+ICONS.chevL+'</button>'+
     '<div class="smart-road-head-icon">'+g.icon+'</div>'+
