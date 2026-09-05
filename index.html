@@ -3325,8 +3325,10 @@ function brainUniverseHTML(goals){
     var delay = (-(i*0.9)).toFixed(1);
     var dx = 9 + (i%4)*4, dy = 7 + (i%3)*5;
     var isDone = g.status==='done';
+    var gc = g.color || 'var(--accent)';
+    var gcSoft = g.color ? g.color+'29' : 'var(--accent-soft)';
     return '<div class="brain-orb-slot" style="left:'+pos.x+'%;top:'+pos.y+'%" data-gid="'+g.id+'">'+
-      '<div class="brain-orb'+(isDone?' is-done':'')+'" style="--size:'+size+'px;--dur:'+dur+'s;--delay:'+delay+'s;--dx:'+dx+'px;--dy:'+dy+'px" onclick="smartOpenGoal(\''+g.id+'\')" title="'+esc(g.title)+'">'+
+      '<div class="brain-orb'+(isDone?' is-done':'')+'" style="--size:'+size+'px;--dur:'+dur+'s;--delay:'+delay+'s;--dx:'+dx+'px;--dy:'+dy+'px;--gc:'+gc+';--gc-soft:'+gcSoft+'" onclick="smartOpenGoal(\''+g.id+'\')" title="'+esc(g.title)+'">'+
         '<div class="brain-orb-icon">'+g.icon+'</div>'+
         '<div class="brain-orb-title">'+esc(g.title)+'</div>'+
         '<div class="brain-orb-pct">'+pct+'%</div>'+
