@@ -401,7 +401,7 @@ a{color:inherit}
 /* shared frosted-glass surface: flat glossy transparent background (static by default).
    the animated diagonal sheen + lift is added separately, only to cards that are
    actually clickable — see .tpl-card below. Purely-informational cards stay static. */
-.card,.stat-card,.widget,.badge,.tpl-card,.hero,.auth-card,.mini-ring-row,.goal-card{
+.card,.stat-card,.widget,.badge,.tpl-card,.hero,.auth-card,.mini-ring-row{
   border:1.5px solid var(--glass-border);background:var(--glass-bg-strong);
   -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(180%);backdrop-filter:blur(var(--glass-blur)) saturate(180%);
   position:relative;overflow:hidden;isolation:isolate;
@@ -879,34 +879,28 @@ tr.cal-row:nth-child(odd) .cal-cell{background:rgba(128,128,128,.02)}
 @media(max-width:820px){.goals-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:520px){.goals-grid{grid-template-columns:1fr}}
 
-/* ---- goal card: the goal itself renders as a circular "orb", card is its glassy frame ---- */
+/* ---- goal card: no card frame at all — just the circular "orb" floating free ---- */
 .goal-card{
-  position:relative;padding:26px 18px 20px;cursor:pointer;overflow:hidden;
-  border-radius:var(--radius-lg);box-shadow:var(--shadow-widget-sm);
-  transition:transform .28s cubic-bezier(.2,.8,.2,1),box-shadow .28s ease,border-color .28s ease,background .28s ease;
+  position:relative;padding:20px 10px 4px;cursor:pointer;overflow:visible;
+  background:none;border:none;box-shadow:none;border-radius:0;
+  transition:transform .28s cubic-bezier(.2,.8,.2,1);
   display:flex;flex-direction:column;align-items:center;text-align:center;
 }
 .goal-card::before{
-  content:'';position:absolute;top:-45%;left:50%;transform:translateX(-50%);width:80%;height:70%;border-radius:50%;
-  background:radial-gradient(circle,var(--gc,var(--accent)),transparent 70%);opacity:.16;filter:blur(30px);pointer-events:none;
+  content:'';position:absolute;top:2px;left:50%;transform:translateX(-50%);width:140px;height:140px;border-radius:50%;
+  background:radial-gradient(circle,var(--gc,var(--accent)),transparent 70%);opacity:.14;filter:blur(28px);pointer-events:none;
   transition:opacity .35s ease;
 }
-.goal-card::after{
-  content:'';position:absolute;inset:0;background:var(--glass-shine);mix-blend-mode:overlay;
-  transform:translateX(-120%);pointer-events:none;z-index:1;transition:transform .7s ease;
-}
-.goal-card:hover::after{transform:translateX(120%)}
-.goal-card:hover::before{opacity:.3}
-.goal-card:hover{transform:translateY(-5px) scale(1.012);box-shadow:var(--shadow-widget),0 0 0 1px var(--gc-soft,rgba(255,255,255,.08)) inset;border-color:var(--gc,var(--glass-border))}
-.goal-card:active{transform:translateY(-2px) scale(1.002)}
+.goal-card:hover::before{opacity:.28}
+.goal-card:hover{transform:translateY(-4px)}
+.goal-card:active{transform:translateY(-1px)}
 .goal-card.is-done{opacity:.78}
-.goal-card.is-expanded{border-color:var(--gc,var(--accent));box-shadow:var(--shadow-widget),0 0 0 1.5px var(--gc,var(--accent)) inset,0 0 24px -6px var(--gc,var(--accent))}
-.goal-card.is-expanded::before{opacity:.36}
+.goal-card.is-expanded .goal-orb-icon{box-shadow:0 0 0 1px var(--gc-soft,var(--accent-soft)) inset,0 0 0 3px var(--gc,var(--accent)),0 0 26px -4px var(--gc,var(--accent))}
 
 .goal-card-inner{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;width:100%}
 
 .goal-menu-btn{
-  position:absolute;top:14px;right:14px;z-index:3;
+  position:absolute;top:2px;right:6px;z-index:3;
   width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--text3);flex-shrink:0;
   opacity:0;transform:scale(.85) translateY(-2px);pointer-events:none;
   transition:opacity .18s ease,transform .18s ease,background .15s ease,color .15s ease;
@@ -950,7 +944,7 @@ tr.cal-row:nth-child(odd) .cal-cell{background:rgba(128,128,128,.02)}
 
 /* ---- board expand panel: the goal's full roadmap, opened inline beneath its card ---- */
 .board-expand{
-  grid-column:1/-1;position:relative;overflow:hidden;
+  position:relative;overflow:hidden;margin-top:18px;
   border-radius:var(--radius-lg);padding:22px 24px 26px;box-shadow:var(--shadow-widget);
   border:1.5px solid var(--gc-soft,var(--glass-border));background:var(--glass-bg-strong);
   -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(180%);backdrop-filter:blur(var(--glass-blur)) saturate(180%);
@@ -3287,8 +3281,7 @@ function sparkCellsHTML(h,n){
    Goal (top level) -> Milestones/Stages -> Tasks (root-level actions)
    ================================================================== */
 var GOAL_ICONS = ['🎯','🚀','🏆','⭐','💪','📚','💼','🏠','✈️','🎓','❤️','🧘','💰','🎨','🏃','🌱','🎵','🌍','🏔️','💡','🔥','🧩','🛠️','📈'];
-var GOAL_COLORS = ['#8B5CF6','#6366F1','#3B82F6','#06B6D4','#14B8A6','#F43F5E','#F5B700','#FF6B35','#EC4899','#84CC16'];
-var _editingGoalId = null, _formGoalIcon = GOAL_ICONS[0], _formGoalColor = GOAL_COLORS[0];
+var _editingGoalId = null, _formGoalIcon = GOAL_ICONS[0];
 var _openMilestoneKey = null;    // gid+'|'+mid of the currently expanded milestone card
 var _addingMilestoneFor = null;  // gid currently showing the "add stage" inline form
 var _goalsView = 'board';        // 'board' (grid) or 'smart' (floating mind-map + scroll road)
@@ -3386,12 +3379,13 @@ function renderGoals(){
     if((a.status==='done') !== (b.status==='done')) return a.status==='done' ? 1 : -1;
     return (b.createdAt||'').localeCompare(a.createdAt||'');
   });
-  var cellsHTML = sorted.map(function(g){
-    var cell = goalCardHTML(g);
-    if(_boardExpandedGoal===g.id) cell += goalBoardExpandHTML(g.id);
-    return cell;
-  }).join('');
+  var cellsHTML = sorted.map(function(g){ return goalCardHTML(g); }).join('');
   html += '<div class="goals-grid">'+cellsHTML+'</div>';
+  /* the goal circles above stay static regardless of selection — the roadmap for
+     whichever goal is selected opens in its own area below, not inside the grid */
+  if(_boardExpandedGoal && goalById(_boardExpandedGoal)){
+    html += goalBoardExpandHTML(_boardExpandedGoal);
+  }
   el.innerHTML = html;
 }
 function setGoalsView(v){
@@ -3635,8 +3629,8 @@ function goalCardHTML(g){
   var tc = goalTaskCounts(g);
   var isDone = g.status==='done';
   var isExpanded = _boardExpandedGoal===g.id;
-  var gc = g.color || 'var(--accent)';
-  var gcSoft = g.color ? g.color+'29' : 'var(--accent-soft)';
+  var gc = 'var(--accent)';
+  var gcSoft = 'var(--accent-soft)';
   var dots = ms.slice(0,10).map(function(m){ return '<div class="goal-dot'+(isMilestoneDone(m)?' done':'')+'"></div>'; }).join('');
   var targetHTML = g.targetDate ? '<div class="goal-card-target">'+ICONS.clock+' Target '+niceDate(g.targetDate)+'</div>' : '';
   return '<div class="goal-card'+(isDone?' is-done':'')+(isExpanded?' is-expanded':'')+'" style="--gc:'+gc+';--gc-soft:'+gcSoft+'" onclick="toggleBoardExpand(\''+g.id+'\')">'+
@@ -3666,8 +3660,8 @@ function goalBoardExpandHTML(gid){
   var msDone = goalMilestonesDoneCount(g);
   var tc = goalTaskCounts(g);
   var currentIdx = ms.findIndex(function(m){ return !isMilestoneDone(m); });
-  var gc = g.color || 'var(--accent)';
-  var gcSoft = g.color ? g.color+'29' : 'var(--accent-soft)';
+  var gc = 'var(--accent)';
+  var gcSoft = 'var(--accent-soft)';
   var allDone = ms.length>0 && msDone===ms.length;
 
   var out = '<div class="board-expand" data-gid="'+g.id+'" style="--gc:'+gc+';--gc-soft:'+gcSoft+'" onclick="event.stopPropagation()">';
@@ -3762,7 +3756,6 @@ function openGoalModal(id){
   _editingGoalId = id || null;
   var g = id ? goalById(id) : null;
   _formGoalIcon = g ? g.icon : GOAL_ICONS[S.goals.length % GOAL_ICONS.length];
-  _formGoalColor = g ? g.color : GOAL_COLORS[S.goals.length % GOAL_COLORS.length];
   document.getElementById('goalModal').innerHTML = goalFormHTML(g);
   document.getElementById('goalVeil').classList.add('open');
   setTimeout(function(){ var i=document.getElementById('gf-title'); if(i) i.focus(); }, 60);
@@ -3780,10 +3773,6 @@ function goalFormHTML(g){
     GOAL_ICONS.map(function(e){ return '<div class="emoji-opt'+(e===_formGoalIcon?' sel':'')+'" onclick="pickGoalIcon(this,\''+e+'\')">'+e+'</div>'; }).join('')+
   '</div></div>';
 
-  out += '<div class="field"><span class="field-label">Color</span><div class="swatch-row" id="gf-color-row">'+
-    GOAL_COLORS.map(function(c){ return '<div class="swatch'+(c===_formGoalColor?' sel':'')+'" style="background:'+c+'" onclick="pickGoalColor(this,\''+c+'\')">'+ICONS.check+'</div>'; }).join('')+
-  '</div></div>';
-
   out += '<div class="field-row"><div class="field"><span class="field-label">Target date (optional)</span>'+
     '<input class="inp" type="date" id="gf-date" value="'+(g&&g.targetDate?g.targetDate:'')+'"/></div>'+
   '</div>';
@@ -3798,7 +3787,6 @@ function goalFormHTML(g){
   return out;
 }
 function pickGoalIcon(el,e){ _formGoalIcon=e; document.querySelectorAll('#gf-emoji-grid .emoji-opt').forEach(function(x){x.classList.remove('sel');}); el.classList.add('sel'); }
-function pickGoalColor(el,c){ _formGoalColor=c; document.querySelectorAll('#gf-color-row .swatch').forEach(function(x){x.classList.remove('sel');}); el.classList.add('sel'); }
 function saveGoalForm(){
   var title = document.getElementById('gf-title').value.trim();
   if(!title){ toast('Give your goal a name', true); return; }
@@ -3807,11 +3795,11 @@ function saveGoalForm(){
 
   if(_editingGoalId){
     var g = goalById(_editingGoalId);
-    g.title=title; g.icon=_formGoalIcon; g.color=_formGoalColor; g.targetDate=targetDate; g.note=note;
+    g.title=title; g.icon=_formGoalIcon; g.targetDate=targetDate; g.note=note;
     toast('Goal updated');
   } else {
     S.goals.push({
-      id:uid(), title:title, icon:_formGoalIcon, color:_formGoalColor, note:note,
+      id:uid(), title:title, icon:_formGoalIcon, note:note,
       targetDate:targetDate, createdAt:_todayStr, status:'active', milestones:[]
     });
     toast('Goal created — now add some milestones');
