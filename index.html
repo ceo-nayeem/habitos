@@ -2105,9 +2105,9 @@ function isAdminEmail(email){ return !!email && email===ADMIN_EMAIL; }
 function ensureMyDirectoryDoc(){
   if(!_currentUser) return;
   var ref = directoryDocRef(_currentUser.uid);
+  var admin = isAdminEmail(_currentUser.email);
   ref.get().then(function(doc){
     if(!doc.exists){
-      var admin = isAdminEmail(_currentUser.email);
       ref.set({
         uid:_currentUser.uid, email:_currentUser.email||null,
         displayName:_currentUser.displayName||null, photoURL:_currentUser.photoURL||null,
@@ -2117,11 +2117,20 @@ function ensureMyDirectoryDoc(){
         lastActiveAt: firebase.firestore.FieldValue.serverTimestamp()
       });
     } else {
-      ref.set({
+      var patch = {
         email:_currentUser.email||null, displayName:_currentUser.displayName||null,
         photoURL:_currentUser.photoURL||null,
         lastActiveAt: firebase.firestore.FieldValue.serverTimestamp()
-      }, {merge:true});
+      };
+      // Self-heal: if this is the ADMIN_EMAIL account but an older/incorrect
+      // directory doc left it as member/free (e.g. from before ADMIN_EMAIL
+      // was set correctly), fix it back to admin/pro on every login.
+      var d = doc.data();
+      if(admin && (d.role!=='admin' || d.plan!=='pro')){
+        patch.role = 'admin';
+        patch.plan = 'pro';
+      }
+      ref.set(patch, {merge:true});
     }
   }).catch(function(err){ console.error('directory ensure failed', err); });
 }
