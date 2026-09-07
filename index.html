@@ -1870,10 +1870,47 @@ html.day .lock-overlay{background:rgba(244,245,249,.76)}
   </div>
 </div>
 
+<!-- ============ AUTH-GATE WATCHDOG ============
+     Runs before the Firebase SDK even starts loading. If a Firebase script
+     is blocked (ad-blocker, firewall, host's CSP headers) or sign-in just
+     never resolves, the person sees a real error instead of an infinite
+     "Checking sign-in…" spinner with no explanation. ============ -->
+<script>
+  window.__habitosAuthResolved = false;
+  function habitosShowGateError(title, detail){
+    var sub = document.getElementById('authSub');
+    var spinner = document.getElementById('authSpinner');
+    var status = document.getElementById('authStatus');
+    var btn = document.getElementById('authGoogleBtn');
+    if(spinner) spinner.style.display = 'none';
+    if(btn) btn.style.display = 'none';
+    if(sub) sub.textContent = title;
+    if(status) status.innerHTML = detail +
+      '<br><br><button onclick="location.reload()" style="padding:9px 18px;border-radius:10px;background:#6366F1;color:#fff;border:none;cursor:pointer;font:inherit;font-weight:600">Reload</button>';
+  }
+  function habitosSdkFailed(which){
+    habitosShowGateError(
+      'Could not load account services',
+      which + ' failed to load. This is almost always a blocked network request — an ad-blocker/extension, a firewall, or your hosting\u2019s CSP headers blocking www.gstatic.com or *.googleapis.com. Open the browser console (F12 \u2192 Console/Network) to see the blocked request, allow that domain, then reload.'
+    );
+  }
+  // Safety net: if sign-in still hasn't resolved after 12s, something is
+  // stuck (wrong FIREBASE_CONFIG, Google provider not enabled in the
+  // Firebase project, or a blocked request that didn't fire onerror).
+  setTimeout(function(){
+    if(!window.__habitosAuthResolved){
+      habitosShowGateError(
+        'Still not connecting\u2026',
+        'Sign-in is taking far longer than normal. Common causes: the Google sign-in provider isn\u2019t enabled yet in Firebase Console \u2192 Authentication \u2192 Sign-in method, your hosting domain isn\u2019t in Authentication \u2192 Settings \u2192 Authorized domains, or a network/firewall block. Check the browser console (F12) for red errors, then reload.'
+      );
+    }
+  }, 12000);
+</script>
+
 <!-- ============ FIREBASE SDK (compat build) ============ -->
-<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-app-compat.js" onerror="habitosSdkFailed('firebase-app-compat.js')"></script>
+<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-auth-compat.js" onerror="habitosSdkFailed('firebase-auth-compat.js')"></script>
+<script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore-compat.js" onerror="habitosSdkFailed('firebase-firestore-compat.js')"></script>
 
 <script>
 /* ==================================================================
@@ -1959,7 +1996,12 @@ var FIREBASE_CONFIG = {
   messagingSenderId: "141936447832",
   appId: "1:141936447832:web:1cc9ab3db338561d42552d"
 };
-firebase.initializeApp(FIREBASE_CONFIG);
+try{
+  firebase.initializeApp(FIREBASE_CONFIG);
+}catch(e){
+  habitosShowGateError('Could not start Firebase', 'Error: ' + (e && e.message || e) + '. Double-check FIREBASE_CONFIG below matches Firebase Console \u2192 Project settings \u2192 General \u2192 Your apps exactly.');
+  throw e;
+}
 var auth = firebase.auth();
 var db = firebase.firestore();
 var googleProvider = new firebase.auth.GoogleAuthProvider();
@@ -2297,6 +2339,7 @@ function signOutUser(){
   auth.signOut();
 }
 auth.onAuthStateChanged(function(user){
+  window.__habitosAuthResolved = true;
   var gate = document.getElementById('authGate');
   var appEl = document.getElementById('app');
   if(user){
@@ -2318,6 +2361,10 @@ auth.onAuthStateChanged(function(user){
     document.getElementById('authGoogleBtn').style.display = 'inline-flex';
     document.getElementById('authGoogleBtn').disabled = false;
   }
+}, function(err){
+  window.__habitosAuthResolved = true;
+  console.error('auth state error', err);
+  habitosShowGateError('Sign-in check failed', 'Error: ' + (err && err.message || err) + '. This usually means requests to Firebase Auth are being blocked (network/firewall) or the Firebase project config is wrong.');
 });
 
 /* ==================================================================
