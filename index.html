@@ -636,6 +636,10 @@ a{color:inherit}
 .hab-item.missed .hab-check{background:var(--bad);border-color:var(--bad)}
 .hab-item.missed .hab-check svg{opacity:1;color:#fff}
 .hab-item.missed{border-color:var(--bad-soft);background:linear-gradient(180deg,rgba(251,113,133,.07),transparent 60%),var(--glass-bg)}
+/* ---- check-in feedback animation: flash green/red, hold briefly, then collapse away ---- */
+.hab-item.hab-flash-done{background:linear-gradient(180deg,rgba(52,211,153,.32),rgba(52,211,153,.14)),var(--glass-bg) !important;border-color:var(--ok) !important;box-shadow:0 0 0 1.5px var(--ok) inset,var(--shadow-widget-sm) !important}
+.hab-item.hab-flash-missed{background:linear-gradient(180deg,rgba(251,113,133,.32),rgba(251,113,133,.14)),var(--glass-bg) !important;border-color:var(--bad) !important;box-shadow:0 0 0 1.5px var(--bad) inset,var(--shadow-widget-sm) !important}
+.hab-check.hab-check-anim svg{opacity:1}
 .hab-edit-btn{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--text3);flex-shrink:0}
 .hab-edit-btn:hover{background:var(--surface2);color:var(--text)}
 .hab-edit-btn svg{width:14px;height:14px}
@@ -1992,6 +1996,49 @@ function cycleStatus(hId,dStr){
   var next = cur===null ? 'done' : (cur==='done' ? 'missed' : null);
   setStatus(hId,dStr,next);
 }
+/* Same cycle as cycleStatus, but for the Daily View checklist row: flashes the row
+   green (done) or red (missed) first, holds briefly so the change actually registers,
+   then gently animates the row away before it re-sorts into its new section below.
+   Reverting a "missed" back to pending has no strong direction to animate toward,
+   so that case still updates instantly. */
+function cycleStatusAnimated(btnEl,hId,dStr){
+  var h = habitById(hId); if(!h || isFuture(dStr)) return;
+  var cur = getStatus(h,dStr);
+  var next = cur===null ? 'done' : (cur==='done' ? 'missed' : null);
+  var item = btnEl.closest('.hab-item');
+  if(!next || !item){ setStatus(hId,dStr,next); reRenderCurrent(); return; }
+
+  btnEl.style.pointerEvents='none';
+  item.style.pointerEvents='none';
+
+  // 1) flash the row + button to the target color immediately
+  item.classList.add(next==='done' ? 'hab-flash-done' : 'hab-flash-missed');
+  btnEl.classList.add('hab-check-anim');
+  btnEl.style.background = next==='done' ? 'var(--ok)' : 'var(--bad)';
+  btnEl.style.borderColor = next==='done' ? 'var(--ok)' : 'var(--bad)';
+  btnEl.style.color = '#fff';
+  btnEl.innerHTML = next==='done' ? ICONS.check : ICONS.x;
+
+  // 2) hold briefly so the color change is clearly seen, then collapse the row away
+  setTimeout(function(){
+    item.style.maxHeight = item.scrollHeight+'px';
+    item.style.overflow = 'hidden';
+    item.style.willChange = 'opacity,transform,max-height';
+    item.style.transition = 'opacity .38s cubic-bezier(.4,0,.2,1),transform .38s cubic-bezier(.4,0,.2,1),max-height .38s cubic-bezier(.4,0,.2,1),margin .38s cubic-bezier(.4,0,.2,1),padding .38s cubic-bezier(.4,0,.2,1)';
+    void item.offsetHeight; // force reflow so the transition below actually animates
+    item.style.opacity = '0';
+    item.style.transform = 'translateY(8px) scale(.96)';
+    item.style.maxHeight = '0px';
+    item.style.marginTop = '0px'; item.style.marginBottom = '0px';
+    item.style.paddingTop = '0px'; item.style.paddingBottom = '0px';
+
+    // 3) once the collapse has finished, commit the status change and re-render
+    setTimeout(function(){
+      setStatus(hId,dStr,next);
+      reRenderCurrent();
+    }, 380);
+  }, 550);
+}
 
 function scheduledDaysInRange(h,fromStr,toStr){
   var out=[]; var d=parseDate(fromStr); var end=parseDate(toStr);
@@ -2686,7 +2733,7 @@ function habitItemHTML(h, dStr){
     '<div class="hab-icon" style="background:'+h.color+'26">'+h.icon+'</div>'+
     '<div class="hab-info"><div class="hab-name">'+esc(h.name)+'</div>'+
       '<div class="hab-meta">'+(streak>0?'<span class="flame">🔥 '+streak+'</span> · ':'')+esc(freqLabel(h))+(h.reminder?' · ⏰ '+fmtTime(h.reminder):'')+'</div></div>'+
-    '<button class="hab-check'+(isFuture(dStr)?' disabled':'')+'" onclick="event.stopPropagation();cycleStatus(\''+h.id+'\',\''+dStr+'\');reRenderCurrent()" title="'+checkTitle+'">'+checkIcon+'</button>'+
+    '<button class="hab-check'+(isFuture(dStr)?' disabled':'')+'" onclick="event.stopPropagation();cycleStatusAnimated(this,\''+h.id+'\',\''+dStr+'\')" title="'+checkTitle+'">'+checkIcon+'</button>'+
   '</div>';
 }
 function reRenderCurrent(){
