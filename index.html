@@ -835,6 +835,19 @@ tr.cal-row:nth-child(odd) .cal-cell{background:rgba(128,128,128,.02)}
 }
 .insight-ic svg{width:14px;height:14px}
 .insight-row p{font-size:12.5px;line-height:1.5}
+.goal-mini-list{display:flex;flex-direction:column;gap:0}
+.goal-mini-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.goal-mini-row:last-child{border-bottom:none;padding-bottom:0}
+.goal-mini-row:first-child{padding-top:0}
+.goal-mini-icon{width:34px;height:34px;border-radius:11px;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.goal-mini-info{flex:1;min-width:0}
+.goal-mini-title{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.goal-mini-sub{font-size:10.5px;color:var(--text3);display:flex;align-items:center;gap:4px;margin-top:2px}
+.goal-mini-sub svg{width:10px;height:10px}
+.goal-mini-track{width:84px;height:8px;border-radius:5px;background:var(--surface2);overflow:hidden;flex-shrink:0}
+.goal-mini-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--accent2),var(--accent));transition:width .5s cubic-bezier(.2,.8,.2,1)}
+.goal-mini-pct{width:38px;text-align:right;font-size:11.5px;font-weight:700;flex-shrink:0}
+@media(max-width:520px){.goal-mini-track{display:none}}
 
 /* ---- consistency heatmap ---- */
 .heatmap-scroll{overflow-x:auto;padding-bottom:4px}
@@ -2588,6 +2601,9 @@ function dashboardSummaryWidgets(viewDate){
     '</div>'+
   '</div>';
 
+  // Card 4 — goals overview (combines Goals data alongside the habit cards above)
+  html += goalsOverviewWidgetHTML();
+
   html += '</div>';
   return html;
 }
@@ -3266,75 +3282,91 @@ function miniTileWidget(icon,val,lbl){
 function renderStats(){
   var el = document.getElementById('page-stats');
   var list = activeHabits();
+  var goals = S.goals||[];
   var html = '<div class="page-head"><div><div class="page-title">Stats & Progress</div><div class="page-sub">How consistent you\'ve really been</div></div></div>';
 
-  if(!list.length){ html += emptyState('No data yet','Tap the + button above to add a habit and start checking in to see your stats.'); el.innerHTML=html; return; }
-
-  var score = momentumScore();
-  var t = todayStats().pct, w7 = rateOverLastNDays(7), w30 = rateOverLastNDays(30);
-  var cats = categoryBreakdown();
-  var dow = dayOfWeekStats(8);
-  var maxV = Math.max.apply(null, dow.map(function(v){ return v===null?-1:v; }));
+  if(!list.length && !goals.length){
+    html += emptyState('No data yet','Add a habit or set a goal and start checking in to see your stats.');
+    el.innerHTML = html; return;
+  }
 
   html += '<div class="widget-grid">';
 
-  html += '<div class="widget w-5">'+
-    '<div class="widget-head"><div><div class="widget-eyebrow">Momentum</div><div class="widget-headline">'+momentumGrade(score)+'</div></div>'+
-      '<div class="widget-pill'+(score>=55?' ok':'')+'">'+score+' / 100</div></div>'+
-    '<div class="rings-row">'+
-      '<div class="rings-wrap">'+activityRingsSVG([{value:t,cls:'aring-a'},{value:w7,cls:'aring-b'},{value:w30,cls:'aring-c'}],132)+
-        '<div class="rings-center"><div class="rings-score mono">'+score+'</div><div class="rings-score-lbl">Score</div></div></div>'+
-      '<div class="rings-legend">'+
-        '<div class="rl-row"><span class="rl-dot a"></span>Today<b>'+pct(t)+'%</b></div>'+
-        '<div class="rl-row"><span class="rl-dot b"></span>7-day avg<b>'+pct(w7)+'%</b></div>'+
-        '<div class="rl-row"><span class="rl-dot c"></span>30-day avg<b>'+pct(w30)+'%</b></div>'+
+  if(list.length){
+    var score = momentumScore();
+    var t = todayStats().pct, w7 = rateOverLastNDays(7), w30 = rateOverLastNDays(30);
+    var cats = categoryBreakdown();
+    var dow = dayOfWeekStats(8);
+    var maxV = Math.max.apply(null, dow.map(function(v){ return v===null?-1:v; }));
+
+    html += '<div class="widget w-5">'+
+      '<div class="widget-head"><div><div class="widget-eyebrow">Momentum</div><div class="widget-headline">'+momentumGrade(score)+'</div></div>'+
+        '<div class="widget-pill'+(score>=55?' ok':'')+'">'+score+' / 100</div></div>'+
+      '<div class="rings-row">'+
+        '<div class="rings-wrap">'+activityRingsSVG([{value:t,cls:'aring-a'},{value:w7,cls:'aring-b'},{value:w30,cls:'aring-c'}],132)+
+          '<div class="rings-center"><div class="rings-score mono">'+score+'</div><div class="rings-score-lbl">Score</div></div></div>'+
+        '<div class="rings-legend">'+
+          '<div class="rl-row"><span class="rl-dot a"></span>Today<b>'+pct(t)+'%</b></div>'+
+          '<div class="rl-row"><span class="rl-dot b"></span>7-day avg<b>'+pct(w7)+'%</b></div>'+
+          '<div class="rl-row"><span class="rl-dot c"></span>30-day avg<b>'+pct(w30)+'%</b></div>'+
+        '</div>'+
       '</div>'+
-    '</div>'+
-  '</div>';
+    '</div>';
 
-  html += '<div class="widget w-7">'+
-    '<div class="widget-head"><div><div class="widget-eyebrow">Last 7 days</div><div class="widget-headline">Daily completion trend</div></div>'+
-      '<div class="widget-pill">Avg '+pct(w7)+'%</div></div>'+
-    weekComboChartSVG()+
-  '</div>';
+    html += '<div class="widget w-7">'+
+      '<div class="widget-head"><div><div class="widget-eyebrow">Last 7 days</div><div class="widget-headline">Daily completion trend</div></div>'+
+        '<div class="widget-pill">Avg '+pct(w7)+'%</div></div>'+
+      weekComboChartSVG()+
+    '</div>';
 
-  html += miniTileWidget(ICONS.today, list.length, 'Active habits');
-  html += miniTileWidget(ICONS.trophy, bestStreakGlobal(), 'Longest streak');
-  html += miniTileWidget(ICONS.check, totalCompletionsAll(), 'Total check-ins');
-  html += miniTileWidget(ICONS.stats, pct(w30)+'%', '30-day rate');
+    html += miniTileWidget(ICONS.today, list.length, 'Active habits');
+    html += miniTileWidget(ICONS.trophy, bestStreakGlobal(), 'Longest streak');
+    html += miniTileWidget(ICONS.check, totalCompletionsAll(), 'Total check-ins');
+    html += miniTileWidget(ICONS.stats, pct(w30)+'%', '30-day rate');
+  }
 
-  html += '<div class="widget w-5">'+
-    '<div class="widget-head"><div><div class="widget-eyebrow">Breakdown</div><div class="widget-headline">Habits by category</div></div></div>'+
-    '<div class="donut-row">'+
-      '<div class="donut-wrap">'+donutChartSVG(cats,120,16)+'<div class="donut-center"><b class="mono">'+list.length+'</b><span>Habits</span></div></div>'+
-      '<div class="donut-legend">'+cats.map(function(c){ return '<div class="dl-row"><span class="dl-dot" style="background:'+c.color+'"></span><span class="muted-cat">'+esc(c.cat)+'</span><b>'+c.count+'</b></div>'; }).join('')+'</div>'+
-    '</div>'+
-  '</div>';
+  if(goals.length){
+    var goalsActive = goals.filter(function(g){ return g.status!=='done'; }).length;
+    var goalsDone = goals.length - goalsActive;
+    html += miniTileWidget(ICONS.target, goalsActive, 'Active goals');
+    html += miniTileWidget(ICONS.flag, goalsDone, 'Goals achieved');
+    html += goalsOverviewWidgetHTML();
+  }
 
-  html += '<div class="widget w-7">'+
-    '<div class="widget-head"><div><div class="widget-eyebrow">Weekday pattern</div><div class="widget-headline">Average completion by day</div></div></div>'+
-    DAY_LABELS_FULL.map(function(lbl,i){
-      var v=dow[i]; var isBest = v!==null && v===maxV && maxV>0;
-      return '<div class="wd-row'+(isBest?' is-best':'')+'"><div class="wd-label">'+lbl.slice(0,3)+'</div>'+
-        '<div class="wd-track"><div class="wd-fill" style="width:'+(v===null?0:pct(v))+'%"></div></div>'+
-        '<div class="wd-val mono">'+(v===null?'—':pct(v)+'%')+'</div></div>';
-    }).join('')+
-  '</div>';
+  if(list.length){
+    html += '<div class="widget w-5">'+
+      '<div class="widget-head"><div><div class="widget-eyebrow">Breakdown</div><div class="widget-headline">Habits by category</div></div></div>'+
+      '<div class="donut-row">'+
+        '<div class="donut-wrap">'+donutChartSVG(cats,120,16)+'<div class="donut-center"><b class="mono">'+list.length+'</b><span>Habits</span></div></div>'+
+        '<div class="donut-legend">'+cats.map(function(c){ return '<div class="dl-row"><span class="dl-dot" style="background:'+c.color+'"></span><span class="muted-cat">'+esc(c.cat)+'</span><b>'+c.count+'</b></div>'; }).join('')+'</div>'+
+      '</div>'+
+    '</div>';
 
-  html += '<div class="widget w-12">'+
-    '<div class="widget-head"><div><div class="widget-eyebrow">Insights</div><div class="widget-headline">What your data is telling you</div></div></div>'+
-    '<div class="insight-list">'+statsInsights().map(function(ins){ return '<div class="insight-row"><div class="insight-ic">'+ins.icon+'</div><p>'+ins.text+'</p></div>'; }).join('')+'</div>'+
-  '</div>';
+    html += '<div class="widget w-7">'+
+      '<div class="widget-head"><div><div class="widget-eyebrow">Weekday pattern</div><div class="widget-headline">Average completion by day</div></div></div>'+
+      DAY_LABELS_FULL.map(function(lbl,i){
+        var v=dow[i]; var isBest = v!==null && v===maxV && maxV>0;
+        return '<div class="wd-row'+(isBest?' is-best':'')+'"><div class="wd-label">'+lbl.slice(0,3)+'</div>'+
+          '<div class="wd-track"><div class="wd-fill" style="width:'+(v===null?0:pct(v))+'%"></div></div>'+
+          '<div class="wd-val mono">'+(v===null?'—':pct(v)+'%')+'</div></div>';
+      }).join('')+
+    '</div>';
 
-  html += '<div class="widget w-12">'+
-    '<div class="widget-head"><div><div class="widget-eyebrow">Consistency</div><div class="widget-headline">Last 18 weeks</div></div></div>'+
-    consistencyHeatmapHTML(18)+
-  '</div>';
+    html += '<div class="widget w-12">'+
+      '<div class="widget-head"><div><div class="widget-eyebrow">Insights</div><div class="widget-headline">What your data is telling you</div></div></div>'+
+      '<div class="insight-list">'+statsInsights().map(function(ins){ return '<div class="insight-row"><div class="insight-ic">'+ins.icon+'</div><p>'+ins.text+'</p></div>'; }).join('')+'</div>'+
+    '</div>';
 
-  html += '<div class="widget w-12">'+
-    '<div class="widget-head"><div><div class="widget-eyebrow">Leaderboard</div><div class="widget-headline">Ranked by current streak</div></div></div>'+
-    leaderboardHTML()+
-  '</div>';
+    html += '<div class="widget w-12">'+
+      '<div class="widget-head"><div><div class="widget-eyebrow">Consistency</div><div class="widget-headline">Last 18 weeks</div></div></div>'+
+      consistencyHeatmapHTML(18)+
+    '</div>';
+
+    html += '<div class="widget w-12">'+
+      '<div class="widget-head"><div><div class="widget-eyebrow">Leaderboard</div><div class="widget-headline">Ranked by current streak</div></div></div>'+
+      leaderboardHTML()+
+    '</div>';
+  }
 
   html += '</div>';
   el.innerHTML = html;
@@ -3397,6 +3429,43 @@ function goalTaskCounts(g){
     (m.tasks||[]).forEach(function(t){ total++; if(t.done) done++; });
   });
   return {done:done, total:total};
+}
+/* Shared "combined report" widget — surfaces Goals progress alongside Habits data,
+   used on both the Dashboard and the Stats & Progress page so neither view is
+   habit-only. Shows active goals sorted by nearest target date first. */
+function goalsOverviewWidgetHTML(){
+  var goals = S.goals||[];
+  if(!goals.length) return '';
+  var active = goals.filter(function(g){ return g.status!=='done'; });
+  var doneCount = goals.length - active.length;
+  var avgPct = active.length ? Math.round(active.reduce(function(s,g){ return s+goalPct(g); },0)/active.length) : 100;
+  var shown = active.slice().sort(function(a,b){
+    if(!a.targetDate && !b.targetDate) return 0;
+    if(!a.targetDate) return 1;
+    if(!b.targetDate) return -1;
+    return a.targetDate.localeCompare(b.targetDate);
+  }).slice(0,5);
+
+  var rowsHTML = shown.length ? shown.map(function(g){
+    var p = goalPct(g);
+    return '<div class="goal-mini-row">'+
+        '<div class="goal-mini-icon">'+g.icon+'</div>'+
+        '<div class="goal-mini-info">'+
+          '<div class="goal-mini-title">'+esc(g.title)+'</div>'+
+          '<div class="goal-mini-sub">'+(g.targetDate ? ICONS.clock+' Target '+niceDate(g.targetDate) : 'No target date')+'</div>'+
+        '</div>'+
+        '<div class="goal-mini-track"><div class="goal-mini-fill" style="width:'+p+'%"></div></div>'+
+        '<div class="goal-mini-pct mono">'+p+'%</div>'+
+      '</div>';
+  }).join('') : '<div class="hint">No active goals right now — every goal you\'ve set has been achieved.</div>';
+
+  return '<div class="widget w-12">'+
+    '<div class="widget-head"><div><div class="widget-eyebrow">Goals</div><div class="widget-headline">Your active journeys</div></div>'+
+      '<div class="widget-pill'+(active.length?' ok':'')+'">'+active.length+' active · '+doneCount+' achieved</div></div>'+
+    '<div class="goal-mini-list">'+rowsHTML+'</div>'+
+    (active.length ? '<div class="hint" style="margin-top:4px">Average progress across active goals: '+avgPct+'%</div>' : '')+
+    '<button class="btn sm" style="width:100%;margin-top:14px" onclick="go(\'goals\')">View all goals</button>'+
+  '</div>';
 }
 function syncGoalStatus(g){
   var ms = g.milestones||[];
