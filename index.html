@@ -899,16 +899,6 @@ tr.cal-row:nth-child(odd) .cal-cell{background:rgba(128,128,128,.02)}
 
 .goal-card-inner{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;width:100%}
 
-.goal-menu-btn{
-  position:absolute;top:2px;right:6px;z-index:3;
-  width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--text3);flex-shrink:0;
-  opacity:0;transform:scale(.85) translateY(-2px);pointer-events:none;
-  transition:opacity .18s ease,transform .18s ease,background .15s ease,color .15s ease;
-}
-.goal-card:hover .goal-menu-btn,.goal-card:focus-within .goal-menu-btn{opacity:1;transform:scale(1) translateY(0);pointer-events:auto}
-.goal-menu-btn:hover{background:var(--surface2);color:var(--text)}
-.goal-menu-btn svg{width:16px;height:16px}
-
 /* the goal "planet": progress ring + icon + % badge, centered */
 .goal-orb-wrap{position:relative;width:104px;height:104px;margin:2px auto 16px;flex-shrink:0}
 .goal-orb-wrap svg{transform:rotate(-90deg);display:block;filter:drop-shadow(0 4px 14px rgba(0,0,0,.25))}
@@ -1013,6 +1003,10 @@ tr.cal-row:nth-child(odd) .cal-cell{background:rgba(128,128,128,.02)}
 .journey-card-chev{width:16px;height:16px;color:var(--text3);flex-shrink:0;transition:transform .2s}
 .journey-card-chev svg{width:16px;height:16px}
 .journey-card.open .journey-card-chev{transform:rotate(90deg)}
+.journey-drag-handle{width:16px;height:16px;flex-shrink:0;color:var(--text3);cursor:grab;display:flex;align-items:center;justify-content:center;opacity:.55;transition:opacity .15s ease,color .15s ease}
+.journey-drag-handle:hover{opacity:1;color:var(--text2)}
+.journey-drag-handle svg{width:14px;height:14px}
+.journey-node.dragging{opacity:.4}
 .journey-progress-row{display:flex;align-items:center;gap:8px;margin-top:9px}
 .journey-progress-bar{flex:1;height:5px;border-radius:3px;background:var(--surface3);overflow:hidden}
 .journey-progress-fill{height:100%;background:linear-gradient(90deg,var(--gc,var(--accent)),var(--gc2,var(--accent2)));border-radius:3px;transition:width .4s cubic-bezier(.2,.8,.2,1)}
@@ -1020,16 +1014,23 @@ tr.cal-row:nth-child(odd) .cal-cell{background:rgba(128,128,128,.02)}
 .journey-tasks{margin-top:12px;display:flex;flex-direction:column;gap:6px;animation:pageIn .2s ease}
 .jtask{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:12px;background:var(--surface2);border:1px solid var(--border)}
 .jtask.done{opacity:.55}
+.jtask.dragging{opacity:.4}
+.jtask-drag-handle{width:15px;height:15px;flex-shrink:0;color:var(--text3);cursor:grab;display:flex;align-items:center;justify-content:center;opacity:.55;transition:opacity .15s ease,color .15s ease}
+.jtask-drag-handle:hover{opacity:1;color:var(--text2)}
+.jtask-drag-handle svg{width:13px;height:13px}
 .jtask-check{width:19px;height:19px;border-radius:6px;border:1.6px solid var(--border2);flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;color:transparent;transition:all .15s}
 .jtask-check svg{width:12px;height:12px}
 .jtask.done .jtask-check{background:var(--gc,var(--accent));border-color:var(--gc,var(--accent));color:#fff}
 .jtask-text{flex:1;font-size:12.5px;min-width:0;word-break:break-word}
 .jtask.done .jtask-text{text-decoration:line-through;color:var(--text3)}
+.jtask-date-inline{color:var(--text3);font-weight:600;font-size:10.5px;text-decoration:none;white-space:nowrap}
 .jtask-del{width:22px;height:22px;border-radius:7px;display:flex;align-items:center;justify-content:center;color:var(--text3);flex-shrink:0}
 .jtask-del svg{width:13px;height:13px}
 .jtask-del:hover{background:var(--bad-soft);color:var(--bad)}
 .jtask-add-row{display:flex;gap:6px;margin-top:4px}
 .jtask-add-row input{flex:1}
+.jtask-add-row input.jtask-date-inp{flex:0 0 132px}
+@media(max-width:420px){.jtask-add-row{flex-wrap:wrap}.jtask-add-row input.jtask-date-inp{flex:1 1 100%}}
 .journey-milestone-empty-note{font-size:11px;color:var(--text3);margin-top:8px;line-height:1.5}
 .journey-milestone-toggle-done{margin-top:9px}
 .journey-add-node{position:relative}
@@ -2125,7 +2126,9 @@ var ICONS = {
   target:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>',
   flag:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22V4"/><path d="M4 4h13.5l-2.7 4 2.7 4H4"/></svg>',
   rocket:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>',
-  chevRSm:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>'
+  chevRSm:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>',
+  grip:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>',
+  sort:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16m0-16 3.5 3.5M7 4 3.5 7.5"/><path d="M17 20V4m0 16-3.5-3.5M17 20l3.5-3.5"/></svg>'
 };
 var NAV = [
   {id:'dashboard', label:'Dashboard', icon:ICONS.home},
@@ -3288,6 +3291,8 @@ var _goalsView = 'board';        // 'board' (grid) or 'smart' (floating mind-map
 var _smartExpandedGoal = null;   // gid of the goal currently expanded into a road, or null = brain universe
 var _smartObserver = null;       // IntersectionObserver that lights up road nodes as they scroll into view
 var _boardExpandedGoal = null;   // gid of the goal whose roadmap is expanded inline under its card in Board view
+var _dragMilestoneId = null;     // milestone id currently being drag-reordered
+var _dragTaskId = null, _dragTaskMid = null; // task id (+ its milestone id) currently being drag-reordered
 
 function goalById(id){ return S.goals.find(function(g){ return g.id===id; }); }
 function milestoneById(g,mid){ return (g.milestones||[]).find(function(m){ return m.id===mid; }); }
@@ -3634,7 +3639,6 @@ function goalCardHTML(g){
   var dots = ms.slice(0,10).map(function(m){ return '<div class="goal-dot'+(isMilestoneDone(m)?' done':'')+'"></div>'; }).join('');
   var targetHTML = g.targetDate ? '<div class="goal-card-target">'+ICONS.clock+' Target '+niceDate(g.targetDate)+'</div>' : '';
   return '<div class="goal-card'+(isDone?' is-done':'')+(isExpanded?' is-expanded':'')+'" style="--gc:'+gc+';--gc-soft:'+gcSoft+'" onclick="toggleBoardExpand(\''+g.id+'\')">'+
-    '<button class="goal-menu-btn" onclick="event.stopPropagation();openGoalModal(\''+g.id+'\')" title="Edit goal">'+ICONS.edit+'</button>'+
     '<div class="goal-card-inner">'+
       '<div class="goal-orb-wrap">'+
         goalMiniRingSVG(pct,104,7)+
@@ -3671,6 +3675,8 @@ function goalBoardExpandHTML(gid){
       '<div class="board-expand-head-title">'+esc(g.title)+'</div>'+
       '<div class="board-expand-head-sub">'+pct+'% complete · '+msDone+'/'+ms.length+' milestones'+(tc.total?' · '+tc.done+'/'+tc.total+' tasks':'')+'</div>'+
     '</div>'+
+    '<button class="btn sm" onclick="event.stopPropagation();openGoalModal(\''+g.id+'\')">'+ICONS.edit+' Customize goal</button>'+
+    '<button class="btn sm" onclick="event.stopPropagation();sortGoalByDate(\''+g.id+'\')" title="Sort milestones &amp; tasks by target date">'+ICONS.sort+' Sort by date</button>'+
     '<button class="btn sm primary" onclick="boardAddMilestone(\''+g.id+'\')">'+ICONS.plus+' Add milestone</button>'+
     '<button class="icon-btn" onclick="toggleBoardExpand(\''+g.id+'\')" title="Collapse">'+ICONS.x+'</button>'+
   '</div>';
@@ -3704,10 +3710,11 @@ function goalBoardExpandHTML(gid){
     var open = _openMilestoneKey===key;
     var mp = milestonePct(m);
     var hasTasks = m.tasks && m.tasks.length;
-    out += '<div class="journey-node'+(done?' done':'')+(isCurrent?' current':'')+'" style="animation-delay:'+(i*0.05)+'s">'+
+    out += '<div class="journey-node'+(done?' done':'')+(isCurrent?' current':'')+'" style="animation-delay:'+(i*0.05)+'s" ondragover="milestoneDragOver(event)" ondrop="milestoneDrop(event,\''+g.id+'\',\''+m.id+'\')">'+
       '<div class="journey-node-dot" onclick="toggleMilestoneExpand(\''+g.id+'\',\''+m.id+'\')">'+(done?ICONS.check:(i+1))+'</div>'+
       '<div class="journey-card'+(open?' open':'')+'" onclick="toggleMilestoneExpand(\''+g.id+'\',\''+m.id+'\')">'+
         '<div class="journey-card-head">'+
+          '<div class="journey-drag-handle" draggable="true" onclick="event.stopPropagation()" ondragstart="milestoneDragStart(event,\''+g.id+'\',\''+m.id+'\')" ondragend="milestoneDragEnd(event)" title="Drag to reorder">'+ICONS.grip+'</div>'+
           '<div class="journey-card-title">'+esc(m.title)+'</div>'+
           (m.targetDate ? '<div class="journey-card-date">'+niceDate(m.targetDate)+'</div>' : '')+
           '<div class="journey-card-chev">'+ICONS.chevRSm+'</div>'+
@@ -3719,14 +3726,16 @@ function goalBoardExpandHTML(gid){
     if(open){
       out += '<div class="journey-tasks" onclick="event.stopPropagation()">';
       (m.tasks||[]).forEach(function(t){
-        out += '<div class="jtask'+(t.done?' done':'')+'">'+
+        out += '<div class="jtask'+(t.done?' done':'')+'" ondragover="taskDragOver(event)" ondrop="taskDrop(event,\''+g.id+'\',\''+m.id+'\',\''+t.id+'\')">'+
+          '<div class="jtask-drag-handle" draggable="true" ondragstart="taskDragStart(event,\''+g.id+'\',\''+m.id+'\',\''+t.id+'\')" ondragend="taskDragEnd(event)" title="Drag to reorder">'+ICONS.grip+'</div>'+
           '<div class="jtask-check" onclick="toggleTask(\''+g.id+'\',\''+m.id+'\',\''+t.id+'\')">'+ICONS.check+'</div>'+
-          '<div class="jtask-text">'+esc(t.title)+'</div>'+
+          '<div class="jtask-text">'+esc(t.title)+(t.targetDate?'<span class="jtask-date-inline"> · '+niceDate(t.targetDate)+'</span>':'')+'</div>'+
           '<div class="jtask-del" onclick="deleteTask(\''+g.id+'\',\''+m.id+'\',\''+t.id+'\')">'+ICONS.trash+'</div>'+
         '</div>';
       });
       out += '<div class="jtask-add-row">'+
         '<input class="inp" id="jt-new-'+m.id+'" placeholder="Add a task…" onkeydown="if(event.key===\'Enter\'){addTask(\''+g.id+'\',\''+m.id+'\')}"/>'+
+        '<input class="inp jtask-date-inp" type="date" id="jt-date-'+m.id+'" title="Target date (optional)"/>'+
         '<button class="btn icon-only" onclick="addTask(\''+g.id+'\',\''+m.id+'\')">'+ICONS.plus+'</button>'+
       '</div>';
       if(!hasTasks){
@@ -3959,9 +3968,11 @@ function addTask(gid,mid){
   var input = document.getElementById('jt-new-'+mid);
   var title = input.value.trim();
   if(!title) return;
+  var dateInput = document.getElementById('jt-date-'+mid);
+  var targetDate = (dateInput && dateInput.value) || null;
   var g = goalById(gid); var m = milestoneById(g,mid);
   m.tasks = m.tasks||[];
-  m.tasks.push({id:uid(), title:title, done:false});
+  m.tasks.push({id:uid(), title:title, done:false, targetDate:targetDate});
   syncGoalStatus(g); save(); reRenderGoalDetail(gid);
 }
 function toggleTask(gid,mid,tid){
@@ -3973,6 +3984,78 @@ function deleteTask(gid,mid,tid){
   var g = goalById(gid); var m = milestoneById(g,mid);
   m.tasks = m.tasks.filter(function(x){ return x.id!==tid; });
   syncGoalStatus(g); save(); reRenderGoalDetail(gid);
+}
+
+/* ---- drag & drop reordering: milestones within a goal, tasks within a milestone ---- */
+function milestoneDragStart(e,gid,mid){
+  e.stopPropagation();
+  _dragMilestoneId = mid;
+  try{ e.dataTransfer.effectAllowed='move'; e.dataTransfer.setData('text/plain',mid); }catch(err){}
+  var node = e.currentTarget.closest('.journey-node');
+  if(node) node.classList.add('dragging');
+}
+function milestoneDragOver(e){ e.preventDefault(); try{ e.dataTransfer.dropEffect='move'; }catch(err){} }
+function milestoneDrop(e,gid,overMid){
+  e.preventDefault(); e.stopPropagation();
+  var draggedId = _dragMilestoneId;
+  _dragMilestoneId = null;
+  document.querySelectorAll('.journey-node.dragging').forEach(function(x){ x.classList.remove('dragging'); });
+  if(!draggedId || draggedId===overMid) return;
+  var g = goalById(gid);
+  var ms = g.milestones||[];
+  var fromIdx = ms.findIndex(function(x){ return x.id===draggedId; });
+  var toIdx = ms.findIndex(function(x){ return x.id===overMid; });
+  if(fromIdx<0 || toIdx<0) return;
+  var item = ms.splice(fromIdx,1)[0];
+  ms.splice(toIdx,0,item);
+  save(); reRenderGoalDetail(gid);
+}
+function milestoneDragEnd(){
+  _dragMilestoneId = null;
+  document.querySelectorAll('.journey-node.dragging').forEach(function(x){ x.classList.remove('dragging'); });
+}
+function taskDragStart(e,gid,mid,tid){
+  e.stopPropagation();
+  _dragTaskId = tid; _dragTaskMid = mid;
+  try{ e.dataTransfer.effectAllowed='move'; e.dataTransfer.setData('text/plain',tid); }catch(err){}
+  var row = e.currentTarget.closest('.jtask');
+  if(row) row.classList.add('dragging');
+}
+function taskDragOver(e){ e.preventDefault(); try{ e.dataTransfer.dropEffect='move'; }catch(err){} }
+function taskDrop(e,gid,mid,overTid){
+  e.preventDefault(); e.stopPropagation();
+  var draggedId = _dragTaskId, draggedMid = _dragTaskMid;
+  _dragTaskId = null; _dragTaskMid = null;
+  document.querySelectorAll('.jtask.dragging').forEach(function(x){ x.classList.remove('dragging'); });
+  if(!draggedId || draggedMid!==mid || draggedId===overTid) return;
+  var g = goalById(gid); var m = milestoneById(g,mid);
+  var tasks = m.tasks||[];
+  var fromIdx = tasks.findIndex(function(x){ return x.id===draggedId; });
+  var toIdx = tasks.findIndex(function(x){ return x.id===overTid; });
+  if(fromIdx<0 || toIdx<0) return;
+  var item = tasks.splice(fromIdx,1)[0];
+  tasks.splice(toIdx,0,item);
+  save(); reRenderGoalDetail(gid);
+}
+function taskDragEnd(){
+  _dragTaskId = null; _dragTaskMid = null;
+  document.querySelectorAll('.jtask.dragging').forEach(function(x){ x.classList.remove('dragging'); });
+}
+/* ---- sort milestones (and each milestone's tasks) by target date — undated items sink to the end ---- */
+function _byTargetDate(a,b){
+  if(!a.targetDate && !b.targetDate) return 0;
+  if(!a.targetDate) return 1;
+  if(!b.targetDate) return -1;
+  return a.targetDate.localeCompare(b.targetDate);
+}
+function sortGoalByDate(gid){
+  var g = goalById(gid);
+  if(!g) return;
+  var ms = g.milestones||[];
+  ms.sort(_byTargetDate);
+  ms.forEach(function(m){ if(m.tasks && m.tasks.length) m.tasks.sort(_byTargetDate); });
+  save(); reRenderGoalDetail(gid);
+  toast('Sorted by target date');
 }
 
 /* ==================================================================
