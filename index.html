@@ -1510,6 +1510,76 @@ html.day .brain-folds{opacity:.5;mix-blend-mode:multiply}
 .auth-status{margin-top:14px;font-size:12px;color:var(--text3);min-height:16px}
 .auth-spinner{width:22px;height:22px;border-radius:50%;border:2.5px solid var(--border2);border-top-color:var(--accent);margin:0 auto 16px;animation:authspin .7s linear infinite}
 @keyframes authspin{to{transform:rotate(360deg)}}
+/* ============================================================
+   SUBSCRIPTION PLAN PILLS + LOCKED-FEATURE OVERLAY
+   ============================================================ */
+.b-pill{font-size:10.5px;font-weight:700;padding:4px 10px;border-radius:20px;display:inline-block;white-space:nowrap;line-height:1.4}
+.b-pill.pro{background:linear-gradient(150deg,var(--ember-soft),var(--accent-soft));color:var(--ember)}
+.b-pill.free{background:var(--surface2);color:var(--text2)}
+.b-pill.admin{background:var(--accent-soft);color:var(--accent)}
+.lock-overlay{
+  position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  background:rgba(8,9,13,.64);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);
+}
+html.day .lock-overlay{background:rgba(244,245,249,.76)}
+.lock-overlay svg{width:17px;height:17px;color:var(--text2)}
+.lock-overlay span{font-size:9.5px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.05em}
+
+/* ============================================================
+   ADMIN / BACKEND CONSOLE
+   ============================================================ */
+#backendApp{display:flex;min-height:100vh;position:relative;z-index:1}
+#bSidebar{
+  width:248px;flex-shrink:0;padding:26px 18px;display:flex;flex-direction:column;gap:26px;
+  position:fixed;left:0;top:0;height:100vh;overflow-y:auto;
+  border-right:1px solid var(--border);background:var(--bg2);
+}
+.b-brand{display:flex;align-items:center;gap:10px}
+.b-brand-mark{
+  width:38px;height:38px;border-radius:11px;flex-shrink:0;
+  background:linear-gradient(150deg,var(--ember),var(--accent2));
+  display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px var(--accent-soft);
+}
+.b-brand-mark svg{width:19px;height:19px}
+.b-brand-text{font-family:var(--f-display);font-weight:700;font-size:15px;line-height:1.15}
+.b-brand-text span{display:block;font-family:var(--f-mono);font-weight:600;font-size:8.5px;letter-spacing:.15em;color:var(--ember);text-transform:uppercase;margin-top:3px}
+.b-nav{display:flex;flex-direction:column;gap:3px;flex:1}
+.b-nav-item{
+  display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:11px;
+  font-size:13px;font-weight:600;color:var(--text2);text-align:left;width:100%;transition:background .15s,color .15s;
+}
+.b-nav-item svg{width:17px;height:17px;flex-shrink:0}
+.b-nav-item:hover{background:var(--surface2);color:var(--text)}
+.b-nav-item.active{background:var(--accent-soft);color:var(--accent)}
+#bMain{margin-left:248px;flex:1;min-width:0;padding:30px 34px 60px;max-width:1180px;width:100%}
+@media(max-width:860px){
+  #bSidebar{position:static;width:auto;height:auto;flex-direction:row;align-items:center;padding:14px 16px;overflow-x:auto;gap:16px}
+  .b-nav{flex-direction:row}
+  .b-exit-btn{white-space:nowrap}
+  #bMain{margin-left:0;padding:22px 18px 50px}
+}
+.b-stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+@media(max-width:760px){.b-stats-row{grid-template-columns:repeat(2,1fr)}}
+.b-stat{border-radius:var(--radius);padding:18px}
+.b-stat b{font-family:var(--f-mono);font-size:26px;display:block;margin-bottom:2px}
+.b-stat span{font-size:10.5px;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;font-weight:700}
+.b-table-wrap{
+  border-radius:var(--radius-lg);overflow-x:auto;box-shadow:var(--shadow-widget-sm);
+  border:1.5px solid var(--glass-border);background:var(--glass-bg-strong);
+  -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(180%);backdrop-filter:blur(var(--glass-blur)) saturate(180%);
+}
+.b-table{width:100%;border-collapse:collapse;font-size:13px}
+.b-table th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);font-weight:700;padding:13px 16px;border-bottom:1px solid var(--border);white-space:nowrap}
+.b-table td{padding:12px 16px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap}
+.b-table tr:last-child td{border-bottom:none}
+.b-table tr:hover td{background:rgba(128,128,128,.04)}
+.b-user-cell{display:flex;align-items:center;gap:10px;white-space:normal}
+.b-avatar{width:32px;height:32px;border-radius:10px;object-fit:cover;flex-shrink:0;background:var(--surface2)}
+.b-avatar-fallback{width:32px;height:32px;border-radius:10px;flex-shrink:0;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.b-search{max-width:300px;margin-bottom:16px}
+.b-empty-cell{padding:32px;text-align:center;color:var(--text2);font-size:13px;white-space:normal}
+.b-limits-form{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;max-width:640px}
+@media(max-width:600px){.b-limits-form{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -1632,6 +1702,7 @@ html.day .brain-folds{opacity:.5;mix-blend-mode:multiply}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-4-4 3 3 0 0 1 1-2.2A9.96 9.96 0 0 0 12 2Z"/></svg>
         Customization
       </button>
+      <div id="profileAdminSlot"></div>
       <div class="profile-dd-divider"></div>
       <button class="profile-item danger" onclick="closeProfileMenu();signOutUser()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
@@ -1686,6 +1757,26 @@ html.day .brain-folds{opacity:.5;mix-blend-mode:multiply}
       <div class="bn-row" id="bnRow"></div>
     </nav>
   </div>
+</div>
+
+<!-- ============ ADMIN / BACKEND CONSOLE (admin-only) ============ -->
+<div id="backendApp" style="display:none">
+  <aside id="bSidebar">
+    <div class="b-brand">
+      <div class="b-brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.4 9 8 11 4.6-2 8-6 8-11V5l-8-3Z"/></svg></div>
+      <div class="b-brand-text">HabitOS<span>Admin Console</span></div>
+    </div>
+    <nav class="b-nav" id="bSideNav"></nav>
+    <button class="btn ghost block b-exit-btn" onclick="exitBackend()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 19l-7-7 7-7M3 12h18"/></svg>
+      Go to Frontend
+    </button>
+  </aside>
+  <main id="bMain">
+    <section class="page active" id="page-b-overview"></section>
+    <section class="page" id="page-b-users"></section>
+    <section class="page" id="page-b-limits"></section>
+  </main>
 </div>
 
 <!-- ============ MORE SHEET (mobile) ============ -->
@@ -1749,6 +1840,11 @@ html.day .brain-folds{opacity:.5;mix-blend-mode:multiply}
     <div class="modal-head"><div class="modal-title">Habit Templates</div><button class="icon-btn" onclick="closeTemplateModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
     <div id="tplModalBody"></div>
   </div>
+</div>
+
+<!-- ============ UPGRADE TO PRO MODAL ============ -->
+<div class="modal-veil" id="upgradeVeil" onclick="if(event.target===this)closeUpgradeModal()">
+  <div class="modal" id="upgradeModal" style="max-width:420px"></div>
 </div>
 
 <!-- ============ TOASTS ============ -->
@@ -1823,15 +1919,15 @@ var BADGES = [
   {id:'streak7',type:'streak',n:7,icon:'🔥',name:'Kindling',desc:'7-day streak'},
   {id:'streak14',type:'streak',n:14,icon:'🔥',name:'Ember',desc:'14-day streak'},
   {id:'streak30',type:'streak',n:30,icon:'🔥',name:'Blaze',desc:'30-day streak'},
-  {id:'streak60',type:'streak',n:60,icon:'🔥',name:'Wildfire',desc:'60-day streak'},
-  {id:'streak100',type:'streak',n:100,icon:'🔥',name:'Inferno',desc:'100-day streak'},
-  {id:'streak365',type:'streak',n:365,icon:'👑',name:'Eternal Flame',desc:'365-day streak'},
+  {id:'streak60',type:'streak',n:60,icon:'🔥',name:'Wildfire',desc:'60-day streak',pro:true},
+  {id:'streak100',type:'streak',n:100,icon:'🔥',name:'Inferno',desc:'100-day streak',pro:true},
+  {id:'streak365',type:'streak',n:365,icon:'👑',name:'Eternal Flame',desc:'365-day streak',pro:true},
   {id:'comp25',type:'completions',n:25,icon:'✅',name:'Getting Started',desc:'25 check-ins'},
   {id:'comp100',type:'completions',n:100,icon:'✅',name:'Century',desc:'100 check-ins'},
-  {id:'comp500',type:'completions',n:500,icon:'🏆',name:'Dedicated',desc:'500 check-ins'},
-  {id:'comp1000',type:'completions',n:1000,icon:'🏆',name:'Unstoppable',desc:'1,000 check-ins'},
+  {id:'comp500',type:'completions',n:500,icon:'🏆',name:'Dedicated',desc:'500 check-ins',pro:true},
+  {id:'comp1000',type:'completions',n:1000,icon:'🏆',name:'Unstoppable',desc:'1,000 check-ins',pro:true},
   {id:'perfectweek',type:'perfectweek',n:1,icon:'⭐',name:'Perfect Week',desc:'100% for 7 days'},
-  {id:'perfectweek4',type:'perfectweek',n:4,icon:'🌟',name:'Perfect Month',desc:'4 perfect weeks'},
+  {id:'perfectweek4',type:'perfectweek',n:4,icon:'🌟',name:'Perfect Month',desc:'4 perfect weeks',pro:true},
   {id:'fivehabits',type:'habitcount',n:5,icon:'🧩',name:'Builder',desc:'5 active habits'}
 ];
 
@@ -1872,6 +1968,33 @@ var _currentUser = null;   // firebase.auth() user object once signed in
 var _unsubDoc = null;      // unsubscribe fn for the realtime Firestore listener
 var _firstSnapshot = true;
 
+/* ==================================================================
+   SUBSCRIPTION PLANS (Free / Pro) + ADMIN / BACKEND ACCESS
+   ================================================================== */
+/* ⚠️ SET THIS to the exact Google account email that should get permanent
+   Admin + Backend console access. Every other Google sign-in becomes a
+   regular Free member automatically. There is no in-app way to create a
+   second admin — this constant (plus the matching check in the Firestore
+   security rules) is the only source of Admin access. */
+var ADMIN_EMAIL = "ceo.nayeemuhammad@gmail.com";
+
+var DEFAULT_PLAN_LIMITS = {
+  freeMaxGoals: 5,
+  freeMaxActiveHabits: 15,
+  freeTemplatesAccess: false,
+  freeAchievementsFull: false
+};
+var _planLimits = Object.assign({}, DEFAULT_PLAN_LIMITS); // live-tunable from the Admin console
+var _myRole = 'member';      // 'admin' | 'member' — mine, resolved from userDirectory/{uid}
+var _myPlan = 'free';        // 'free' | 'pro' — mine
+var _unsubMyDirectory = null;
+var _unsubPlanLimits = null;
+var _unsubAllUsers = null;
+var _backendMode = false;
+var _bCurSection = 'overview';
+var _bUsersCache = [];
+var _bUsersSearch = '';
+
 /* ---- storage layer: one Firestore doc per signed-in user, realtime-synced ---- */
 function userDocRef(){
   return db.collection('users').doc(_currentUser.uid);
@@ -1892,6 +2015,11 @@ function save(){
       console.error('save failed', err);
       toast('Could not save — check your connection', true);
     });
+    directoryDocRef(_currentUser.uid).set({
+      activeHabitsCount: activeHabits().length,
+      activeGoalsCount: (S.goals||[]).filter(function(g){ return g.status!=='done'; }).length,
+      lastActiveAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, {merge:true}).catch(function(err){ console.error('directory stats sync failed', err); });
   }, 260);
 }
 function startRealtimeSync(){
@@ -1921,6 +2049,238 @@ function startRealtimeSync(){
 }
 function stopRealtimeSync(){
   if(_unsubDoc){ _unsubDoc(); _unsubDoc = null; }
+  stopDirectorySync();
+}
+
+/* ---- lightweight per-user "directory" doc: separate from the private
+   users/{uid} doc above so the Admin console can list every account
+   (name, email, role, plan, usage counts) without ever touching anyone's
+   actual habits/goals. Free vs Pro membership lives here, not on the
+   private doc, so a Free user can never grant themselves Pro by editing
+   their own data — see the shipped firestore.rules for the enforcement. ---- */
+function directoryDocRef(uidStr){ return db.collection('userDirectory').doc(uidStr); }
+function isAdminEmail(email){ return !!email && email===ADMIN_EMAIL; }
+function ensureMyDirectoryDoc(){
+  if(!_currentUser) return;
+  var ref = directoryDocRef(_currentUser.uid);
+  ref.get().then(function(doc){
+    if(!doc.exists){
+      var admin = isAdminEmail(_currentUser.email);
+      ref.set({
+        uid:_currentUser.uid, email:_currentUser.email||null,
+        displayName:_currentUser.displayName||null, photoURL:_currentUser.photoURL||null,
+        role: admin ? 'admin' : 'member', plan: admin ? 'pro' : 'free',
+        activeHabitsCount:0, activeGoalsCount:0,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        lastActiveAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    } else {
+      ref.set({
+        email:_currentUser.email||null, displayName:_currentUser.displayName||null,
+        photoURL:_currentUser.photoURL||null,
+        lastActiveAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, {merge:true});
+    }
+  }).catch(function(err){ console.error('directory ensure failed', err); });
+}
+function subscribeMyDirectory(){
+  if(!_currentUser) return;
+  _unsubMyDirectory = directoryDocRef(_currentUser.uid).onSnapshot(function(doc){
+    var data = doc.exists ? doc.data() : {};
+    var wasAdmin = _myRole==='admin';
+    _myRole = data.role==='admin' ? 'admin' : 'member';
+    _myPlan = data.plan==='pro' ? 'pro' : 'free';
+    updateProfileMenu();
+    if(_curPage==='settings') renderSettings();
+    if(_curPage==='achievements') renderAchievements();
+    if(wasAdmin && _myRole!=='admin' && _backendMode) exitBackend();
+  }, function(err){ console.error('directory sync error', err); });
+}
+function subscribePlanLimits(){
+  if(_unsubPlanLimits) return;
+  _unsubPlanLimits = db.collection('config').doc('planLimits').onSnapshot(function(doc){
+    _planLimits = Object.assign({}, DEFAULT_PLAN_LIMITS, doc.exists ? doc.data() : {});
+    if(_curPage==='settings') renderSettings();
+    if(_backendMode && _bCurSection==='limits') renderBackendLimits();
+    if(_backendMode && _bCurSection==='overview') renderBackendOverview();
+  }, function(err){ console.error('plan limits sync error', err); });
+}
+function stopDirectorySync(){
+  if(_unsubMyDirectory){ _unsubMyDirectory(); _unsubMyDirectory=null; }
+  if(_unsubPlanLimits){ _unsubPlanLimits(); _unsubPlanLimits=null; }
+  if(_unsubAllUsers){ _unsubAllUsers(); _unsubAllUsers=null; }
+  _myRole='member'; _myPlan='free'; _backendMode=false;
+}
+
+/* ---- Free vs Pro gating helpers, used everywhere a limit applies ---- */
+function isPro(){ return _myRole==='admin' || _myPlan==='pro'; }
+function canCreateGoal(){ return isPro() || (S.goals||[]).length < _planLimits.freeMaxGoals; }
+function canCreateHabit(){ return isPro() || activeHabits().length < _planLimits.freeMaxActiveHabits; }
+function templatesAllowed(){ return isPro() || _planLimits.freeTemplatesAccess; }
+function badgeLocked(b){ return !!b.pro && !isPro() && !_planLimits.freeAchievementsFull; }
+
+/* ---- "Upgrade to Pro" prompt shown wherever a Free limit is hit ---- */
+function openUpgradeModal(reason){
+  var copy = {
+    goals:{title:'Goal limit reached', body:'Free accounts can keep up to '+_planLimits.freeMaxGoals+' active goals. Upgrade to Pro for unlimited goals.'},
+    habits:{title:'Habit limit reached', body:'Free accounts can track up to '+_planLimits.freeMaxActiveHabits+' active habits at once. Upgrade to Pro for unlimited habits.'},
+    templates:{title:'Templates are a Pro feature', body:'Habit templates are reserved for Pro accounts. Upgrade to add ready-made habits instantly instead of building them from scratch.'},
+    achievements:{title:'Locked achievement', body:'This achievement is reserved for Pro accounts. Upgrade to unlock every badge.'}
+  }[reason] || {title:'Pro feature', body:'This feature is part of the Pro plan.'};
+  document.getElementById('upgradeModal').innerHTML =
+    '<div class="modal-head"><div class="modal-title">'+esc(copy.title)+'</div><button class="icon-btn" onclick="closeUpgradeModal()">'+ICONS.x+'</button></div>'+
+    '<div class="hint" style="margin-bottom:18px">'+esc(copy.body)+'</div>'+
+    '<div class="modal-foot"><button class="btn" onclick="closeUpgradeModal()">Not now</button>'+
+    '<button class="btn primary block" onclick="closeUpgradeModal();goToSettingsSection(\'settingsPlanCard\')">See my plan</button></div>';
+  document.getElementById('upgradeVeil').classList.add('open');
+}
+function closeUpgradeModal(){ document.getElementById('upgradeVeil').classList.remove('open'); }
+
+/* ---- Admin-only Backend console: full-screen view swap, no page reload ---- */
+var B_NAV = [
+  {id:'overview', label:'Overview', icon:ICONS.grid},
+  {id:'users', label:'Users', icon:ICONS.users},
+  {id:'limits', label:'Plan limits', icon:ICONS.sliders}
+];
+function enterBackend(){
+  if(_myRole!=='admin'){ toast('Admin access only', true); return; }
+  _backendMode = true;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('backendApp').style.display = 'flex';
+  closeProfileMenu();
+  goBackend('overview');
+}
+function exitBackend(){
+  _backendMode = false;
+  document.getElementById('backendApp').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  go(_curPage || 'dashboard');
+}
+function goBackend(section){
+  _bCurSection = section;
+  document.querySelectorAll('#bMain .page').forEach(function(p){ p.classList.remove('active'); });
+  var el = document.getElementById('page-b-'+section);
+  if(el) el.classList.add('active');
+  renderBackendNav();
+  if(section==='overview') renderBackendOverview();
+  else if(section==='users') renderBackendUsers();
+  else if(section==='limits') renderBackendLimits();
+  var main = document.getElementById('bMain'); if(main) main.scrollTop = 0;
+  window.scrollTo(0,0);
+}
+function renderBackendNav(){
+  var wrap = document.getElementById('bSideNav');
+  if(!wrap) return;
+  wrap.innerHTML = B_NAV.map(function(n){
+    return '<button class="b-nav-item'+(n.id===_bCurSection?' active':'')+'" onclick="goBackend(\''+n.id+'\')">'+n.icon+'<span>'+n.label+'</span></button>';
+  }).join('');
+}
+function ensureAllUsersSub(){
+  if(_unsubAllUsers) return;
+  _unsubAllUsers = db.collection('userDirectory').onSnapshot(function(snap){
+    _bUsersCache = snap.docs.map(function(d){ return d.data(); });
+    if(_backendMode && _bCurSection==='overview') renderBackendOverview();
+    if(_backendMode && _bCurSection==='users') renderBackendUsers();
+  }, function(err){ console.error('users directory sync error', err); toast('Could not load users: '+err.message, true); });
+}
+function tsToDate(ts){
+  if(!ts) return '—';
+  try{ var d = ts.toDate ? ts.toDate() : new Date(ts); return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+  catch(e){ return '—'; }
+}
+function renderBackendOverview(){
+  ensureAllUsersSub();
+  var el = document.getElementById('page-b-overview'); if(!el) return;
+  var users = _bUsersCache;
+  var total = users.length;
+  var pro = users.filter(function(u){ return u.plan==='pro'; }).length;
+  var free = total - pro;
+  var habitsSum = users.reduce(function(a,u){ return a+(u.activeHabitsCount||0); },0);
+  var goalsSum = users.reduce(function(a,u){ return a+(u.activeGoalsCount||0); },0);
+  var html = '<div class="page-head"><div><div class="page-title">Overview</div><div class="page-sub">A live snapshot of every HabitOS account</div></div></div>';
+  html += '<div class="b-stats-row">'+
+    '<div class="b-stat card"><b class="mono">'+total+'</b><span>Total users</span></div>'+
+    '<div class="b-stat card"><b class="mono" style="color:var(--ember)">'+pro+'</b><span>Pro users</span></div>'+
+    '<div class="b-stat card"><b class="mono">'+free+'</b><span>Free users</span></div>'+
+    '<div class="b-stat card"><b class="mono">'+(habitsSum+goalsSum)+'</b><span>Habits + goals tracked</span></div>'+
+  '</div>';
+  html += '<div class="card"><div class="sec-title" style="margin-top:0"><h3>Current plan limits</h3><a onclick="goBackend(\'limits\')" style="cursor:pointer">Edit</a></div>'+
+    '<div class="hint">Free accounts get up to <b>'+_planLimits.freeMaxGoals+'</b> goals and <b>'+_planLimits.freeMaxActiveHabits+'</b> active habits, '+
+    (_planLimits.freeTemplatesAccess?'with':'without')+' habit templates, and '+(_planLimits.freeAchievementsFull?'every achievement unlocked':'a limited set of achievements')+'. Pro accounts have no limits.</div>'+
+  '</div>';
+  el.innerHTML = html;
+}
+function renderBackendUsers(){
+  ensureAllUsersSub();
+  var el = document.getElementById('page-b-users'); if(!el) return;
+  var q = _bUsersSearch.trim().toLowerCase();
+  var users = _bUsersCache.slice().sort(function(a,b){
+    var ta = (a.createdAt && a.createdAt.seconds) || 0, tb = (b.createdAt && b.createdAt.seconds) || 0;
+    return tb-ta;
+  });
+  if(q) users = users.filter(function(u){
+    return (u.displayName||'').toLowerCase().indexOf(q)!==-1 || (u.email||'').toLowerCase().indexOf(q)!==-1;
+  });
+  var html = '<div class="page-head"><div><div class="page-title">Users</div><div class="page-sub">'+_bUsersCache.length+' registered account'+(_bUsersCache.length===1?'':'s')+'</div></div></div>';
+  html += '<input class="inp b-search" placeholder="Search by name or email…" value="'+esc(_bUsersSearch)+'" oninput="_bUsersSearch=this.value;renderBackendUsers()"/>';
+  html += '<div class="b-table-wrap"><table class="b-table"><thead><tr><th>User</th><th>Plan</th><th>Habits</th><th>Goals</th><th>Joined</th><th></th></tr></thead><tbody>';
+  if(!users.length){
+    html += '<tr><td colspan="6" class="b-empty-cell">No users match yet.</td></tr>';
+  } else {
+    html += users.map(function(u){
+      var name = u.displayName || u.email || 'Unknown';
+      var initials = name.trim().split(/\s+/).map(function(w){return w[0];}).slice(0,2).join('').toUpperCase();
+      var isAdminRow = u.role==='admin';
+      var isProRow = u.plan==='pro';
+      return '<tr><td><div class="b-user-cell">'+
+          (u.photoURL ? '<img class="b-avatar" src="'+esc(u.photoURL)+'" referrerpolicy="no-referrer"/>' : '<div class="b-avatar-fallback">'+esc(initials||'?')+'</div>')+
+          '<div><div style="font-weight:700;font-size:12.5px">'+esc(name)+'</div><div class="faint" style="font-size:11px">'+esc(u.email||'')+'</div></div>'+
+        '</div></td>'+
+        '<td>'+(isAdminRow?'<span class="b-pill admin">Admin</span>':'<span class="b-pill '+(isProRow?'pro':'free')+'">'+(isProRow?'Pro':'Free')+'</span>')+'</td>'+
+        '<td class="mono">'+(u.activeHabitsCount||0)+'</td>'+
+        '<td class="mono">'+(u.activeGoalsCount||0)+'</td>'+
+        '<td class="faint" style="font-size:12px">'+tsToDate(u.createdAt)+'</td>'+
+        '<td>'+(isAdminRow ? '' : '<button class="btn sm" onclick="toggleUserPlan(\''+u.uid+'\',\''+(isProRow?'free':'pro')+'\')">'+(isProRow?'Move to Free':'Upgrade to Pro')+'</button>')+'</td>'+
+      '</tr>';
+    }).join('');
+  }
+  html += '</tbody></table></div>';
+  el.innerHTML = html;
+}
+function toggleUserPlan(uidStr, newPlan){
+  directoryDocRef(uidStr).update({plan:newPlan}).then(function(){
+    toast('Plan updated to '+(newPlan==='pro'?'Pro':'Free'));
+  }).catch(function(err){ toast('Could not update: '+err.message, true); });
+}
+function renderBackendLimits(){
+  var el = document.getElementById('page-b-limits'); if(!el) return;
+  var html = '<div class="page-head"><div><div class="page-title">Plan limits</div><div class="page-sub">Changes apply live to every Free account</div></div></div>';
+  html += '<div class="card"><div class="b-limits-form">'+
+    '<div class="field"><span class="field-label">Max goals (Free)</span><input class="inp" type="number" min="0" id="bl-goals" value="'+_planLimits.freeMaxGoals+'"/></div>'+
+    '<div class="field"><span class="field-label">Max active habits (Free)</span><input class="inp" type="number" min="0" id="bl-habits" value="'+_planLimits.freeMaxActiveHabits+'"/></div>'+
+    '<div class="field"><span class="field-label">Habit templates</span><select class="sel" id="bl-templates">'+
+      '<option value="0"'+(!_planLimits.freeTemplatesAccess?' selected':'')+'>Pro only</option>'+
+      '<option value="1"'+(_planLimits.freeTemplatesAccess?' selected':'')+'>Free + Pro</option>'+
+    '</select></div>'+
+    '<div class="field"><span class="field-label">Achievements</span><select class="sel" id="bl-ach">'+
+      '<option value="0"'+(!_planLimits.freeAchievementsFull?' selected':'')+'>Some Pro-only</option>'+
+      '<option value="1"'+(_planLimits.freeAchievementsFull?' selected':'')+'>All unlocked for everyone</option>'+
+    '</select></div>'+
+  '</div>'+
+  '<button class="btn primary" style="margin-top:18px" onclick="saveBackendLimits()">'+ICONS.check+' Save limits</button>'+
+  '</div>';
+  el.innerHTML = html;
+}
+function saveBackendLimits(){
+  var vals = {
+    freeMaxGoals: Math.max(0, parseInt(document.getElementById('bl-goals').value,10)||0),
+    freeMaxActiveHabits: Math.max(0, parseInt(document.getElementById('bl-habits').value,10)||0),
+    freeTemplatesAccess: document.getElementById('bl-templates').value==='1',
+    freeAchievementsFull: document.getElementById('bl-ach').value==='1'
+  };
+  db.collection('config').doc('planLimits').set(vals, {merge:true}).then(function(){
+    toast('Plan limits saved');
+  }).catch(function(err){ toast('Could not save: '+err.message, true); });
 }
 
 /* ---- auth (Google sign-in via Firebase Auth) ---- */
@@ -1944,10 +2304,14 @@ auth.onAuthStateChanged(function(user){
     gate.style.display = 'none';
     appEl.style.display = 'flex';
     startRealtimeSync();
+    ensureMyDirectoryDoc();
+    subscribeMyDirectory();
+    subscribePlanLimits();
   } else {
     _currentUser = null;
     stopRealtimeSync();
     appEl.style.display = 'none';
+    document.getElementById('backendApp').style.display = 'none';
     gate.style.display = 'flex';
     document.getElementById('authSpinner').style.display = 'none';
     document.getElementById('authSub').textContent = 'Sign in to sync your habits across every device.';
@@ -2176,6 +2540,7 @@ function perfectWeeksCount(){
   return n;
 }
 function isBadgeEarned(b){
+  if(badgeLocked(b)) return false;
   if(b.type==='streak') return bestStreakGlobal() >= b.n;
   if(b.type==='completions') return totalCompletionsAll() >= b.n;
   if(b.type==='perfectweek') return perfectWeeksCount() >= b.n;
@@ -2211,7 +2576,11 @@ var ICONS = {
   rocket:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>',
   chevRSm:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>',
   grip:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>',
-  sort:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16m0-16 3.5 3.5M7 4 3.5 7.5"/><path d="M17 20V4m0 16-3.5-3.5M17 20l3.5-3.5"/></svg>'
+  sort:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16m0-16 3.5 3.5M7 4 3.5 7.5"/><path d="M17 20V4m0 16-3.5-3.5M17 20l3.5-3.5"/></svg>',
+  shield:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.4 9 8 11 4.6-2 8-6 8-11V5l-8-3Z"/></svg>',
+  users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  sliders:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3"/><path d="M1 14h6M9 8h6M17 16h6"/></svg>',
+  grid:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>'
 };
 var NAV = [
   {id:'dashboard', label:'Dashboard', icon:ICONS.home},
@@ -2357,9 +2726,16 @@ function updateProfileMenu(){
   btn.innerHTML = photo ? '<img src="'+esc(photo)+'" referrerpolicy="no-referrer" alt=""/>' : profileInitials();
   var displayName = S.profile.name || (_currentUser && _currentUser.displayName) || 'Your account';
   var displayEmail = (_currentUser && _currentUser.email) || '';
+  var planPill = _myRole==='admin' ? '<span class="b-pill admin">Admin</span>' : (isPro() ? '<span class="b-pill pro">Pro</span>' : '<span class="b-pill free">Free</span>');
   head.innerHTML = '<div class="avatar-big" style="width:34px;height:34px;border-radius:11px;font-size:13px">'+
       (photo ? '<img src="'+esc(photo)+'" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover;border-radius:11px"/>' : profileInitials())+
-    '</div><div style="min-width:0"><b>'+esc(displayName)+'</b>'+(displayEmail?'<span>'+esc(displayEmail)+'</span>':'')+'</div>';
+    '</div><div style="min-width:0"><b style="display:flex;align-items:center;gap:7px">'+esc(displayName)+' '+planPill+'</b>'+(displayEmail?'<span>'+esc(displayEmail)+'</span>':'')+'</div>';
+  var slot = document.getElementById('profileAdminSlot');
+  if(slot){
+    slot.innerHTML = (_myRole==='admin')
+      ? '<button class="profile-item" onclick="closeProfileMenu();enterBackend()">'+ICONS.shield+' Go to Backend</button>'
+      : '';
+  }
 }
 function toggleProfileMenu(e){
   if(e) e.stopPropagation();
@@ -2969,9 +3345,11 @@ function habitStatsHTML(h){
    TODAY PAGE
    ================================================================== */
 function templateGridHTML(){
+  var locked = !templatesAllowed();
   return '<div class="tpl-grid">'+
     TEMPLATES.map(function(t,i){
-      return '<button class="tpl-card" onclick="addFromTemplate('+i+')">'+
+      return '<button class="tpl-card" onclick="'+(locked?"openUpgradeModal('templates')":'addFromTemplate('+i+')')+'">'+
+        (locked?'<div class="lock-overlay">'+ICONS.shield+'<span>Pro</span></div>':'')+
         '<div class="tpl-icon">'+t.icon+'</div>'+
         '<div><div class="tpl-name">'+esc(t.name)+'</div><div class="tpl-freq">'+esc(freqLabel(t))+'</div></div>'+
       '</button>';
@@ -3902,6 +4280,7 @@ function goalBoardExpandHTML(gid){
 
 /* ---------------- ADD / EDIT GOAL MODAL ---------------- */
 function openGoalModal(id){
+  if(!id && !canCreateGoal()){ openUpgradeModal('goals'); return; }
   _editingGoalId = id || null;
   var g = id ? goalById(id) : null;
   _formGoalIcon = g ? g.icon : GOAL_ICONS[S.goals.length % GOAL_ICONS.length];
@@ -4364,6 +4743,7 @@ var _editingId = null;
 var _formIcon='🎯', _formColor=HABIT_COLORS[0], _formFreqType='daily', _formFreqDays=[1,2,3,4,5], _formFreqCount=3, _formReminder=null;
 
 function openHabitModal(id){
+  if(!id && !canCreateHabit()){ openUpgradeModal('habits'); return; }
   _editingId = id || null;
   var h = id ? habitById(id) : null;
   _formIcon = h ? h.icon : EMOJIS[Math.floor(Math.random()*EMOJIS.length)];
