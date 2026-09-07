@@ -2085,7 +2085,6 @@ function go(pageId){
   document.getElementById('page-'+pageId).classList.add('active');
   renderNav();
   closeMore();
-  collapseSidebar();
   if(pageId==='dashboard') renderDashboard();
   else if(pageId==='calendar') renderCalendar();
   else if(pageId==='goals') renderGoals();
