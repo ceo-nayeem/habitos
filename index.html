@@ -3695,8 +3695,6 @@ function initSmartRoadObservers(){
 function goalCardHTML(g){
   var pct = goalPct(g);
   var ms = g.milestones||[];
-  var msDone = goalMilestonesDoneCount(g);
-  var tc = goalTaskCounts(g);
   var isDone = g.status==='done';
   var isExpanded = _boardExpandedGoal===g.id;
   var gc = 'var(--accent)';
@@ -3711,10 +3709,8 @@ function goalCardHTML(g){
         '<div class="goal-orb-badge'+(isDone?' done':'')+'">'+(isDone?ICONS.check:pct+'%')+'</div>'+
       '</div>'+
       '<div class="goal-card-title">'+esc(g.title)+'</div>'+
-      (g.note ? '<div class="goal-card-note">'+esc(g.note)+'</div>' : '')+
-      '<div class="goal-stat-line">'+msDone+'/'+ms.length+' milestones'+(tc.total?' · '+tc.done+'/'+tc.total+' tasks':'')+'</div>'+
-      (ms.length ? '<div class="goal-dots">'+dots+'</div>' : '<div class="hint" style="margin-top:7px">Tap to start your roadmap</div>')+
-      (isDone ? '<div class="goal-status-chip">'+ICONS.check+' Achieved</div>' : targetHTML)+
+      targetHTML+
+      (ms.length ? '<div class="goal-dots">'+dots+'</div>' : '')+
       '<div class="goal-card-chev">'+ICONS.chevRSm+'</div>'+
     '</div>'+
   '</div>';
