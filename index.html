@@ -601,6 +601,7 @@ a{color:inherit}
 .sec-title{display:flex;align-items:center;justify-content:space-between;margin:26px 0 12px}
 .sec-title h3{font-size:14.5px;font-weight:700}
 .sec-title a{font-size:11.5px;color:var(--accent);font-weight:700}
+.sec-title-divider{flex:1;height:1px;background:var(--border2);margin-left:14px;border-radius:1px}
 
 /* ============================================================
    HABIT LIST ITEMS
@@ -2590,24 +2591,20 @@ function dashboardSummaryWidgets(viewDate){
 /* Shared habit checklist for a given date — used by Dashboard and the Habits→Daily View tab */
 function dailyHabitListHTML(viewDate){
   var isToday = viewDate === _todayStr;
-  var shortViewDate = parseDate(viewDate).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
   var all = activeHabits().filter(function(h){ return isScheduledOn(h,viewDate); });
   var pending = all.filter(function(h){ return getStatus(h,viewDate)===null; });
   var done2 = all.filter(function(h){ return getStatus(h,viewDate)==='done'; });
   var missed = all.filter(function(h){ return getStatus(h,viewDate)==='missed'; });
-  var listTitle = isToday ? 'Today\'s habits' : 'Habits — '+shortViewDate;
   var html = '';
 
   if(!S.habits.length){
     html += emptyState('No habits yet','Tap the + button above to start with a habit template, or create your own from scratch.');
   } else if(!all.length){
-    html += '<div class="sec-title" style="margin-top:26px"><h3>'+esc(listTitle)+'</h3></div>';
     html += emptyState(isToday?'Nothing scheduled today':'Nothing scheduled on this day', isToday?'Enjoy the rest, or add a habit for today.':'No habits were scheduled on '+niceDate(viewDate)+'.');
   } else {
-    html += '<div class="sec-title" style="margin-top:26px"><h3>'+esc(listTitle)+'</h3></div>';
-    if(pending.length) html += '<div class="sec-title" style="margin-top:0"><h3>To do — '+pending.length+'</h3></div><div class="hab-list">'+pending.map(function(h){ return habitItemHTML(h,viewDate); }).join('')+'</div>';
-    if(done2.length) html += '<div class="sec-title"><h3>Done — '+done2.length+'</h3></div><div class="hab-list">'+done2.map(function(h){ return habitItemHTML(h,viewDate); }).join('')+'</div>';
-    if(missed.length) html += '<div class="sec-title"><h3>Missed — '+missed.length+'</h3></div><div class="hab-list">'+missed.map(function(h){ return habitItemHTML(h,viewDate); }).join('')+'</div>';
+    if(pending.length) html += '<div class="sec-title" style="margin-top:0"><h3>To do — '+pending.length+'</h3><span class="sec-title-divider"></span></div><div class="hab-list">'+pending.map(function(h){ return habitItemHTML(h,viewDate); }).join('')+'</div>';
+    if(done2.length) html += '<div class="sec-title"><h3>Done — '+done2.length+'</h3><span class="sec-title-divider"></span></div><div class="hab-list">'+done2.map(function(h){ return habitItemHTML(h,viewDate); }).join('')+'</div>';
+    if(missed.length) html += '<div class="sec-title"><h3>Missed — '+missed.length+'</h3><span class="sec-title-divider"></span></div><div class="hab-list">'+missed.map(function(h){ return habitItemHTML(h,viewDate); }).join('')+'</div>';
   }
 
   var archived = S.habits.filter(function(h){ return h.archived; });
@@ -2991,9 +2988,9 @@ function renderCalendar(){
     if(!_dashDate) _dashDate = _todayStr;
     var viewDate = _dashDate;
     var isTodayDaily = viewDate === _todayStr;
-    html += '<div class="greet-sub" style="margin-bottom:14px">'+
-      (isTodayDaily ? niceDate(viewDate) : '📅 Viewing '+niceDate(viewDate)+' · <a onclick="selectDashDate(\''+_todayStr+'\')" style="color:var(--accent);font-weight:600;cursor:pointer">Back to today</a>')+
-    '</div>';
+    if(!isTodayDaily){
+      html += '<div class="greet-sub" style="margin-bottom:14px">📅 Viewing '+niceDate(viewDate)+' · <a onclick="selectDashDate(\''+_todayStr+'\')" style="color:var(--accent);font-weight:600;cursor:pointer">Back to today</a></div>';
+    }
     html += dailyHabitListHTML(viewDate);
     el.innerHTML = html;
     updateSideRing();
