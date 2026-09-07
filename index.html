@@ -1996,15 +1996,33 @@ function cycleStatus(hId,dStr){
   var next = cur===null ? 'done' : (cur==='done' ? 'missed' : null);
   setStatus(hId,dStr,next);
 }
-/* Same cycle as cycleStatus, but for the Daily View checklist row: flashes the row
-   green (done) or red (missed) first, holds briefly so the change actually registers,
-   then gently animates the row away before it re-sorts into its new section below.
-   Reverting a "missed" back to pending has no strong direction to animate toward,
-   so that case still updates instantly. */
-function cycleStatusAnimated(btnEl,hId,dStr){
+/* Daily View checklist row: single click marks the habit done, double click marks
+   it missed — both flash the row the matching color, hold briefly so the change
+   actually registers, then gently collapse the row away before it re-sorts into
+   its new section below. A single click is held for a short window so a follow-up
+   click can upgrade it into a double click before anything visible happens. */
+var _habClickTimers = {};
+function habitCheckClick(btnEl,hId,dStr){
+  var key = hId+'|'+dStr;
+  if(_habClickTimers[key]) return; // a click is already pending on this row
+  _habClickTimers[key] = setTimeout(function(){
+    delete _habClickTimers[key];
+    var h = habitById(hId); if(!h || isFuture(dStr)) return;
+    var next = getStatus(h,dStr)==='done' ? null : 'done';
+    runHabitStatusAnim(btnEl,hId,dStr,next);
+  }, 300);
+}
+function habitCheckDblClick(btnEl,hId,dStr){
+  var key = hId+'|'+dStr;
+  if(_habClickTimers[key]){ clearTimeout(_habClickTimers[key]); delete _habClickTimers[key]; }
   var h = habitById(hId); if(!h || isFuture(dStr)) return;
-  var cur = getStatus(h,dStr);
-  var next = cur===null ? 'done' : (cur==='done' ? 'missed' : null);
+  var next = getStatus(h,dStr)==='missed' ? null : 'missed';
+  runHabitStatusAnim(btnEl,hId,dStr,next);
+}
+/* Reverting a habit back to pending (clicking "done" again, or double-clicking
+   "missed" again) has no strong direction to animate toward, so that case still
+   updates instantly. */
+function runHabitStatusAnim(btnEl,hId,dStr,next){
   var item = btnEl.closest('.hab-item');
   if(!next || !item){ setStatus(hId,dStr,next); reRenderCurrent(); return; }
 
@@ -2728,12 +2746,12 @@ function habitItemHTML(h, dStr){
   var streak = currentStreak(h);
   var cls = st==='done' ? 'done' : (st==='missed' ? 'missed' : '');
   var checkIcon = st==='done' ? ICONS.check : (st==='missed' ? ICONS.x : '');
-  var checkTitle = isFuture(dStr) ? 'Future day' : 'Tap to mark done, tap again to mark missed';
+  var checkTitle = isFuture(dStr) ? 'Future day' : 'Click to mark done · double-click to mark missed';
   return '<div class="hab-item '+cls+'" style="--hc:'+h.color+';--hc-soft:'+h.color+'26" onclick="openHabitAction(\''+h.id+'\')">'+
     '<div class="hab-icon" style="background:'+h.color+'26">'+h.icon+'</div>'+
     '<div class="hab-info"><div class="hab-name">'+esc(h.name)+'</div>'+
       '<div class="hab-meta">'+(streak>0?'<span class="flame">🔥 '+streak+'</span> · ':'')+esc(freqLabel(h))+(h.reminder?' · ⏰ '+fmtTime(h.reminder):'')+'</div></div>'+
-    '<button class="hab-check'+(isFuture(dStr)?' disabled':'')+'" onclick="event.stopPropagation();cycleStatusAnimated(this,\''+h.id+'\',\''+dStr+'\')" title="'+checkTitle+'">'+checkIcon+'</button>'+
+    '<button class="hab-check'+(isFuture(dStr)?' disabled':'')+'" onclick="event.stopPropagation();habitCheckClick(this,\''+h.id+'\',\''+dStr+'\')" ondblclick="event.stopPropagation();event.preventDefault();habitCheckDblClick(this,\''+h.id+'\',\''+dStr+'\')" title="'+checkTitle+'">'+checkIcon+'</button>'+
   '</div>';
 }
 function reRenderCurrent(){
