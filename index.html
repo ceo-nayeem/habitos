@@ -634,6 +634,12 @@ a{color:inherit}
 .hab-edit-btn{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--text3);flex-shrink:0}
 .hab-edit-btn:hover{background:var(--surface2);color:var(--text)}
 .hab-edit-btn svg{width:14px;height:14px}
+.hab-item-manage{cursor:pointer}
+.hab-row-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.hab-item-manage .hab-row-actions .hab-edit-btn{opacity:0;transform:translateX(4px);transition:opacity .15s ease,transform .15s ease}
+.hab-item-manage:hover .hab-row-actions .hab-edit-btn,.hab-item-manage:focus-within .hab-row-actions .hab-edit-btn{opacity:1;transform:translateX(0)}
+.hab-row-actions .hab-delete-btn:hover{background:var(--bad-soft);color:var(--bad)}
+@media(hover:none){.hab-item-manage .hab-row-actions .hab-edit-btn{opacity:1;transform:none}}
 
 /* ---- habit action sheet (tap a habit card) ---- */
 /* ---- circular quick-action row (Edit / Stats / Remove) ---- */
@@ -1610,6 +1616,11 @@ html.day .brain-folds{opacity:.5;mix-blend-mode:multiply}
   <div class="modal" id="habitActionModal" style="max-width:420px"></div>
 </div>
 
+<!-- ============ DELETE / MOVE TO TRASH CONFIRMATION ============ -->
+<div class="modal-veil" id="trashConfirmVeil" onclick="if(event.target===this)closeTrashConfirm()">
+  <div class="modal" id="trashConfirmModal" style="max-width:400px"></div>
+</div>
+
 <!-- ============ PER-HABIT STATS MODAL ============ -->
 <div class="modal-veil" id="habitStatsVeil" onclick="if(event.target===this)closeHabitStats()">
   <div class="modal" id="habitStatsModal" style="max-width:480px"></div>
@@ -1740,7 +1751,8 @@ var BADGES = [
 var S = {
   profile:{ name:'', theme:'night', accent:'indigo', weekStart:1, notif:false, sidebarExpanded:false },
   habits:[],
-  goals:[]
+  goals:[],
+  trash:[] // deleted habits: {habit, deletedAt} — auto-purged after 7 days
 };
 var _todayStr = '';
 var _dashDate = ''; // date currently shown on the dashboard (defaults to today, changeable via date strip)
@@ -1783,6 +1795,7 @@ function save(){
       profile: S.profile,
       habits: S.habits,
       goals: S.goals,
+      trash: S.trash,
       email: _currentUser.email || null,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }, {merge:true}).catch(function(err){
@@ -1799,6 +1812,7 @@ function startRealtimeSync(){
       if(data.profile) S.profile = Object.assign(S.profile, data.profile);
       if(Array.isArray(data.habits)) S.habits = data.habits;
       if(Array.isArray(data.goals)) S.goals = data.goals;
+      S.trash = Array.isArray(data.trash) ? data.trash : [];
     }
     if(_firstSnapshot){
       _firstSnapshot = false;
@@ -2824,7 +2838,7 @@ function habitsViewTabsHTML(){
       '<button class="seg-tab'+(_habitsView==='daily'?' active':'')+'" onclick="switchHabitsView(\'daily\')">Daily View</button>'+
       '<button class="seg-tab'+(_habitsView==='calendar'?' active':'')+'" onclick="switchHabitsView(\'calendar\')">Calendar View</button>'+
     '</div>'+
-    '<button class="btn sm'+(_habitsView==='manage'?' primary':' ghost')+'" onclick="switchHabitsView(\'manage\')">'+ICONS.settings+' Manage Habit</button>'+
+    '<button class="btn sm'+(_habitsView==='manage'?' primary':' ghost')+'" onclick="switchHabitsView(\'manage\')">'+ICONS.settings+' Habit Manager</button>'+
   '</div>';
 }
 function renderCalendar(){
@@ -2852,9 +2866,16 @@ function renderCalendar(){
   }
 
   if(_habitsView==='manage'){
+    purgeExpiredTrash();
     html += '<div class="card"><div class="sec-title" style="margin-top:0"><h3>All habits</h3><span class="faint mono" style="font-size:11px">'+S.habits.length+' total</span></div>'+
       (S.habits.length ? '<div class="hab-list">'+S.habits.map(manageHabitRowHTML).join('')+'</div>' : emptyState('No habits yet','Tap the + button above to create one.'))+
     '</div>';
+    if(S.trash && S.trash.length){
+      html += '<div class="card" style="margin-top:16px"><div class="sec-title" style="margin-top:0"><h3>Trash</h3><span class="faint mono" style="font-size:11px">'+S.trash.length+' item'+(S.trash.length===1?'':'s')+'</span></div>'+
+        '<div class="hint" style="margin-bottom:12px">Deleted habits stay here for 7 days, then they\'re removed automatically.</div>'+
+        '<div class="hab-list">'+S.trash.map(trashRowHTML).join('')+'</div>'+
+      '</div>';
+    }
     el.innerHTML = html;
     return;
   }
@@ -3854,10 +3875,25 @@ function renderSettings(){
   el.innerHTML = html;
 }
 function manageHabitRowHTML(h){
-  return '<div class="hab-item" style="--hc:'+h.color+';--hc-soft:'+h.color+'26'+(h.archived?';opacity:.5':'')+'">'+
+  return '<div class="hab-item hab-item-manage" style="--hc:'+h.color+';--hc-soft:'+h.color+'26'+(h.archived?';opacity:.5':'')+'" onclick="openHabitModal(\''+h.id+'\')">'+
     '<div class="hab-icon" style="background:'+h.color+'26">'+h.icon+'</div>'+
     '<div class="hab-info"><div class="hab-name">'+esc(h.name)+'</div><div class="hab-meta">'+esc(h.cat)+' · '+esc(freqLabel(h))+(h.reminder?' · ⏰ '+fmtTime(h.reminder):'')+(h.archived?' · Archived':'')+'</div></div>'+
-    '<button class="hab-edit-btn" onclick="openHabitModal(\''+h.id+'\')" title="Edit">'+ICONS.edit+'</button>'+
+    '<div class="hab-row-actions">'+
+      '<button class="hab-edit-btn" onclick="event.stopPropagation();openHabitModal(\''+h.id+'\')" title="Edit">'+ICONS.edit+'</button>'+
+      '<button class="hab-edit-btn hab-delete-btn" onclick="event.stopPropagation();deleteHabitConfirm(\''+h.id+'\')" title="Delete">'+ICONS.trash+'</button>'+
+    '</div>'+
+  '</div>';
+}
+function trashRowHTML(t){
+  var h = t.habit;
+  var daysLeft = Math.max(0, 7 - Math.floor((Date.now()-t.deletedAt)/86400000));
+  return '<div class="hab-item" style="--hc:'+h.color+';--hc-soft:'+h.color+'26;opacity:.7">'+
+    '<div class="hab-icon" style="background:'+h.color+'26">'+h.icon+'</div>'+
+    '<div class="hab-info"><div class="hab-name">'+esc(h.name)+'</div><div class="hab-meta">Deletes in '+daysLeft+' day'+(daysLeft===1?'':'s')+'</div></div>'+
+    '<div class="hab-row-actions">'+
+      '<button class="btn sm ghost" onclick="restoreFromTrash(\''+h.id+'\')">Restore</button>'+
+      '<button class="hab-edit-btn hab-delete-btn" onclick="permanentDeleteFromTrash(\''+h.id+'\')" title="Delete permanently">'+ICONS.trash+'</button>'+
+    '</div>'+
   '</div>';
 }
 function toggleNotif(){
@@ -3873,7 +3909,7 @@ function toggleNotif(){
   S.profile.notif = false; save(); renderSettings();
 }
 function exportData(){
-  var blob = new Blob([JSON.stringify({profile:S.profile, habits:S.habits, goals:S.goals, exportedAt:_todayStr},null,2)], {type:'application/json'});
+  var blob = new Blob([JSON.stringify({profile:S.profile, habits:S.habits, goals:S.goals, trash:S.trash, exportedAt:_todayStr},null,2)], {type:'application/json'});
   var a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = 'habitos-backup-'+_todayStr+'.json';
@@ -3889,6 +3925,7 @@ function importData(file){
       if(!Array.isArray(data.habits)) throw new Error('bad format');
       S.habits = data.habits;
       S.goals = Array.isArray(data.goals) ? data.goals : [];
+      S.trash = Array.isArray(data.trash) ? data.trash : [];
       if(data.profile) S.profile = Object.assign(S.profile, data.profile);
       save(); applyTheme(); go(_curPage); applySidebarState();
       toast('Backup imported');
@@ -3900,6 +3937,7 @@ function resetData(){
   if(!confirm('This deletes every habit, goal and log permanently. Continue?')) return;
   S.habits = [];
   S.goals = [];
+  S.trash = [];
   S.profile = {name:S.profile.name, theme:S.profile.theme, accent:S.profile.accent, weekStart:S.profile.weekStart, notif:false, sidebarExpanded:S.profile.sidebarExpanded};
   save(); go('dashboard');
   toast('All data cleared');
@@ -4115,12 +4153,57 @@ function saveHabitForm(){
   }
   save(); closeHabitModal(); go(_curPage);
 }
+var _trashConfirmId = null;
 function deleteHabitConfirm(id){
   var h = habitById(id); if(!h) return;
-  if(!confirm('Delete "'+h.name+'" and all of its history? This can\'t be undone.')) return;
+  _trashConfirmId = id;
+  document.getElementById('trashConfirmModal').innerHTML =
+    '<div class="modal-head"><div class="modal-title">Delete habit?</div>'+
+      '<button class="icon-btn" onclick="closeTrashConfirm()">'+ICONS.x+'</button></div>'+
+    '<div class="hint" style="margin-bottom:18px">"'+esc(h.name)+'" will be moved to Trash. Items in Trash are kept for <b>7 days</b> and then deleted automatically — you can restore it any time before then.</div>'+
+    '<div class="modal-foot">'+
+      '<button class="btn" onclick="closeTrashConfirm()">Cancel</button>'+
+      '<button class="btn danger block" onclick="confirmMoveToTrash()">'+ICONS.trash+' Move to Trash</button>'+
+    '</div>';
+  document.getElementById('trashConfirmVeil').classList.add('open');
+}
+function closeTrashConfirm(){ document.getElementById('trashConfirmVeil').classList.remove('open'); _trashConfirmId = null; }
+function confirmMoveToTrash(){
+  var id = _trashConfirmId; if(!id) return;
+  var h = habitById(id); if(!h){ closeTrashConfirm(); return; }
   S.habits = S.habits.filter(function(x){ return x.id!==id; });
-  save(); closeHabitModal(); go(_curPage);
-  toast('Habit deleted');
+  if(!S.trash) S.trash = [];
+  S.trash.push({habit:h, deletedAt:Date.now()});
+  save();
+  closeTrashConfirm();
+  closeHabitModal();
+  closeHabitAction();
+  go(_curPage);
+  toast('"'+h.name+'" moved to Trash — kept for 7 days');
+}
+function restoreFromTrash(id){
+  if(!S.trash) return;
+  var idx = -1;
+  for(var i=0;i<S.trash.length;i++){ if(S.trash[i].habit.id===id){ idx=i; break; } }
+  if(idx===-1) return;
+  var h = S.trash[idx].habit;
+  S.trash.splice(idx,1);
+  S.habits.push(h);
+  save(); go(_curPage);
+  toast('"'+h.name+'" restored');
+}
+function permanentDeleteFromTrash(id){
+  if(!confirm('Permanently delete this habit? This can\'t be undone.')) return;
+  S.trash = (S.trash||[]).filter(function(t){ return t.habit.id!==id; });
+  save(); go(_curPage);
+  toast('Habit permanently deleted');
+}
+function purgeExpiredTrash(){
+  if(!S.trash || !S.trash.length) return;
+  var now = Date.now();
+  var before = S.trash.length;
+  S.trash = S.trash.filter(function(t){ return (now - t.deletedAt) < 7*86400000; });
+  if(S.trash.length !== before) save();
 }
 function toggleArchive(id){
   var h = habitById(id); if(!h) return;
@@ -4392,7 +4475,7 @@ function refreshTodayIfChanged(){
   checkReminders();
 }
 document.addEventListener('keydown', function(e){
-  if(e.key==='Escape'){ closeTimePicker(); closeDatePickerDropdown(); closeHabitModal(); closeMore(); closeTemplateModal(); closeHabitAction(); closeHabitStats(); if(_aiOpen) toggleAI(); }
+  if(e.key==='Escape'){ closeTimePicker(); closeDatePickerDropdown(); closeHabitModal(); closeMore(); closeTemplateModal(); closeHabitAction(); closeHabitStats(); closeTrashConfirm(); if(_aiOpen) toggleAI(); }
 });
 
 _todayStr = dateStr(new Date());
@@ -4403,6 +4486,7 @@ function initApp(){
   applyTheme();
   renderNav();
   updateProfileMenu();
+  purgeExpiredTrash();
   go('dashboard');
   applySidebarState(); // runs after go(), since go() always collapses the dock on navigation
   setInterval(refreshTodayIfChanged, 60000);
