@@ -1738,7 +1738,7 @@ var BADGES = [
    STATE
    ================================================================== */
 var S = {
-  profile:{ name:'', theme:'night', accent:'indigo', weekStart:1, notif:false },
+  profile:{ name:'', theme:'night', accent:'indigo', weekStart:1, notif:false, sidebarExpanded:false },
   habits:[],
   goals:[]
 };
@@ -1808,7 +1808,7 @@ function startRealtimeSync(){
       // a genuine remote update (another device/tab on the same account) —
       // our own local writes also fire this listener, so we skip those
       // (hasPendingWrites=true) to avoid re-rendering mid-keystroke.
-      applyTheme(); renderNav(); updateProfileMenu(); reRenderCurrent();
+      applyTheme(); renderNav(); applySidebarState(); updateProfileMenu(); reRenderCurrent();
     }
   }, function(err){
     console.error('sync error', err);
@@ -2155,10 +2155,20 @@ function setWeekStart(v){ S.profile.weekStart = v; save(); renderSettings(); if(
    SIDEBAR DOCK (expand / collapse)
    ================================================================== */
 function toggleSidebar(){
-  document.getElementById('sidebar').classList.toggle('expanded');
+  var side = document.getElementById('sidebar');
+  side.classList.toggle('expanded');
+  // remember the user's explicit choice so it persists across reloads and re-logins
+  S.profile.sidebarExpanded = side.classList.contains('expanded');
+  save();
 }
 function collapseSidebar(){
   document.getElementById('sidebar').classList.remove('expanded');
+}
+/* restores the sidebar to whatever state the user last explicitly left it in
+   (applied on every fresh app init: first load, reload, and after logging back in) */
+function applySidebarState(){
+  var side = document.getElementById('sidebar');
+  if(side) side.classList.toggle('expanded', !!S.profile.sidebarExpanded);
 }
 document.addEventListener('click', function(e){
   var side = document.getElementById('sidebar');
@@ -3889,7 +3899,7 @@ function importData(file){
       S.habits = data.habits;
       S.goals = Array.isArray(data.goals) ? data.goals : [];
       if(data.profile) S.profile = Object.assign(S.profile, data.profile);
-      save(); applyTheme(); go(_curPage);
+      save(); applyTheme(); go(_curPage); applySidebarState();
       toast('Backup imported');
     }catch(err){ toast('Could not read that file', true); }
   };
@@ -3899,7 +3909,7 @@ function resetData(){
   if(!confirm('This deletes every habit, goal and log permanently. Continue?')) return;
   S.habits = [];
   S.goals = [];
-  S.profile = {name:S.profile.name, theme:S.profile.theme, accent:S.profile.accent, weekStart:S.profile.weekStart, notif:false};
+  S.profile = {name:S.profile.name, theme:S.profile.theme, accent:S.profile.accent, weekStart:S.profile.weekStart, notif:false, sidebarExpanded:S.profile.sidebarExpanded};
   save(); go('dashboard');
   toast('All data cleared');
 }
@@ -4403,6 +4413,7 @@ function initApp(){
   renderNav();
   updateProfileMenu();
   go('dashboard');
+  applySidebarState(); // runs after go(), since go() always collapses the dock on navigation
   setInterval(refreshTodayIfChanged, 60000);
 }
 </script>
