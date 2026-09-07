@@ -2173,7 +2173,12 @@ document.addEventListener('click', function(e){
   var side = document.getElementById('sidebar');
   var toggle = document.getElementById('sidebarToggle');
   if(!side || !side.classList.contains('expanded')) return;
-  if(side.contains(e.target) || (toggle && toggle.contains(e.target))) return;
+  // use composedPath (captured at dispatch time) instead of e.target: nav-item clicks
+  // re-render the sidebar's innerHTML mid-click (via go() -> renderNav()), which detaches
+  // the original clicked node from the DOM before this listener runs, so a plain
+  // side.contains(e.target) check would wrongly report "outside" and collapse the sidebar
+  var path = e.composedPath ? e.composedPath() : [e.target];
+  if(path.indexOf(side)!==-1 || (toggle && path.indexOf(toggle)!==-1)) return;
   collapseSidebar();
 });
 document.addEventListener('keydown', function(e){
