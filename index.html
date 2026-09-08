@@ -2027,15 +2027,50 @@ var DEFAULT_PLAN_LIMITS = {
   freeAchievementsFull: false
 };
 var _planLimits = Object.assign({}, DEFAULT_PLAN_LIMITS); // live-tunable from the Admin console
+
+/* ---- Dashboard greeting: root-level, admin-controlled prefix/suffix around the
+   user's own name. Placeholder {name} is substituted client-side (falls back to
+   "there" when the signed-in user has no name set). ---- */
+var DEFAULT_GREETING_CONFIG = {
+  prefix: 'Hi',
+  suffix: '',
+  fallbackName: 'there'
+};
+var _greetingConfig = Object.assign({}, DEFAULT_GREETING_CONFIG);
+
+/* ---- Achievements: admin-managed badge catalog, replaces the hardcoded BADGES
+   array at runtime once config/achievements loads (falls back to BADGES defaults
+   until then / if never customized). ---- */
+var _badgesConfig = null; // null = use built-in BADGES; array = admin-customized list
+
+/* ---- Appearance: admin-managed accent color palette, replaces ACCENTS at runtime. ---- */
+var _accentsConfig = null; // null = use built-in ACCENTS; array = admin-customized list
+
+/* ---- New Habit: admin-managed emoji / color / category catalogs. ---- */
+var _habitItemsConfig = null; // null = use built-in EMOJIS/HABIT_COLORS/CATEGORIES; else {emojis,colors,categories}
+
+/* ---- Habit Templates: admin-managed template catalog, replaces TEMPLATES at runtime. ---- */
+var _templatesConfig = null; // null = use built-in TEMPLATES; array = admin-customized list
+
 var _myRole = 'member';      // 'admin' | 'member' — mine, resolved from userDirectory/{uid}
 var _myPlan = 'free';        // 'free' | 'pro' — mine
 var _unsubMyDirectory = null;
 var _unsubPlanLimits = null;
+var _unsubGreetingConfig = null;
+var _unsubBadgesConfig = null;
+var _unsubAccentsConfig = null;
+var _unsubHabitItemsConfig = null;
+var _unsubTemplatesConfig = null;
 var _unsubAllUsers = null;
 var _backendMode = false;
 var _bCurSection = 'overview';
 var _bUsersCache = [];
 var _bUsersSearch = '';
+var _bAchDraft = null;     // working copy of the achievements list while editing in the backend
+var _bDragBadgeId = null;  // id currently being dragged in the achievements reorder list
+var _bHabitItemsDraft = null; // working copy of {emojis,colors,categories} while editing
+var _bTplDraft = null;     // working copy of the templates list while editing
+var _bDragTplIdx = null;   // index currently being dragged in the templates reorder list
 
 /* ---- storage layer: one Firestore doc per signed-in user, realtime-synced ---- */
 function userDocRef(){
@@ -2156,11 +2191,82 @@ function subscribePlanLimits(){
     if(_backendMode && _bCurSection==='overview') renderBackendOverview();
   }, function(err){ console.error('plan limits sync error', err); });
 }
+function subscribeGreetingConfig(){
+  if(_unsubGreetingConfig) return;
+  _unsubGreetingConfig = db.collection('config').doc('greeting').onSnapshot(function(doc){
+    _greetingConfig = Object.assign({}, DEFAULT_GREETING_CONFIG, doc.exists ? doc.data() : {});
+    if(_curPage==='dashboard') renderDashboard();
+    if(_backendMode && _bCurSection==='dashboard') renderBackendDashboard();
+  }, function(err){ console.error('greeting config sync error', err); });
+}
+function subscribeBadgesConfig(){
+  if(_unsubBadgesConfig) return;
+  _unsubBadgesConfig = db.collection('config').doc('achievements').onSnapshot(function(doc){
+    var data = doc.exists ? doc.data() : {};
+    _badgesConfig = Array.isArray(data.badges) ? data.badges : null;
+    if(_curPage==='achievements') renderAchievements();
+    if(_curPage==='dashboard') renderDashboard();
+    if(_backendMode && _bCurSection==='achievements') renderBackendAchievements();
+  }, function(err){ console.error('achievements config sync error', err); });
+}
+function subscribeAccentsConfig(){
+  if(_unsubAccentsConfig) return;
+  _unsubAccentsConfig = db.collection('config').doc('appearance').onSnapshot(function(doc){
+    var data = doc.exists ? doc.data() : {};
+    _accentsConfig = Array.isArray(data.accents) ? data.accents : null;
+    applyTheme();
+    if(_curPage==='settings') renderSettings();
+    if(_backendMode && _bCurSection==='settings') renderBackendSettings();
+  }, function(err){ console.error('appearance config sync error', err); });
+}
+function subscribeHabitItemsConfig(){
+  if(_unsubHabitItemsConfig) return;
+  _unsubHabitItemsConfig = db.collection('config').doc('habitItems').onSnapshot(function(doc){
+    var data = doc.exists ? doc.data() : {};
+    _habitItemsConfig = (data.emojis||data.colors||data.categories) ? {
+      emojis: Array.isArray(data.emojis) ? data.emojis : [],
+      colors: Array.isArray(data.colors) ? data.colors : [],
+      categories: Array.isArray(data.categories) ? data.categories : []
+    } : null;
+    if(_backendMode && _bCurSection==='settings') renderBackendSettings();
+  }, function(err){ console.error('habit items config sync error', err); });
+}
+function subscribeTemplatesConfig(){
+  if(_unsubTemplatesConfig) return;
+  _unsubTemplatesConfig = db.collection('config').doc('habitTemplates').onSnapshot(function(doc){
+    var data = doc.exists ? doc.data() : {};
+    _templatesConfig = Array.isArray(data.templates) ? data.templates : null;
+    if(_backendMode && _bCurSection==='templates') renderBackendTemplates();
+  }, function(err){ console.error('templates config sync error', err); });
+}
 function stopDirectorySync(){
   if(_unsubMyDirectory){ _unsubMyDirectory(); _unsubMyDirectory=null; }
   if(_unsubPlanLimits){ _unsubPlanLimits(); _unsubPlanLimits=null; }
+  if(_unsubGreetingConfig){ _unsubGreetingConfig(); _unsubGreetingConfig=null; }
+  if(_unsubBadgesConfig){ _unsubBadgesConfig(); _unsubBadgesConfig=null; }
+  if(_unsubAccentsConfig){ _unsubAccentsConfig(); _unsubAccentsConfig=null; }
+  if(_unsubHabitItemsConfig){ _unsubHabitItemsConfig(); _unsubHabitItemsConfig=null; }
+  if(_unsubTemplatesConfig){ _unsubTemplatesConfig(); _unsubTemplatesConfig=null; }
   if(_unsubAllUsers){ _unsubAllUsers(); _unsubAllUsers=null; }
   _myRole='member'; _myPlan='free'; _backendMode=false;
+}
+
+/* ---- Effective config getters: admin-customized value if set, else the
+   built-in default. Every place that used to read BADGES/ACCENTS/EMOJIS/
+   HABIT_COLORS/CATEGORIES/TEMPLATES directly should read these instead, so
+   Admin console edits reflect live across every signed-in user. ---- */
+function effBadges(){ return (_badgesConfig && _badgesConfig.length) ? _badgesConfig : BADGES; }
+function effAccents(){ return (_accentsConfig && _accentsConfig.length) ? _accentsConfig : ACCENTS; }
+function effEmojis(){ return (_habitItemsConfig && _habitItemsConfig.emojis && _habitItemsConfig.emojis.length) ? _habitItemsConfig.emojis : EMOJIS; }
+function effHabitColors(){ return (_habitItemsConfig && _habitItemsConfig.colors && _habitItemsConfig.colors.length) ? _habitItemsConfig.colors : HABIT_COLORS; }
+function effCategories(){ return (_habitItemsConfig && _habitItemsConfig.categories && _habitItemsConfig.categories.length) ? _habitItemsConfig.categories : CATEGORIES; }
+function effTemplates(){ return (_templatesConfig && _templatesConfig.length) ? _templatesConfig : TEMPLATES; }
+function greetingLine(name){
+  var g = _greetingConfig || DEFAULT_GREETING_CONFIG;
+  var nm = name ? name : (g.fallbackName || 'there');
+  var pre = (g.prefix||'').trim();
+  var suf = (g.suffix||'').trim();
+  return (pre?pre+' ':'')+nm+(suf?' '+suf:'');
 }
 
 /* ---- Free vs Pro gating helpers, used everywhere a limit applies ---- */
@@ -2354,6 +2460,11 @@ auth.onAuthStateChanged(function(user){
     ensureMyDirectoryDoc();
     subscribeMyDirectory();
     subscribePlanLimits();
+    subscribeGreetingConfig();
+    subscribeBadgesConfig();
+    subscribeAccentsConfig();
+    subscribeHabitItemsConfig();
+    subscribeTemplatesConfig();
   } else {
     _currentUser = null;
     stopRealtimeSync();
@@ -2947,7 +3058,7 @@ function renderDashboard(){
       '</button>'+
     '</div>';
 
-  html += '<div class="greet-block"><div class="greet-headline">Hi'+(name?', '+name:' there')+'</div>'+
+  html += '<div class="greet-block"><div class="greet-headline">'+esc(greetingLine(name))+'</div>'+
     (isToday
       ? '<div class="greet-sub">'+timeIcon+' '+greeting+' · '+niceDate(viewDate)+'</div>'
       : '<div class="greet-sub">📅 Viewing '+niceDate(viewDate)+' · <a onclick="selectDashDate(\''+_todayStr+'\')" style="color:var(--accent);font-weight:600;cursor:pointer">Back to today</a></div>'
@@ -2971,7 +3082,7 @@ function renderDashboard(){
     statCard(totalCompletionsAll(),'Total check-ins')+
     statCard(perfectWeeks,'Perfect weeks')+
     statCard(pct(last30Rate())+'%','Last 30 days')+
-    statCard(BADGES.filter(isBadgeEarned).length+'/'+BADGES.length,'Badges earned')+
+    statCard(effBadges().filter(isBadgeEarned).length+'/'+effBadges().length,'Badges earned')+
   '</div>';
 
   html += dashboardSummaryWidgets(viewDate);
@@ -3008,11 +3119,11 @@ function dashboardSummaryWidgets(viewDate){
   '</div>';
 
   // Card 2 — recently earned achievements summary
-  var earnedBadges = BADGES.filter(isBadgeEarned);
+  var earnedBadges = effBadges().filter(isBadgeEarned);
   var recentBadges = earnedBadges.slice(-3).reverse();
   html += '<div class="widget w-4">'+
     '<div class="widget-head"><div><div class="widget-eyebrow">Achievements</div><div class="widget-headline">Recently earned</div></div>'+
-      '<div class="widget-pill'+(earnedBadges.length>0?' ok':'')+'">'+earnedBadges.length+'/'+BADGES.length+'</div></div>'+
+      '<div class="widget-pill'+(earnedBadges.length>0?' ok':'')+'">'+earnedBadges.length+'/'+effBadges().length+'</div></div>'+
     (recentBadges.length
       ? '<div class="summary-row-3">'+recentBadges.concat(recentBadges.length<3?new Array(3-recentBadges.length).fill(null):[]).slice(0,3).map(function(b){
           return b
@@ -4638,9 +4749,9 @@ function sortGoalByDate(gid){
    ================================================================== */
 function renderAchievements(){
   var el = document.getElementById('page-achievements');
-  var earned = BADGES.filter(isBadgeEarned);
-  var html = '<div class="page-head"><div><div class="page-title">Achievements</div><div class="page-sub">'+earned.length+' of '+BADGES.length+' badges earned</div></div></div>';
-  html += '<div class="badge-grid">'+BADGES.map(function(b){
+  var earned = effBadges().filter(isBadgeEarned);
+  var html = '<div class="page-head"><div><div class="page-title">Achievements</div><div class="page-sub">'+earned.length+' of '+effBadges().length+' badges earned</div></div></div>';
+  html += '<div class="badge-grid">'+effBadges().map(function(b){
     var got = isBadgeEarned(b);
     return '<div class="badge'+(got?' earned':'')+'"><div class="badge-icon">'+b.icon+'</div>'+
       '<div class="badge-name">'+esc(b.name)+'</div><div class="badge-desc">'+esc(b.desc)+'</div></div>';
@@ -5186,7 +5297,7 @@ function aiExecuteTool(name,input){
       var ts = todayStats();
       return { todayDone:ts.done, todayTotal:ts.total, todayPct:pct(ts.pct),
         bestStreakEver:bestStreakGlobal(), totalCheckIns:totalCompletionsAll(),
-        last30DayRate:pct(last30Rate()), badgesEarned:BADGES.filter(isBadgeEarned).length, badgesTotal:BADGES.length,
+        last30DayRate:pct(last30Rate()), badgesEarned:effBadges().filter(isBadgeEarned).length, badgesTotal:effBadges().length,
         activeHabits:activeHabits().length };
     }
     if(name==='delete_habit'){
