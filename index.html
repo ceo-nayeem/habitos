@@ -2830,13 +2830,13 @@ function toast(msg, bad){
 function renderQuickThemeSwatches(){
   var wrap = document.getElementById('quickThemeSwatches');
   if(!wrap) return;
-  wrap.innerHTML = ACCENTS.map(function(a){
+  wrap.innerHTML = effAccents().map(function(a){
     return '<div class="accent-swatch'+(S.profile.accent===a.id?' sel':'')+'" style="background:'+a.a+'" onclick="setAccent(\''+a.id+'\')" title="'+a.id+'">'+ICONS.check+'</div>';
   }).join('');
 }
 function applyTheme(){
   document.documentElement.classList.toggle('day', S.profile.theme==='day');
-  var acc = ACCENTS.find(function(a){ return a.id===S.profile.accent; }) || ACCENTS[0];
+  var acc = effAccents().find(function(a){ return a.id===S.profile.accent; }) || effAccents()[0];
   document.documentElement.style.setProperty('--accent', acc.a);
   document.documentElement.style.setProperty('--accent2', acc.a2);
   document.documentElement.style.setProperty('--accent-soft', acc.a+'29');
@@ -3514,7 +3514,7 @@ function habitStatsHTML(h){
 function templateGridHTML(){
   var locked = !templatesAllowed();
   return '<div class="tpl-grid">'+
-    TEMPLATES.map(function(t,i){
+    effTemplates().map(function(t,i){
       return '<button class="tpl-card" onclick="'+(locked?"openUpgradeModal('templates')":'addFromTemplate('+i+')')+'">'+
         (locked?'<div class="lock-overlay">'+ICONS.shield+'<span>Pro</span></div>':'')+
         '<div class="tpl-icon">'+t.icon+'</div>'+
@@ -4793,7 +4793,7 @@ function renderSettings(){
       '<div class="theme-card'+(S.profile.theme==='day'?' sel':'')+'" onclick="setTheme(\'day\')"><div class="theme-card-prev" style="background:#F3F5FA;border:1px solid #E3E7F0"></div><b>Day</b></div>'+
     '</div>'+
     '<div class="field-label">Accent color</div>'+
-    '<div class="accent-row">'+ACCENTS.map(function(a){
+    '<div class="accent-row">'+effAccents().map(function(a){
       return '<div class="accent-swatch'+(S.profile.accent===a.id?' sel':'')+'" style="background:'+a.a+'" onclick="setAccent(\''+a.id+'\')">'+ICONS.check+'</div>';
     }).join('')+'</div>'+
   '</div>';
@@ -4907,14 +4907,14 @@ function resetData(){
    ADD / EDIT HABIT MODAL
    ================================================================== */
 var _editingId = null;
-var _formIcon='🎯', _formColor=HABIT_COLORS[0], _formFreqType='daily', _formFreqDays=[1,2,3,4,5], _formFreqCount=3, _formReminder=null;
+var _formIcon='🎯', _formColor=HABIT_COLORS[0], _formFreqType='daily', _formFreqDays=[1,2,3,4,5], _formFreqCount=3, _formReminder=null; // initial defaults only; openHabitModal() below always re-picks from effEmojis()/effHabitColors()
 
 function openHabitModal(id){
   if(!id && !canCreateHabit()){ openUpgradeModal('habits'); return; }
   _editingId = id || null;
   var h = id ? habitById(id) : null;
-  _formIcon = h ? h.icon : EMOJIS[Math.floor(Math.random()*EMOJIS.length)];
-  _formColor = h ? h.color : HABIT_COLORS[S.habits.length % HABIT_COLORS.length];
+  _formIcon = h ? h.icon : effEmojis()[Math.floor(Math.random()*effEmojis().length)];
+  _formColor = h ? h.color : effHabitColors()[S.habits.length % effHabitColors().length];
   _formFreqType = h ? h.freqType : 'daily';
   _formFreqDays = h ? (h.freqDays||[1,2,3,4,5]).slice() : [1,2,3,4,5];
   _formFreqCount = h ? (h.freqCount||3) : 3;
@@ -4934,15 +4934,15 @@ function habitFormHTML(h){
   out += '<div class="field"><span class="field-label">Name</span><input class="inp" id="hf-name" placeholder="e.g. Morning Walk" value="'+(h?esc(h.name):'')+'"/></div>';
 
   out += '<div class="field"><span class="field-label">Icon</span><div class="emoji-grid" id="hf-emoji-grid">'+
-    EMOJIS.map(function(e){ return '<div class="emoji-opt'+(e===_formIcon?' sel':'')+'" onclick="pickIcon(this,\''+e+'\')">'+e+'</div>'; }).join('')+
+    effEmojis().map(function(e){ return '<div class="emoji-opt'+(e===_formIcon?' sel':'')+'" onclick="pickIcon(this,\''+e+'\')">'+e+'</div>'; }).join('')+
   '</div></div>';
 
   out += '<div class="field"><span class="field-label">Color</span><div class="swatch-row" id="hf-color-row">'+
-    HABIT_COLORS.map(function(c){ return '<div class="swatch'+(c===_formColor?' sel':'')+'" style="background:'+c+'" onclick="pickColor(this,\''+c+'\')">'+ICONS.check+'</div>'; }).join('')+
+    effHabitColors().map(function(c){ return '<div class="swatch'+(c===_formColor?' sel':'')+'" style="background:'+c+'" onclick="pickColor(this,\''+c+'\')">'+ICONS.check+'</div>'; }).join('')+
   '</div></div>';
 
   out += '<div class="field-row"><div class="field"><span class="field-label">Category</span><select class="sel" id="hf-cat">'+
-    CATEGORIES.map(function(c){ return '<option'+(h&&h.cat===c?' selected':'')+'>'+c+'</option>'; }).join('')+
+    effCategories().map(function(c){ return '<option'+(h&&h.cat===c?' selected':'')+'>'+c+'</option>'; }).join('')+
   '</select></div>'+
   '<div class="field"><span class="field-label">Reminder (optional)</span>'+
     '<button type="button" class="inp time-trigger'+(_formReminder?'':' is-empty')+'" id="hf-reminder-btn" onclick="openTimePicker()">'+
@@ -5217,12 +5217,12 @@ function aiShowThinking(){
 }
 function aiHideThinking(){ var el=document.getElementById('ai-thinking-el'); if(el) el.remove(); }
 
-var AI_TOOLS = [
+function AI_TOOLS(){ return [
   { name:'add_habit', description:'Create a new habit for the user to track.',
     input_schema:{ type:'object', properties:{
       name:{type:'string', description:'Short name of the habit'},
       icon:{type:'string', description:'A single emoji representing the habit'},
-      category:{type:'string', enum:CATEGORIES},
+      category:{type:'string', enum:effCategories()},
       frequency_type:{type:'string', enum:['daily','days','weekly'], description:'daily = every day, days = specific weekdays, weekly = X times per week on any days'},
       frequency_days:{type:'array', items:{type:'integer', minimum:0, maximum:6}, description:'Weekdays for frequency_type=days, 0=Sunday..6=Saturday'},
       frequency_count:{type:'integer', minimum:1, maximum:7, description:'Times per week for frequency_type=weekly'}
@@ -5241,7 +5241,7 @@ var AI_TOOLS = [
     input_schema:{ type:'object', properties:{ name:{type:'string'} }, required:['name'] } },
   { name:'archive_habit', description:'Archive or unarchive a habit by name (fuzzy match), removing/restoring it from active tracking without deleting history.',
     input_schema:{ type:'object', properties:{ name:{type:'string'}, archived:{type:'boolean'} }, required:['name','archived'] } }
-];
+]; }
 
 /* ==================================================================
    GEMINI — Habit Coach runs on Google's Gemini API (client-side call).
@@ -5253,9 +5253,9 @@ var AI_TOOLS = [
    ================================================================== */
 var GEMINI_API_KEY = "AQ.Ab8RN6K_5T9iKoJL-7_nLh9nZrduQMqYL7q5jaz1z-R1x8n2mg";
 var GEMINI_MODEL = "gemini-2.5-flash";
-var GEMINI_TOOLS = [{ functionDeclarations: AI_TOOLS.map(function(t){
+function GEMINI_TOOLS(){ return [{ functionDeclarations: AI_TOOLS().map(function(t){
   return { name:t.name, description:t.description, parameters:t.input_schema };
-}) }];
+}) }]; }
 
 function findHabitFuzzy(name){
   if(!name) return null;
@@ -5269,9 +5269,9 @@ function aiExecuteTool(name,input){
       if(!input.name) return {error:'name is required'};
       var ft = ['daily','days','weekly'].indexOf(input.frequency_type)!==-1 ? input.frequency_type : 'daily';
       var h = {
-        id:uid(), name:input.name, icon:input.icon||EMOJIS[Math.floor(Math.random()*EMOJIS.length)],
-        color:HABIT_COLORS[S.habits.length % HABIT_COLORS.length],
-        cat: CATEGORIES.indexOf(input.category)!==-1 ? input.category : 'Other',
+        id:uid(), name:input.name, icon:input.icon||effEmojis()[Math.floor(Math.random()*effEmojis().length)],
+        color:effHabitColors()[S.habits.length % effHabitColors().length],
+        cat: effCategories().indexOf(input.category)!==-1 ? input.category : 'Other',
         freqType:ft, freqDays: Array.isArray(input.frequency_days)&&input.frequency_days.length?input.frequency_days:[1,2,3,4,5],
         freqCount: input.frequency_count||3, reminder:null, createdAt:_todayStr, logs:{}, archived:false
       };
@@ -5338,7 +5338,7 @@ async function callGemini(){
       body: JSON.stringify({
         contents: _aiHistory,
         systemInstruction: { parts:[{ text: aiSystemPrompt() }] },
-        tools: GEMINI_TOOLS
+        tools: GEMINI_TOOLS()
       })
     });
     if(!resp.ok){
@@ -5393,7 +5393,7 @@ async function aiSend(){
 }
 
 function addFromTemplate(i){
-  var t = TEMPLATES[i];
+  var t = effTemplates()[i];
   var h = {
     id:uid(), name:t.name, icon:t.icon, color:HABIT_COLORS[S.habits.length % HABIT_COLORS.length],
     cat:t.cat, freqType:t.freqType, freqDays:t.freqDays||[1,2,3,4,5], freqCount:t.freqCount||3,
