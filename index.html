@@ -1580,6 +1580,39 @@ html.day .lock-overlay{background:rgba(244,245,249,.76)}
 .b-empty-cell{padding:32px;text-align:center;color:var(--text2);font-size:13px;white-space:normal}
 .b-limits-form{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;max-width:640px}
 @media(max-width:600px){.b-limits-form{grid-template-columns:1fr}}
+
+/* ---- Admin: Users — status pills, filters, detail drawer, subscription log ---- */
+.b-pill.active{background:var(--ok-soft);color:var(--ok)}
+.b-pill.suspended{background:var(--bad-soft);color:var(--bad)}
+.b-pill.pending{background:var(--warn-soft);color:var(--warn)}
+.b-pill.expired{background:var(--bad-soft);color:var(--bad)}
+.b-users-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.b-users-toolbar .b-search{margin-bottom:0;flex:1;min-width:180px}
+.b-users-toolbar .sel{max-width:170px;margin-bottom:0}
+.b-add-user-btn{margin-left:auto;white-space:nowrap}
+.b-user-cell{display:flex;align-items:center;gap:10px}
+.b-avatar{width:32px;height:32px;border-radius:50%;object-fit:cover;flex:none}
+.b-avatar-fallback{width:32px;height:32px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex:none}
+.b-row-actions{display:flex;gap:6px}
+.b-user-modal .b-user-head{display:flex;align-items:center;gap:14px;margin-bottom:20px}
+.b-user-modal .b-avatar-lg{width:56px;height:56px;border-radius:50%;object-fit:cover;flex:none}
+.b-user-modal .b-avatar-lg-fallback{width:56px;height:56px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;flex:none}
+.b-user-modal .b-user-head-pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.b-user-form{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+@media(max-width:520px){.b-user-form{grid-template-columns:1fr}}
+.b-section-title{font-size:12.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);margin:22px 0 12px;padding-top:18px;border-top:1px solid var(--border)}
+.b-section-title:first-of-type{margin-top:0;padding-top:0;border-top:none}
+.b-sub-current{background:var(--surface2);border-radius:var(--radius-sm);padding:14px;font-size:12.5px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:6px 18px}
+.b-sub-current div span{display:block;color:var(--text3);font-size:10px;text-transform:uppercase;letter-spacing:.03em;font-weight:700;margin-bottom:2px}
+.b-sub-current div b{font-family:var(--f-mono);font-size:13px}
+.b-hist-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:10px}
+.b-hist-table th{text-align:left;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;font-weight:700;font-size:10px;padding:8px 10px;border-bottom:1px solid var(--border)}
+.b-hist-table td{padding:8px 10px;border-bottom:1px solid var(--border)}
+.b-hist-table tr:last-child td{border-bottom:none}
+.b-hist-empty{color:var(--text3);font-size:12px;padding:10px 2px}
+.b-danger-zone{background:var(--bad-soft);border-radius:var(--radius-sm);padding:14px}
+.b-danger-zone p{font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.5}
+.b-note{font-size:11.5px;color:var(--text3);line-height:1.5;margin-top:4px}
 </style>
 </head>
 <body>
@@ -1851,6 +1884,21 @@ html.day .lock-overlay{background:rgba(244,245,249,.76)}
   <div class="modal" id="upgradeModal" style="max-width:420px"></div>
 </div>
 
+<!-- ============ ADMIN: USER DETAIL / EDIT / SUBSCRIPTION DRAWER ============ -->
+<div class="modal-veil" id="userVeil" onclick="if(event.target===this)closeUserDetail()">
+  <div class="modal b-user-modal" id="userModal" style="max-width:640px;max-height:88vh;overflow-y:auto"></div>
+</div>
+
+<!-- ============ ADMIN: ADD USER MODAL ============ -->
+<div class="modal-veil" id="addUserVeil" onclick="if(event.target===this)closeAddUserModal()">
+  <div class="modal" id="addUserModal" style="max-width:460px;max-height:88vh;overflow-y:auto"></div>
+</div>
+
+<!-- ============ ADMIN: REMOVE USER CONFIRM ============ -->
+<div class="modal-veil" id="removeUserVeil" onclick="if(event.target===this)closeRemoveUserConfirm()">
+  <div class="modal" id="removeUserModal" style="max-width:420px"></div>
+</div>
+
 <!-- ============ TOASTS ============ -->
 <div id="toast-wrap"></div>
 
@@ -2066,10 +2114,16 @@ var _unsubAccentsConfig = null;
 var _unsubHabitItemsConfig = null;
 var _unsubTemplatesConfig = null;
 var _unsubAllUsers = null;
+var _unsubPendingUsers = null;
 var _backendMode = false;
 var _bCurSection = 'overview';
 var _bUsersCache = [];
 var _bUsersSearch = '';
+var _bUsersFilter = 'all';   // all | active | suspended | pending | admin | pro | free
+var _bPendingCache = [];     // manually added / pre-provisioned users, keyed by email, not yet signed in
+var _bDetailKind = null;     // 'real' | 'pending' — which collection the open detail drawer refers to
+var _bDetailId = null;       // uid (real) or email key (pending) of the open detail drawer
+var _removeUserTarget = null;// {kind,id,name} pending removal confirmation
 var _bAchDraft = null;     // working copy of the achievements list while editing in the backend
 var _bDragBadgeId = null;  // id currently being dragged in the achievements reorder list
 var _bHabitItemsDraft = null; // working copy of {emojis,colors,categories} while editing
@@ -2140,6 +2194,12 @@ function stopRealtimeSync(){
    private doc, so a Free user can never grant themselves Pro by editing
    their own data — see the shipped firestore.rules for the enforcement. ---- */
 function directoryDocRef(uidStr){ return db.collection('userDirectory').doc(uidStr); }
+/* ---- Pending / manually-provisioned users: created by an admin from the Backend
+   console before the person has ever signed in (or for someone tracked manually,
+   e.g. an offline/manual subscription). Keyed by lowercased email so it can be
+   "claimed" and merged into the real userDirectory/{uid} doc the first time that
+   email actually signs in with Google — see the claim step below. ---- */
+function pendingDocRef(emailStr){ return db.collection('userDirectoryPending').doc((emailStr||'').trim().toLowerCase()); }
 function isAdminEmail(email){ return !!email && email===ADMIN_EMAIL; }
 function ensureMyDirectoryDoc(){
   if(!_currentUser) return;
@@ -2147,14 +2207,31 @@ function ensureMyDirectoryDoc(){
   var admin = isAdminEmail(_currentUser.email);
   ref.get().then(function(doc){
     if(!doc.exists){
-      ref.set({
-        uid:_currentUser.uid, email:_currentUser.email||null,
-        displayName:_currentUser.displayName||null, photoURL:_currentUser.photoURL||null,
-        role: admin ? 'admin' : 'member', plan: admin ? 'pro' : 'free',
-        activeHabitsCount:0, activeGoalsCount:0,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        lastActiveAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
+      var pRef = _currentUser.email ? pendingDocRef(_currentUser.email) : null;
+      var seed = function(pending){
+        var base = {
+          uid:_currentUser.uid, email:_currentUser.email||null,
+          displayName:_currentUser.displayName||null, photoURL:_currentUser.photoURL||null,
+          role: admin ? 'admin' : 'member', plan: admin ? 'pro' : 'free',
+          status:'active', activeHabitsCount:0, activeGoalsCount:0,
+          subscription:null, subscriptionHistory:[],
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          lastActiveAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+        if(pending && !admin){
+          // A backend admin pre-provisioned this email — inherit the role/plan/
+          // status/subscription they configured instead of the plain default.
+          base.role = pending.role==='admin' ? 'admin' : 'member';
+          base.plan = pending.plan==='pro' ? 'pro' : 'free';
+          base.status = pending.status==='suspended' ? 'suspended' : 'active';
+          base.subscription = pending.subscription || null;
+          base.subscriptionHistory = Array.isArray(pending.subscriptionHistory) ? pending.subscriptionHistory : [];
+        }
+        ref.set(base);
+        if(pRef) pRef.delete().catch(function(){});
+      };
+      if(pRef){ pRef.get().then(function(pDoc){ seed(pDoc.exists ? pDoc.data() : null); }).catch(function(){ seed(null); }); }
+      else seed(null);
     } else {
       var patch = {
         email:_currentUser.email||null, displayName:_currentUser.displayName||null,
@@ -2177,6 +2254,14 @@ function subscribeMyDirectory(){
   if(!_currentUser) return;
   _unsubMyDirectory = directoryDocRef(_currentUser.uid).onSnapshot(function(doc){
     var data = doc.exists ? doc.data() : {};
+    // Access control: an admin can suspend an account from the Backend console.
+    // Enforce it here so it takes effect immediately, even mid-session.
+    if(data.status==='suspended' && data.role!=='admin'){
+      toast('Your account access has been suspended. Contact support for help.', true);
+      stopRealtimeSync();
+      auth.signOut();
+      return;
+    }
     var wasAdmin = _myRole==='admin';
     _myRole = data.role==='admin' ? 'admin' : 'member';
     _myPlan = data.plan==='pro' ? 'pro' : 'free';
@@ -2252,6 +2337,7 @@ function stopDirectorySync(){
   if(_unsubHabitItemsConfig){ _unsubHabitItemsConfig(); _unsubHabitItemsConfig=null; }
   if(_unsubTemplatesConfig){ _unsubTemplatesConfig(); _unsubTemplatesConfig=null; }
   if(_unsubAllUsers){ _unsubAllUsers(); _unsubAllUsers=null; }
+  if(_unsubPendingUsers){ _unsubPendingUsers(); _unsubPendingUsers=null; }
   _myRole='member'; _myPlan='free'; _backendMode=false;
 }
 
@@ -2336,17 +2422,40 @@ function renderBackendNav(){
   }).join('');
 }
 function ensureAllUsersSub(){
-  if(_unsubAllUsers) return;
-  _unsubAllUsers = db.collection('userDirectory').onSnapshot(function(snap){
-    _bUsersCache = snap.docs.map(function(d){ return d.data(); });
-    if(_backendMode && _bCurSection==='overview') renderBackendOverview();
-    if(_backendMode && _bCurSection==='users') renderBackendUsers();
-  }, function(err){ console.error('users directory sync error', err); toast('Could not load users: '+err.message, true); });
+  if(!_unsubAllUsers){
+    _unsubAllUsers = db.collection('userDirectory').onSnapshot(function(snap){
+      _bUsersCache = snap.docs.map(function(d){ return d.data(); });
+      if(_backendMode && _bCurSection==='overview') renderBackendOverview();
+      if(_backendMode && _bCurSection==='users') renderBackendUsers();
+      if(_backendMode && _bDetailKind==='real' && _bDetailId) refreshOpenUserDetail();
+    }, function(err){ console.error('users directory sync error', err); toast('Could not load users: '+err.message, true); });
+  }
+  if(!_unsubPendingUsers){
+    _unsubPendingUsers = db.collection('userDirectoryPending').onSnapshot(function(snap){
+      _bPendingCache = snap.docs.map(function(d){ return Object.assign({email:d.id}, d.data()); });
+      if(_backendMode && _bCurSection==='users') renderBackendUsers();
+      if(_backendMode && _bDetailKind==='pending' && _bDetailId) refreshOpenUserDetail();
+    }, function(err){ console.error('pending users sync error', err); toast('Could not load pending invites: '+err.message, true); });
+  }
 }
 function tsToDate(ts){
   if(!ts) return '—';
   try{ var d = ts.toDate ? ts.toDate() : new Date(ts); return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
   catch(e){ return '—'; }
+}
+/* Subscription dates are plain 'YYYY-MM-DD' strings (from <input type=date>),
+   not Firestore timestamps — fmtPlainDate formats those for display. */
+function fmtPlainDate(s){
+  if(!s) return '—';
+  try{ var d=new Date(s+'T00:00:00'); if(isNaN(d)) return s; return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
+  catch(e){ return s; }
+}
+function subIsExpired(sub){ return !!(sub && sub.endDate && sub.endDate < todayISO()); }
+function todayISO(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function userInitials(name){
+  name = (name||'').trim();
+  if(!name) return '?';
+  return name.split(/\s+/).map(function(w){return w[0];}).slice(0,2).join('').toUpperCase();
 }
 function renderBackendOverview(){
   ensureAllUsersSub();
@@ -2355,6 +2464,7 @@ function renderBackendOverview(){
   var total = users.length;
   var pro = users.filter(function(u){ return u.plan==='pro'; }).length;
   var free = total - pro;
+  var suspended = users.filter(function(u){ return u.status==='suspended'; }).length;
   var habitsSum = users.reduce(function(a,u){ return a+(u.activeHabitsCount||0); },0);
   var goalsSum = users.reduce(function(a,u){ return a+(u.activeGoalsCount||0); },0);
   var html = '<div class="page-head"><div><div class="page-title">Overview</div><div class="page-sub">A live snapshot of every HabitOS account</div></div></div>';
@@ -2362,53 +2472,101 @@ function renderBackendOverview(){
     '<div class="b-stat card"><b class="mono">'+total+'</b><span>Total users</span></div>'+
     '<div class="b-stat card"><b class="mono" style="color:var(--ember)">'+pro+'</b><span>Pro users</span></div>'+
     '<div class="b-stat card"><b class="mono">'+free+'</b><span>Free users</span></div>'+
-    '<div class="b-stat card"><b class="mono">'+(habitsSum+goalsSum)+'</b><span>Habits + goals tracked</span></div>'+
+    '<div class="b-stat card"><b class="mono" style="color:var(--bad)">'+suspended+'</b><span>Suspended</span></div>'+
   '</div>';
   html += '<div class="card"><div class="sec-title" style="margin-top:0"><h3>Current plan limits</h3><a onclick="goBackend(\'limits\')" style="cursor:pointer">Edit</a></div>'+
     '<div class="hint">Free accounts get up to <b>'+_planLimits.freeMaxGoals+'</b> goals and <b>'+_planLimits.freeMaxActiveHabits+'</b> active habits, '+
     (_planLimits.freeTemplatesAccess?'with':'without')+' habit templates, and '+(_planLimits.freeAchievementsFull?'every achievement unlocked':'a limited set of achievements')+'. Pro accounts have no limits.</div>'+
   '</div>';
+  html += '<div class="card"><div class="sec-title"><h3>Habits + goals tracked</h3></div><div class="hint">Across every account, people are tracking <b>'+habitsSum+'</b> active habits and <b>'+goalsSum+'</b> goals right now.</div></div>';
   el.innerHTML = html;
+}
+/* ---- Users page: merges real accounts (userDirectory, keyed by uid) with
+   pending / manually-provisioned accounts (userDirectoryPending, keyed by
+   email) into one unified, filterable, searchable table. ---- */
+function unifiedUserList(){
+  var real = _bUsersCache.map(function(u){ return Object.assign({_kind:'real', _id:u.uid}, u); });
+  var pending = _bPendingCache.map(function(u){ return Object.assign({_kind:'pending', _id:u.email}, u); });
+  return real.concat(pending);
 }
 function renderBackendUsers(){
   ensureAllUsersSub();
   var el = document.getElementById('page-b-users'); if(!el) return;
   var q = _bUsersSearch.trim().toLowerCase();
-  var users = _bUsersCache.slice().sort(function(a,b){
+  var all = unifiedUserList().sort(function(a,b){
     var ta = (a.createdAt && a.createdAt.seconds) || 0, tb = (b.createdAt && b.createdAt.seconds) || 0;
     return tb-ta;
   });
+  var users = all;
   if(q) users = users.filter(function(u){
     return (u.displayName||'').toLowerCase().indexOf(q)!==-1 || (u.email||'').toLowerCase().indexOf(q)!==-1;
   });
-  var html = '<div class="page-head"><div><div class="page-title">Users</div><div class="page-sub">'+_bUsersCache.length+' registered account'+(_bUsersCache.length===1?'':'s')+'</div></div></div>';
-  html += '<input class="inp b-search" placeholder="Search by name or email…" value="'+esc(_bUsersSearch)+'" oninput="_bUsersSearch=this.value;renderBackendUsers()"/>';
-  html += '<div class="b-table-wrap"><table class="b-table"><thead><tr><th>User</th><th>Plan</th><th>Habits</th><th>Goals</th><th>Joined</th><th></th></tr></thead><tbody>';
+  var f = _bUsersFilter;
+  if(f==='active') users = users.filter(function(u){ return u._kind==='real' && u.status!=='suspended'; });
+  else if(f==='suspended') users = users.filter(function(u){ return u.status==='suspended'; });
+  else if(f==='pending') users = users.filter(function(u){ return u._kind==='pending'; });
+  else if(f==='admin') users = users.filter(function(u){ return u.role==='admin'; });
+  else if(f==='pro') users = users.filter(function(u){ return u.plan==='pro'; });
+  else if(f==='free') users = users.filter(function(u){ return u.plan!=='pro' && u.role!=='admin'; });
+
+  var html = '<div class="page-head"><div><div class="page-title">Users</div><div class="page-sub">'+_bUsersCache.length+' registered account'+(_bUsersCache.length===1?'':'s')+(_bPendingCache.length?', '+_bPendingCache.length+' pending invite'+(_bPendingCache.length===1?'':'s'):'')+'</div></div></div>';
+  html += '<div class="b-users-toolbar">'+
+    '<input class="inp b-search" placeholder="Search by name or email…" value="'+esc(_bUsersSearch)+'" oninput="_bUsersSearch=this.value;renderBackendUsers()"/>'+
+    '<select class="sel" onchange="_bUsersFilter=this.value;renderBackendUsers()">'+
+      ['all:All users','active:Active','suspended:Suspended','pending:Pending invites','admin:Admins','pro:Pro','free:Free'].map(function(o){
+        var parts=o.split(':'); return '<option value="'+parts[0]+'"'+(f===parts[0]?' selected':'')+'>'+parts[1]+'</option>';
+      }).join('')+
+    '</select>'+
+    '<button class="btn primary sm b-add-user-btn" onclick="openAddUserModal()">'+ICONS.plus+' Add user</button>'+
+  '</div>';
+  html += '<div class="b-table-wrap"><table class="b-table"><thead><tr><th>User</th><th>Plan</th><th>Status</th><th>Subscription</th><th>Habits</th><th>Goals</th><th>Joined</th><th></th></tr></thead><tbody>';
   if(!users.length){
-    html += '<tr><td colspan="6" class="b-empty-cell">No users match yet.</td></tr>';
+    html += '<tr><td colspan="8" class="b-empty-cell">No users match yet.</td></tr>';
   } else {
     html += users.map(function(u){
       var name = u.displayName || u.email || 'Unknown';
-      var initials = name.trim().split(/\s+/).map(function(w){return w[0];}).slice(0,2).join('').toUpperCase();
+      var initials = userInitials(name);
       var isAdminRow = u.role==='admin';
       var isProRow = u.plan==='pro';
-      return '<tr><td><div class="b-user-cell">'+
+      var isPending = u._kind==='pending';
+      var isSuspended = u.status==='suspended';
+      var statusPill = isPending ? '<span class="b-pill pending">Pending</span>' : (isSuspended ? '<span class="b-pill suspended">Suspended</span>' : '<span class="b-pill active">Active</span>');
+      var sub = u.subscription;
+      var subCell = '<span class="faint" style="font-size:12px">—</span>';
+      if(sub && (sub.endDate || sub.startDate)){
+        var expired = subIsExpired(sub);
+        subCell = '<span style="font-size:12px" class="'+(expired?'':'faint')+'"'+(expired?' style="color:var(--bad)"':'')+'>'+
+          (sub.endDate ? 'ends '+fmtPlainDate(sub.endDate) : 'from '+fmtPlainDate(sub.startDate))+(expired?' · expired':'')+'</span>';
+      }
+      return '<tr style="cursor:pointer" onclick="openUserDetail(\''+u._kind+'\',\''+esc(u._id).replace(/'/g,"\\'")+'\')"><td><div class="b-user-cell">'+
           (u.photoURL ? '<img class="b-avatar" src="'+esc(u.photoURL)+'" referrerpolicy="no-referrer"/>' : '<div class="b-avatar-fallback">'+esc(initials||'?')+'</div>')+
           '<div><div style="font-weight:700;font-size:12.5px">'+esc(name)+'</div><div class="faint" style="font-size:11px">'+esc(u.email||'')+'</div></div>'+
         '</div></td>'+
         '<td>'+(isAdminRow?'<span class="b-pill admin">Admin</span>':'<span class="b-pill '+(isProRow?'pro':'free')+'">'+(isProRow?'Pro':'Free')+'</span>')+'</td>'+
-        '<td class="mono">'+(u.activeHabitsCount||0)+'</td>'+
-        '<td class="mono">'+(u.activeGoalsCount||0)+'</td>'+
+        '<td>'+statusPill+'</td>'+
+        '<td>'+subCell+'</td>'+
+        '<td class="mono">'+(isPending?'—':(u.activeHabitsCount||0))+'</td>'+
+        '<td class="mono">'+(isPending?'—':(u.activeGoalsCount||0))+'</td>'+
         '<td class="faint" style="font-size:12px">'+tsToDate(u.createdAt)+'</td>'+
-        '<td>'+(isAdminRow ? '' : '<button class="btn sm" onclick="toggleUserPlan(\''+u.uid+'\',\''+(isProRow?'free':'pro')+'\')">'+(isProRow?'Move to Free':'Upgrade to Pro')+'</button>')+'</td>'+
+        '<td onclick="event.stopPropagation()"><div class="b-row-actions">'+
+          (isAdminRow ? '' : '<button class="btn sm" onclick="toggleUserPlan(\''+u._kind+'\',\''+esc(u._id).replace(/'/g,"\\'")+'\',\''+(isProRow?'free':'pro')+'\')">'+(isProRow?'Move to Free':'Upgrade to Pro')+'</button>')+
+          '<button class="icon-btn sm" title="Manage" onclick="openUserDetail(\''+u._kind+'\',\''+esc(u._id).replace(/'/g,"\\'")+'\')">'+ICONS.edit+'</button>'+
+        '</div></td>'+
       '</tr>';
     }).join('');
   }
   html += '</tbody></table></div>';
   el.innerHTML = html;
 }
-function toggleUserPlan(uidStr, newPlan){
-  directoryDocRef(uidStr).update({plan:newPlan}).then(function(){
+function userRef(kind, id){ return kind==='pending' ? pendingDocRef(id) : directoryDocRef(id); }
+function findUserRecord(kind, id){
+  var list = kind==='pending' ? _bPendingCache : _bUsersCache;
+  var key = kind==='pending' ? 'email' : 'uid';
+  for(var i=0;i<list.length;i++){ if(list[i][key]===id) return list[i]; }
+  return null;
+}
+function toggleUserPlan(kind, id, newPlan){
+  userRef(kind, id).update({plan:newPlan}).then(function(){
     toast('Plan updated to '+(newPlan==='pro'?'Pro':'Free'));
   }).catch(function(err){ toast('Could not update: '+err.message, true); });
 }
