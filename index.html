@@ -1775,6 +1775,10 @@ html.day .lock-overlay{background:rgba(244,245,249,.76)}
   <main id="bMain">
     <section class="page active" id="page-b-overview"></section>
     <section class="page" id="page-b-users"></section>
+    <section class="page" id="page-b-dashboard"></section>
+    <section class="page" id="page-b-achievements"></section>
+    <section class="page" id="page-b-settings"></section>
+    <section class="page" id="page-b-templates"></section>
     <section class="page" id="page-b-limits"></section>
   </main>
 </div>
@@ -2316,6 +2320,10 @@ function goBackend(section){
   renderBackendNav();
   if(section==='overview') renderBackendOverview();
   else if(section==='users') renderBackendUsers();
+  else if(section==='dashboard') renderBackendDashboard();
+  else if(section==='achievements') renderBackendAchievements();
+  else if(section==='settings') renderBackendSettings();
+  else if(section==='templates') renderBackendTemplates();
   else if(section==='limits') renderBackendLimits();
   var main = document.getElementById('bMain'); if(main) main.scrollTop = 0;
   window.scrollTo(0,0);
@@ -2432,6 +2440,398 @@ function saveBackendLimits(){
   };
   db.collection('config').doc('planLimits').set(vals, {merge:true}).then(function(){
     toast('Plan limits saved');
+  }).catch(function(err){ toast('Could not save: '+err.message, true); });
+}
+
+/* ==================================================================
+   BACKEND — DASHBOARD (greeting prefix / suffix / fallback name)
+   Root-level setting: every signed-in user's dashboard headline is built
+   from these three pieces via greetingLine(name) — "{prefix} {name} {suffix}".
+   ================================================================== */
+function renderBackendDashboard(){
+  var g = _greetingConfig || DEFAULT_GREETING_CONFIG;
+  var previewName = 'Alex';
+  var html = '<div class="page-head"><div><div class="page-title">Dashboard</div><div class="page-sub">Customize the greeting headline shown on every user\'s dashboard</div></div></div>';
+  html += '<div class="card">'+
+    '<div class="sec-title" style="margin-top:0"><h3>Greeting title</h3></div>'+
+    '<div class="hint" style="margin-bottom:16px">Built from prefix + the signed-in user\'s own name + suffix. If someone hasn\'t set a name yet, the fallback name is used instead.</div>'+
+    '<div class="field-row">'+
+      '<div class="field"><span class="field-label">Prefix</span><input class="inp" id="bg-prefix" placeholder="e.g. Hi" value="'+esc(g.prefix)+'"/></div>'+
+      '<div class="field"><span class="field-label">Suffix</span><input class="inp" id="bg-suffix" placeholder="e.g. 👋" value="'+esc(g.suffix)+'"/></div>'+
+    '</div>'+
+    '<div class="field"><span class="field-label">Fallback name</span><input class="inp" id="bg-fallback" placeholder="there" value="'+esc(g.fallbackName)+'"/>'+
+      '<div class="hint" style="margin-top:6px">Used when a user hasn\'t set their own name in Settings.</div></div>'+
+    '<div class="field"><span class="field-label">Live preview</span><div class="card" style="box-shadow:none;border:1px solid var(--border);padding:14px 16px" id="bg-preview">'+
+      esc(greetingLineWith(g, previewName))+'</div></div>'+
+    '<button class="btn primary" onclick="saveBackendGreeting()">'+ICONS.check+' Save greeting</button>'+
+  '</div>';
+  el_bDash().innerHTML = html;
+  ['bg-prefix','bg-suffix','bg-fallback'].forEach(function(id){
+    var inp = document.getElementById(id);
+    if(inp) inp.oninput = updateBackendGreetingPreview;
+  });
+}
+function el_bDash(){ return document.getElementById('page-b-dashboard'); }
+function greetingLineWith(g, name){
+  var nm = name ? name : (g.fallbackName || 'there');
+  var pre = (g.prefix||'').trim();
+  var suf = (g.suffix||'').trim();
+  return (pre?pre+' ':'')+nm+(suf?' '+suf:'');
+}
+function updateBackendGreetingPreview(){
+  var prev = document.getElementById('bg-preview'); if(!prev) return;
+  var draft = {
+    prefix: document.getElementById('bg-prefix').value,
+    suffix: document.getElementById('bg-suffix').value,
+    fallbackName: document.getElementById('bg-fallback').value
+  };
+  prev.textContent = greetingLineWith(draft, 'Alex');
+}
+function saveBackendGreeting(){
+  var vals = {
+    prefix: document.getElementById('bg-prefix').value.trim(),
+    suffix: document.getElementById('bg-suffix').value.trim(),
+    fallbackName: document.getElementById('bg-fallback').value.trim() || 'there'
+  };
+  db.collection('config').doc('greeting').set(vals, {merge:true}).then(function(){
+    toast('Greeting saved');
+  }).catch(function(err){ toast('Could not save: '+err.message, true); });
+}
+
+/* ==================================================================
+   BACKEND — ACHIEVEMENTS (badge catalog editor)
+   Working copy in _bAchDraft while editing; add / delete / reorder (drag)
+   / edit icon+title+description+threshold, then Save publishes to
+   config/achievements and every signed-in user's effBadges() picks it up.
+   ================================================================== */
+function ensureAchDraft(){
+  if(!_bAchDraft) _bAchDraft = JSON.parse(JSON.stringify(effBadges()));
+}
+function renderBackendAchievements(){
+  ensureAchDraft();
+  var el = document.getElementById('page-b-achievements'); if(!el) return;
+  var html = '<div class="page-head"><div><div class="page-title">Achievements</div><div class="page-sub">Add, remove, reorder and edit the badges everyone can earn</div></div>'+
+    '<button class="btn primary" onclick="addBackendBadge()">'+ICONS.plus+' New achievement</button></div>';
+  html += '<div class="card"><div id="bAchList" style="display:flex;flex-direction:column;gap:8px">';
+  if(!_bAchDraft.length){
+    html += '<div class="b-empty-cell">No achievements yet — add one above.</div>';
+  } else {
+    html += _bAchDraft.map(function(b,i){ return bAchRowHTML(b,i); }).join('');
+  }
+  html += '</div>'+
+    '<div style="display:flex;gap:8px;margin-top:16px">'+
+      '<button class="btn primary" onclick="saveBackendAchievements()">'+ICONS.check+' Save achievements</button>'+
+      '<button class="btn ghost" onclick="resetBackendAchievements()">Reset to defaults</button>'+
+    '</div>'+
+  '</div>';
+  el.innerHTML = html;
+}
+function bAchRowHTML(b,i){
+  return '<div class="b-row" draggable="true" data-idx="'+i+'" '+
+      'ondragstart="bAchDragStart(event,\''+b.id+'\')" ondragover="bAchDragOver(event)" ondrop="bAchDrop(event,\''+b.id+'\')" ondragend="bAchDragEnd(event)">'+
+    '<div class="journey-drag-handle" style="cursor:grab">'+ICONS.grip+'</div>'+
+    '<input class="inp b-row-emoji" maxlength="4" value="'+esc(b.icon)+'" oninput="updateAchField(\''+b.id+'\',\'icon\',this.value)"/>'+
+    '<div class="b-row-fields">'+
+      '<input class="inp" placeholder="Title" value="'+esc(b.name)+'" oninput="updateAchField(\''+b.id+'\',\'name\',this.value)"/>'+
+      '<input class="inp" placeholder="Description" value="'+esc(b.desc)+'" oninput="updateAchField(\''+b.id+'\',\'desc\',this.value)"/>'+
+    '</div>'+
+    '<label class="b-row-check" title="Pro-only badge"><input type="checkbox" '+(b.pro?'checked':'')+' onchange="updateAchField(\''+b.id+'\',\'pro\',this.checked)"/><span>Pro</span></label>'+
+    '<button class="icon-btn" title="Delete" onclick="deleteBackendBadge(\''+b.id+'\')">'+ICONS.trash+'</button>'+
+  '</div>';
+}
+function updateAchField(id, field, val){
+  var b = _bAchDraft.find(function(x){ return x.id===id; }); if(!b) return;
+  b[field] = val;
+}
+function addBackendBadge(){
+  _bAchDraft.push({id:'badge'+Date.now().toString(36)+Math.random().toString(36).slice(2,6), type:'custom', n:0, icon:'⭐', name:'New badge', desc:'Description', pro:false});
+  renderBackendAchievements();
+}
+function deleteBackendBadge(id){
+  _bAchDraft = _bAchDraft.filter(function(b){ return b.id!==id; });
+  renderBackendAchievements();
+}
+function resetBackendAchievements(){
+  _bAchDraft = JSON.parse(JSON.stringify(BADGES));
+  renderBackendAchievements();
+}
+function bAchDragStart(e,id){
+  e.stopPropagation();
+  _bDragBadgeId = id;
+  try{ e.dataTransfer.effectAllowed='move'; e.dataTransfer.setData('text/plain',id); }catch(err){}
+  var row = e.currentTarget; if(row) row.classList.add('dragging');
+}
+function bAchDragOver(e){ e.preventDefault(); try{ e.dataTransfer.dropEffect='move'; }catch(err){} }
+function bAchDrop(e,overId){
+  e.preventDefault(); e.stopPropagation();
+  var draggedId = _bDragBadgeId;
+  _bDragBadgeId = null;
+  document.querySelectorAll('#bAchList .b-row.dragging').forEach(function(x){ x.classList.remove('dragging'); });
+  if(!draggedId || draggedId===overId) return;
+  var fromIdx = _bAchDraft.findIndex(function(x){ return x.id===draggedId; });
+  var toIdx = _bAchDraft.findIndex(function(x){ return x.id===overId; });
+  if(fromIdx<0 || toIdx<0) return;
+  var item = _bAchDraft.splice(fromIdx,1)[0];
+  _bAchDraft.splice(toIdx,0,item);
+  renderBackendAchievements();
+}
+function bAchDragEnd(e){
+  _bDragBadgeId = null;
+  document.querySelectorAll('#bAchList .b-row.dragging').forEach(function(x){ x.classList.remove('dragging'); });
+}
+function saveBackendAchievements(){
+  var clean = _bAchDraft.map(function(b){
+    return {id:b.id, type:b.type||'custom', n:b.n||0, icon:(b.icon||'⭐').trim()||'⭐', name:(b.name||'').trim()||'Untitled', desc:(b.desc||'').trim(), pro:!!b.pro};
+  });
+  db.collection('config').doc('achievements').set({badges:clean}, {merge:true}).then(function(){
+    toast('Achievements saved');
+  }).catch(function(err){ toast('Could not save: '+err.message, true); });
+}
+
+/* ==================================================================
+   BACKEND — SETTINGS
+   Two independent editors on one page:
+   1) Appearance accent colors (config/appearance → replaces ACCENTS)
+   2) New Habit catalogs: emojis / colors / categories
+      (config/habitItems → replaces EMOJIS / HABIT_COLORS / CATEGORIES)
+   ================================================================== */
+function ensureHabitItemsDraft(){
+  if(!_bHabitItemsDraft) _bHabitItemsDraft = {
+    emojis: effEmojis().slice(),
+    colors: effHabitColors().slice(),
+    categories: effCategories().slice()
+  };
+}
+var _bAccentsDraft = null;
+function ensureAccentsDraft(){
+  if(!_bAccentsDraft) _bAccentsDraft = JSON.parse(JSON.stringify(effAccents()));
+}
+function renderBackendSettings(){
+  ensureAccentsDraft();
+  ensureHabitItemsDraft();
+  var el = document.getElementById('page-b-settings'); if(!el) return;
+  var html = '<div class="page-head"><div><div class="page-title">Settings</div><div class="page-sub">Manage the colors and New Habit catalogs every user sees</div></div></div>';
+
+  /* ---- Appearance colors ---- */
+  html += '<div class="card" style="margin-bottom:16px">'+
+    '<div class="sec-title" style="margin-top:0"><h3>Appearance colors</h3>'+
+      '<button class="btn sm" onclick="addBackendAccent()">'+ICONS.plus+' Add color</button></div>'+
+    '<div class="hint" style="margin-bottom:12px">Accent options shown in every user\'s Settings → Appearance.</div>'+
+    '<div id="bAccentList" style="display:flex;flex-direction:column;gap:8px">'+
+      _bAccentsDraft.map(function(a,i){ return bAccentRowHTML(a,i); }).join('')+
+    '</div>'+
+    '<div style="display:flex;gap:8px;margin-top:16px">'+
+      '<button class="btn primary" onclick="saveBackendAccents()">'+ICONS.check+' Save colors</button>'+
+      '<button class="btn ghost" onclick="resetBackendAccents()">Reset to defaults</button>'+
+    '</div>'+
+  '</div>';
+
+  /* ---- New Habit: emojis ---- */
+  html += '<div class="card" style="margin-bottom:16px">'+
+    '<div class="sec-title" style="margin-top:0"><h3>New Habit — icons</h3></div>'+
+    '<div class="hint" style="margin-bottom:12px">Emoji choices offered when someone creates or edits a habit.</div>'+
+    '<div class="field-row" style="margin-bottom:12px">'+
+      '<input class="inp" id="bhi-emoji-input" maxlength="4" placeholder="Add emoji, e.g. 🔥" style="max-width:220px"/>'+
+      '<button class="btn" onclick="addBackendEmoji()">'+ICONS.plus+' Add</button>'+
+    '</div>'+
+    '<div class="emoji-grid" id="bEmojiGrid" style="max-height:none">'+
+      _bHabitItemsDraft.emojis.map(function(e,i){ return '<div class="emoji-opt sel" title="Remove" onclick="removeBackendEmoji('+i+')">'+e+'</div>'; }).join('')+
+    '</div>'+
+  '</div>';
+
+  /* ---- New Habit: colors ---- */
+  html += '<div class="card" style="margin-bottom:16px">'+
+    '<div class="sec-title" style="margin-top:0"><h3>New Habit — colors</h3></div>'+
+    '<div class="hint" style="margin-bottom:12px">Color swatches offered when someone creates or edits a habit.</div>'+
+    '<div class="field-row" style="margin-bottom:12px">'+
+      '<input class="inp" type="color" id="bhi-color-input" value="#FF6B35" style="max-width:70px;padding:4px"/>'+
+      '<button class="btn" onclick="addBackendHabitColor()">'+ICONS.plus+' Add</button>'+
+    '</div>'+
+    '<div class="swatch-row" id="bColorRow">'+
+      _bHabitItemsDraft.colors.map(function(c,i){ return '<div class="swatch sel" style="background:'+c+'" title="Remove" onclick="removeBackendHabitColor('+i+')">'+ICONS.x+'</div>'; }).join('')+
+    '</div>'+
+  '</div>';
+
+  /* ---- New Habit: categories ---- */
+  html += '<div class="card" style="margin-bottom:16px">'+
+    '<div class="sec-title" style="margin-top:0"><h3>New Habit — categories</h3></div>'+
+    '<div class="hint" style="margin-bottom:12px">Category options offered when someone creates or edits a habit.</div>'+
+    '<div class="field-row" style="margin-bottom:12px">'+
+      '<input class="inp" id="bhi-cat-input" placeholder="Add category, e.g. Travel" style="max-width:220px"/>'+
+      '<button class="btn" onclick="addBackendCategory()">'+ICONS.plus+' Add</button>'+
+    '</div>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:8px" id="bCatRow">'+
+      _bHabitItemsDraft.categories.map(function(c,i){ return '<div class="b-pill free" style="cursor:pointer;display:flex;align-items:center;gap:6px" title="Remove" onclick="removeBackendCategory('+i+')">'+esc(c)+' '+ICONS.x+'</div>'; }).join('')+
+    '</div>'+
+  '</div>';
+
+  html += '<div class="card">'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
+      '<button class="btn primary" onclick="saveBackendHabitItems()">'+ICONS.check+' Save New Habit catalogs</button>'+
+      '<button class="btn ghost" onclick="resetBackendHabitItems()">Reset to defaults</button>'+
+    '</div>'+
+  '</div>';
+
+  el.innerHTML = html;
+}
+function bAccentRowHTML(a,i){
+  return '<div class="b-row">'+
+    '<input class="inp" type="color" value="'+esc(a.a)+'" style="max-width:56px;padding:4px" onchange="updateAccentField('+i+',\'a\',this.value)"/>'+
+    '<div class="b-row-fields">'+
+      '<input class="inp" placeholder="id (unique)" value="'+esc(a.id)+'" oninput="updateAccentField('+i+',\'id\',this.value)"/>'+
+      '<input class="inp" type="color" value="'+esc(a.a2||a.a)+'" style="max-width:100%" onchange="updateAccentField('+i+',\'a2\',this.value)"/>'+
+    '</div>'+
+    '<button class="icon-btn" title="Delete" onclick="removeBackendAccent('+i+')">'+ICONS.trash+'</button>'+
+  '</div>';
+}
+function updateAccentField(i, field, val){ if(_bAccentsDraft[i]) _bAccentsDraft[i][field]=val; }
+function addBackendAccent(){
+  _bAccentsDraft.push({id:'color'+(_bAccentsDraft.length+1), a:'#3B82F6', a2:'#2563EB'});
+  renderBackendSettings();
+}
+function removeBackendAccent(i){ _bAccentsDraft.splice(i,1); renderBackendSettings(); }
+function resetBackendAccents(){ _bAccentsDraft = JSON.parse(JSON.stringify(ACCENTS)); renderBackendSettings(); }
+function saveBackendAccents(){
+  var clean = _bAccentsDraft.filter(function(a){ return a.id && a.a; })
+    .map(function(a){ return {id:a.id.trim(), a:a.a, a2:a.a2||a.a}; });
+  if(!clean.length){ toast('Add at least one color', true); return; }
+  db.collection('config').doc('appearance').set({accents:clean}, {merge:true}).then(function(){
+    toast('Colors saved');
+  }).catch(function(err){ toast('Could not save: '+err.message, true); });
+}
+function addBackendEmoji(){
+  var inp = document.getElementById('bhi-emoji-input');
+  var v = (inp.value||'').trim();
+  if(!v){ return; }
+  _bHabitItemsDraft.emojis.push(v);
+  inp.value = '';
+  renderBackendSettings();
+}
+function removeBackendEmoji(i){ _bHabitItemsDraft.emojis.splice(i,1); renderBackendSettings(); }
+function addBackendHabitColor(){
+  var v = document.getElementById('bhi-color-input').value;
+  _bHabitItemsDraft.colors.push(v);
+  renderBackendSettings();
+}
+function removeBackendHabitColor(i){ _bHabitItemsDraft.colors.splice(i,1); renderBackendSettings(); }
+function addBackendCategory(){
+  var inp = document.getElementById('bhi-cat-input');
+  var v = (inp.value||'').trim();
+  if(!v) return;
+  _bHabitItemsDraft.categories.push(v);
+  inp.value = '';
+  renderBackendSettings();
+}
+function removeBackendCategory(i){ _bHabitItemsDraft.categories.splice(i,1); renderBackendSettings(); }
+function resetBackendHabitItems(){
+  _bHabitItemsDraft = {emojis:EMOJIS.slice(), colors:HABIT_COLORS.slice(), categories:CATEGORIES.slice()};
+  renderBackendSettings();
+}
+function saveBackendHabitItems(){
+  if(!_bHabitItemsDraft.emojis.length || !_bHabitItemsDraft.colors.length || !_bHabitItemsDraft.categories.length){
+    toast('Each list needs at least one item', true); return;
+  }
+  db.collection('config').doc('habitItems').set({
+    emojis: _bHabitItemsDraft.emojis,
+    colors: _bHabitItemsDraft.colors,
+    categories: _bHabitItemsDraft.categories
+  }, {merge:true}).then(function(){
+    toast('New Habit catalogs saved');
+  }).catch(function(err){ toast('Could not save: '+err.message, true); });
+}
+
+/* ==================================================================
+   BACKEND — HABIT TEMPLATES
+   Working copy in _bTplDraft; add / edit / delete / reorder (drag),
+   then Save publishes to config/habitTemplates and every user's "New
+   Habit → Templates" picker (effTemplates()) reflects it live.
+   ================================================================== */
+function ensureTplDraft(){
+  if(!_bTplDraft) _bTplDraft = JSON.parse(JSON.stringify(effTemplates()));
+}
+function renderBackendTemplates(){
+  ensureTplDraft();
+  var el = document.getElementById('page-b-templates'); if(!el) return;
+  var html = '<div class="page-head"><div><div class="page-title">Habit Templates</div><div class="page-sub">Add, remove, reorder and edit the ready-made habits people can add instantly</div></div>'+
+    '<button class="btn primary" onclick="addBackendTemplate()">'+ICONS.plus+' New template</button></div>';
+  html += '<div class="card"><div id="bTplList" style="display:flex;flex-direction:column;gap:8px">';
+  if(!_bTplDraft.length){
+    html += '<div class="b-empty-cell">No templates yet — add one above.</div>';
+  } else {
+    html += _bTplDraft.map(function(t,i){ return bTplRowHTML(t,i); }).join('');
+  }
+  html += '</div>'+
+    '<div style="display:flex;gap:8px;margin-top:16px">'+
+      '<button class="btn primary" onclick="saveBackendTemplates()">'+ICONS.check+' Save templates</button>'+
+      '<button class="btn ghost" onclick="resetBackendTemplates()">Reset to defaults</button>'+
+    '</div>'+
+  '</div>';
+  el.innerHTML = html;
+}
+function bTplRowHTML(t,i){
+  var catOpts = effCategories().map(function(c){ return '<option'+(t.cat===c?' selected':'')+'>'+esc(c)+'</option>'; }).join('');
+  var freqOpts = ['daily','weekly','days'].map(function(f){
+    return '<option value="'+f+'"'+(t.freqType===f?' selected':'')+'>'+(f==='daily'?'Every day':f==='weekly'?'X per week':'Specific days')+'</option>';
+  }).join('');
+  return '<div class="b-row" draggable="true" data-idx="'+i+'" '+
+      'ondragstart="bTplDragStart(event,'+i+')" ondragover="bTplDragOver(event)" ondrop="bTplDrop(event,'+i+')" ondragend="bTplDragEnd(event)">'+
+    '<div class="journey-drag-handle" style="cursor:grab">'+ICONS.grip+'</div>'+
+    '<input class="inp b-row-emoji" maxlength="4" value="'+esc(t.icon)+'" oninput="updateTplField('+i+',\'icon\',this.value)"/>'+
+    '<div class="b-row-fields">'+
+      '<input class="inp" placeholder="Name" value="'+esc(t.name)+'" oninput="updateTplField('+i+',\'name\',this.value)"/>'+
+      '<div class="field-row" style="gap:6px">'+
+        '<select class="sel" onchange="updateTplField('+i+',\'cat\',this.value)">'+catOpts+'</select>'+
+        '<select class="sel" onchange="updateTplField('+i+',\'freqType\',this.value)">'+freqOpts+'</select>'+
+        (t.freqType==='weekly' ? '<input class="inp" type="number" min="1" max="7" style="max-width:70px" value="'+(t.freqCount||3)+'" oninput="updateTplField('+i+',\'freqCount\',parseInt(this.value,10)||1)"/>' : '')+
+      '</div>'+
+    '</div>'+
+    '<button class="icon-btn" title="Delete" onclick="deleteBackendTemplate('+i+')">'+ICONS.trash+'</button>'+
+  '</div>';
+}
+function updateTplField(i, field, val){
+  if(!_bTplDraft[i]) return;
+  _bTplDraft[i][field] = val;
+  if(field==='freqType' && val!=='days') delete _bTplDraft[i].freqDays;
+  if(field==='freqType' && val==='days' && !_bTplDraft[i].freqDays) _bTplDraft[i].freqDays=[1,2,3,4,5];
+  renderBackendTemplates();
+}
+function addBackendTemplate(){
+  _bTplDraft.push({name:'New Habit', icon:'✨', cat:effCategories()[0]||'Other', freqType:'daily'});
+  renderBackendTemplates();
+}
+function deleteBackendTemplate(i){ _bTplDraft.splice(i,1); renderBackendTemplates(); }
+function resetBackendTemplates(){ _bTplDraft = JSON.parse(JSON.stringify(TEMPLATES)); renderBackendTemplates(); }
+function bTplDragStart(e,i){
+  e.stopPropagation();
+  _bDragTplIdx = i;
+  try{ e.dataTransfer.effectAllowed='move'; e.dataTransfer.setData('text/plain',String(i)); }catch(err){}
+  var row = e.currentTarget; if(row) row.classList.add('dragging');
+}
+function bTplDragOver(e){ e.preventDefault(); try{ e.dataTransfer.dropEffect='move'; }catch(err){} }
+function bTplDrop(e,overIdx){
+  e.preventDefault(); e.stopPropagation();
+  var fromIdx = _bDragTplIdx;
+  _bDragTplIdx = null;
+  document.querySelectorAll('#bTplList .b-row.dragging').forEach(function(x){ x.classList.remove('dragging'); });
+  if(fromIdx===null || fromIdx===undefined || fromIdx===overIdx) return;
+  var item = _bTplDraft.splice(fromIdx,1)[0];
+  _bTplDraft.splice(overIdx,0,item);
+  renderBackendTemplates();
+}
+function bTplDragEnd(e){
+  _bDragTplIdx = null;
+  document.querySelectorAll('#bTplList .b-row.dragging').forEach(function(x){ x.classList.remove('dragging'); });
+}
+function saveBackendTemplates(){
+  var clean = _bTplDraft.filter(function(t){ return (t.name||'').trim(); }).map(function(t){
+    var out = {name:t.name.trim(), icon:(t.icon||'✨').trim()||'✨', cat:t.cat||'Other', freqType:t.freqType||'daily'};
+    if(out.freqType==='weekly') out.freqCount = t.freqCount||3;
+    if(out.freqType==='days') out.freqDays = t.freqDays||[1,2,3,4,5];
+    return out;
+  });
+  if(!clean.length){ toast('Add at least one template', true); return; }
+  db.collection('config').doc('habitTemplates').set({templates:clean}, {merge:true}).then(function(){
+    toast('Templates saved');
   }).catch(function(err){ toast('Could not save: '+err.message, true); });
 }
 
@@ -2747,6 +3147,10 @@ var ICONS = {
 var B_NAV = [
   {id:'overview', label:'Overview', icon:ICONS.grid},
   {id:'users', label:'Users', icon:ICONS.users},
+  {id:'dashboard', label:'Dashboard', icon:ICONS.home},
+  {id:'achievements', label:'Achievements', icon:ICONS.trophy},
+  {id:'settings', label:'Settings', icon:ICONS.settings},
+  {id:'templates', label:'Habit Templates', icon:ICONS.calendar},
   {id:'limits', label:'Plan limits', icon:ICONS.sliders}
 ];
 var NAV = [
@@ -3514,7 +3918,7 @@ function habitStatsHTML(h){
 function templateGridHTML(){
   var locked = !templatesAllowed();
   return '<div class="tpl-grid">'+
-    effTemplates().map(function(t,i){
+    TEMPLATES.map(function(t,i){
       return '<button class="tpl-card" onclick="'+(locked?"openUpgradeModal('templates')":'addFromTemplate('+i+')')+'">'+
         (locked?'<div class="lock-overlay">'+ICONS.shield+'<span>Pro</span></div>':'')+
         '<div class="tpl-icon">'+t.icon+'</div>'+
@@ -4793,7 +5197,7 @@ function renderSettings(){
       '<div class="theme-card'+(S.profile.theme==='day'?' sel':'')+'" onclick="setTheme(\'day\')"><div class="theme-card-prev" style="background:#F3F5FA;border:1px solid #E3E7F0"></div><b>Day</b></div>'+
     '</div>'+
     '<div class="field-label">Accent color</div>'+
-    '<div class="accent-row">'+effAccents().map(function(a){
+    '<div class="accent-row">'+ACCENTS.map(function(a){
       return '<div class="accent-swatch'+(S.profile.accent===a.id?' sel':'')+'" style="background:'+a.a+'" onclick="setAccent(\''+a.id+'\')">'+ICONS.check+'</div>';
     }).join('')+'</div>'+
   '</div>';
@@ -4907,14 +5311,14 @@ function resetData(){
    ADD / EDIT HABIT MODAL
    ================================================================== */
 var _editingId = null;
-var _formIcon='🎯', _formColor=HABIT_COLORS[0], _formFreqType='daily', _formFreqDays=[1,2,3,4,5], _formFreqCount=3, _formReminder=null; // initial defaults only; openHabitModal() below always re-picks from effEmojis()/effHabitColors()
+var _formIcon='🎯', _formColor=HABIT_COLORS[0], _formFreqType='daily', _formFreqDays=[1,2,3,4,5], _formFreqCount=3, _formReminder=null;
 
 function openHabitModal(id){
   if(!id && !canCreateHabit()){ openUpgradeModal('habits'); return; }
   _editingId = id || null;
   var h = id ? habitById(id) : null;
-  _formIcon = h ? h.icon : effEmojis()[Math.floor(Math.random()*effEmojis().length)];
-  _formColor = h ? h.color : effHabitColors()[S.habits.length % effHabitColors().length];
+  _formIcon = h ? h.icon : EMOJIS[Math.floor(Math.random()*EMOJIS.length)];
+  _formColor = h ? h.color : HABIT_COLORS[S.habits.length % HABIT_COLORS.length];
   _formFreqType = h ? h.freqType : 'daily';
   _formFreqDays = h ? (h.freqDays||[1,2,3,4,5]).slice() : [1,2,3,4,5];
   _formFreqCount = h ? (h.freqCount||3) : 3;
@@ -4934,15 +5338,15 @@ function habitFormHTML(h){
   out += '<div class="field"><span class="field-label">Name</span><input class="inp" id="hf-name" placeholder="e.g. Morning Walk" value="'+(h?esc(h.name):'')+'"/></div>';
 
   out += '<div class="field"><span class="field-label">Icon</span><div class="emoji-grid" id="hf-emoji-grid">'+
-    effEmojis().map(function(e){ return '<div class="emoji-opt'+(e===_formIcon?' sel':'')+'" onclick="pickIcon(this,\''+e+'\')">'+e+'</div>'; }).join('')+
+    EMOJIS.map(function(e){ return '<div class="emoji-opt'+(e===_formIcon?' sel':'')+'" onclick="pickIcon(this,\''+e+'\')">'+e+'</div>'; }).join('')+
   '</div></div>';
 
   out += '<div class="field"><span class="field-label">Color</span><div class="swatch-row" id="hf-color-row">'+
-    effHabitColors().map(function(c){ return '<div class="swatch'+(c===_formColor?' sel':'')+'" style="background:'+c+'" onclick="pickColor(this,\''+c+'\')">'+ICONS.check+'</div>'; }).join('')+
+    HABIT_COLORS.map(function(c){ return '<div class="swatch'+(c===_formColor?' sel':'')+'" style="background:'+c+'" onclick="pickColor(this,\''+c+'\')">'+ICONS.check+'</div>'; }).join('')+
   '</div></div>';
 
   out += '<div class="field-row"><div class="field"><span class="field-label">Category</span><select class="sel" id="hf-cat">'+
-    effCategories().map(function(c){ return '<option'+(h&&h.cat===c?' selected':'')+'>'+c+'</option>'; }).join('')+
+    CATEGORIES.map(function(c){ return '<option'+(h&&h.cat===c?' selected':'')+'>'+c+'</option>'; }).join('')+
   '</select></div>'+
   '<div class="field"><span class="field-label">Reminder (optional)</span>'+
     '<button type="button" class="inp time-trigger'+(_formReminder?'':' is-empty')+'" id="hf-reminder-btn" onclick="openTimePicker()">'+
@@ -5217,12 +5621,12 @@ function aiShowThinking(){
 }
 function aiHideThinking(){ var el=document.getElementById('ai-thinking-el'); if(el) el.remove(); }
 
-function AI_TOOLS(){ return [
+var AI_TOOLS = [
   { name:'add_habit', description:'Create a new habit for the user to track.',
     input_schema:{ type:'object', properties:{
       name:{type:'string', description:'Short name of the habit'},
       icon:{type:'string', description:'A single emoji representing the habit'},
-      category:{type:'string', enum:effCategories()},
+      category:{type:'string', enum:CATEGORIES},
       frequency_type:{type:'string', enum:['daily','days','weekly'], description:'daily = every day, days = specific weekdays, weekly = X times per week on any days'},
       frequency_days:{type:'array', items:{type:'integer', minimum:0, maximum:6}, description:'Weekdays for frequency_type=days, 0=Sunday..6=Saturday'},
       frequency_count:{type:'integer', minimum:1, maximum:7, description:'Times per week for frequency_type=weekly'}
@@ -5241,7 +5645,7 @@ function AI_TOOLS(){ return [
     input_schema:{ type:'object', properties:{ name:{type:'string'} }, required:['name'] } },
   { name:'archive_habit', description:'Archive or unarchive a habit by name (fuzzy match), removing/restoring it from active tracking without deleting history.',
     input_schema:{ type:'object', properties:{ name:{type:'string'}, archived:{type:'boolean'} }, required:['name','archived'] } }
-]; }
+];
 
 /* ==================================================================
    GEMINI — Habit Coach runs on Google's Gemini API (client-side call).
@@ -5253,9 +5657,9 @@ function AI_TOOLS(){ return [
    ================================================================== */
 var GEMINI_API_KEY = "AQ.Ab8RN6K_5T9iKoJL-7_nLh9nZrduQMqYL7q5jaz1z-R1x8n2mg";
 var GEMINI_MODEL = "gemini-2.5-flash";
-function GEMINI_TOOLS(){ return [{ functionDeclarations: AI_TOOLS().map(function(t){
+var GEMINI_TOOLS = [{ functionDeclarations: AI_TOOLS.map(function(t){
   return { name:t.name, description:t.description, parameters:t.input_schema };
-}) }]; }
+}) }];
 
 function findHabitFuzzy(name){
   if(!name) return null;
@@ -5269,9 +5673,9 @@ function aiExecuteTool(name,input){
       if(!input.name) return {error:'name is required'};
       var ft = ['daily','days','weekly'].indexOf(input.frequency_type)!==-1 ? input.frequency_type : 'daily';
       var h = {
-        id:uid(), name:input.name, icon:input.icon||effEmojis()[Math.floor(Math.random()*effEmojis().length)],
-        color:effHabitColors()[S.habits.length % effHabitColors().length],
-        cat: effCategories().indexOf(input.category)!==-1 ? input.category : 'Other',
+        id:uid(), name:input.name, icon:input.icon||EMOJIS[Math.floor(Math.random()*EMOJIS.length)],
+        color:HABIT_COLORS[S.habits.length % HABIT_COLORS.length],
+        cat: CATEGORIES.indexOf(input.category)!==-1 ? input.category : 'Other',
         freqType:ft, freqDays: Array.isArray(input.frequency_days)&&input.frequency_days.length?input.frequency_days:[1,2,3,4,5],
         freqCount: input.frequency_count||3, reminder:null, createdAt:_todayStr, logs:{}, archived:false
       };
@@ -5338,7 +5742,7 @@ async function callGemini(){
       body: JSON.stringify({
         contents: _aiHistory,
         systemInstruction: { parts:[{ text: aiSystemPrompt() }] },
-        tools: GEMINI_TOOLS()
+        tools: GEMINI_TOOLS
       })
     });
     if(!resp.ok){
@@ -5393,7 +5797,7 @@ async function aiSend(){
 }
 
 function addFromTemplate(i){
-  var t = effTemplates()[i];
+  var t = TEMPLATES[i];
   var h = {
     id:uid(), name:t.name, icon:t.icon, color:HABIT_COLORS[S.habits.length % HABIT_COLORS.length],
     cat:t.cat, freqType:t.freqType, freqDays:t.freqDays||[1,2,3,4,5], freqCount:t.freqCount||3,
