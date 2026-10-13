@@ -402,7 +402,7 @@ a{color:inherit}
    the animated diagonal sheen + lift is added separately, only to cards that are
    actually clickable — see .tpl-card below. Purely-informational cards stay static. */
 .card,.stat-card,.widget,.badge,.tpl-card,.hero,.auth-card,.mini-ring-row{
-  border:none;background:none;
+  border:1.5px solid var(--glass-border);background:var(--glass-bg-strong);
   -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(180%);backdrop-filter:blur(var(--glass-blur)) saturate(180%);
   position:relative;overflow:hidden;isolation:isolate;
 }
@@ -1613,6 +1613,173 @@ html.day .lock-overlay{background:rgba(244,245,249,.76)}
 .b-danger-zone{background:var(--bad-soft);border-radius:var(--radius-sm);padding:14px}
 .b-danger-zone p{font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.5}
 .b-note{font-size:11.5px;color:var(--text3);line-height:1.5;margin-top:4px}
+
+/* ============================================================
+   ADMIN CONSOLE v2 — compact, consistent SaaS layout
+   (visual layer only; all data/IDs/handlers unchanged)
+   ============================================================ */
+#bSidebar{width:216px;padding:18px 12px;gap:18px}
+.b-brand-mark{width:32px;height:32px;border-radius:9px}
+.b-brand-mark svg{width:16px;height:16px}
+.b-brand-text{font-size:14px}
+.b-nav{gap:2px}
+.b-nav-item{padding:8px 10px;border-radius:9px;font-size:12.5px;gap:9px}
+.b-nav-item svg{width:15px;height:15px}
+#bMain{margin-left:216px;padding:20px 26px 28px;max-width:1240px}
+@media(max-width:860px){
+  #bSidebar{position:static;width:auto;height:auto;flex-direction:row;align-items:center;padding:10px 12px;gap:10px;overflow-x:auto}
+  #bMain{margin-left:0;padding:16px 14px 24px}
+}
+#bMain .page-head{margin-bottom:14px;align-items:center}
+#bMain .page-title{font-size:19px}
+#bMain .page-sub{font-size:12px;margin-top:2px}
+#bMain .btn{padding:7px 12px;font-size:12.5px;border-radius:9px;gap:6px}
+#bMain .btn:hover{transform:none}
+#bMain .btn.primary{box-shadow:0 3px 10px var(--accent-soft)}
+#bMain .btn.sm{padding:5px 10px;font-size:11.5px}
+#bMain .inp,#bMain .sel{padding:6px 10px;font-size:13px;border-radius:9px;min-height:34px}
+#bMain .card{padding:14px 16px;border-radius:14px}
+#bMain .field{margin-bottom:10px}
+#bMain .field-label{margin-bottom:5px;font-size:10.5px}
+#bMain .hint{font-size:11px;margin-top:4px}
+#bMain .seg-tabs{margin-bottom:12px;padding:3px;border-radius:11px}
+#bMain .seg-tab{padding:6px 12px;font-size:12px;border-radius:8px;display:inline-flex;align-items:center;gap:6px}
+.b-count{font-family:var(--f-mono);font-size:10.5px;opacity:.65}
+.b-tdot{width:6px;height:6px;border-radius:50%;background:var(--warn)}
+
+/* panels */
+.b-panel{border:1px solid var(--glass-border);background:var(--glass-bg-strong);border-radius:14px;box-shadow:var(--shadow-widget-sm);
+  -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(180%);backdrop-filter:blur(var(--glass-blur)) saturate(180%);margin-bottom:12px;overflow:hidden}
+.b-panel-head{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap;min-height:50px}
+.b-panel-head h3{font-size:13px;font-weight:700}
+.b-panel-head .sub{font-size:11.5px;color:var(--text3)}
+.b-panel-body{padding:12px 14px}
+.b-sp{flex:1}
+.b-cols{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:12px;align-items:start}
+@media(max-width:900px){.b-cols{grid-template-columns:1fr}}
+.b-sbox{position:relative;width:220px;max-width:100%}
+.b-sbox svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--text3);pointer-events:none}
+.b-sbox .inp{padding-left:30px}
+.b-fsel{width:auto !important;min-width:150px}
+.b-add-inline{display:flex;gap:6px;align-items:center}
+.b-add-inline .inp{width:190px}
+
+/* editable table rows (templates / achievements / colors) */
+.b-thead,.b-trow{display:grid;align-items:center;gap:8px;padding:0 12px}
+.b-thead{padding-top:7px;padding-bottom:7px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);border-bottom:1px solid var(--border);background:rgba(128,128,128,.05)}
+.b-trow{padding-top:4px;padding-bottom:4px;border-bottom:1px solid var(--border);transition:background .12s}
+.b-trow:last-child{border-bottom:none}
+.b-trow:hover{background:rgba(128,128,128,.05)}
+.b-trow.dragging{opacity:.4}
+.b-trow .inp,.b-trow .sel{min-height:30px;padding:4px 8px;font-size:12.5px;background:transparent;border-color:transparent}
+.b-trow .inp:hover,.b-trow .sel:hover{background:var(--surface2)}
+.b-trow .inp:focus,.b-trow .sel:focus{background:var(--surface2);border-color:var(--accent)}
+.b-trow .b-emo{text-align:center;font-size:16px;padding:4px 2px}
+.b-trow.tpl,.b-thead.tpl{grid-template-columns:16px 44px minmax(120px,1.5fr) 140px 120px 156px 62px}
+.b-trow.ach,.b-thead.ach{grid-template-columns:16px 44px minmax(110px,1fr) minmax(150px,2fr) 66px 34px}
+.b-trow.acc,.b-thead.acc{grid-template-columns:44px minmax(120px,1fr) 44px 110px 34px}
+.b-grip{width:16px;height:16px;color:var(--text3);cursor:grab;opacity:.55;display:flex;align-items:center;justify-content:center}
+.b-grip:hover{opacity:1}
+.b-grip.off{cursor:not-allowed;opacity:.2}
+.b-grip svg{width:14px;height:14px}
+.b-acts{display:flex;gap:2px;justify-content:flex-end}
+.b-ib{width:28px;height:28px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;color:var(--text3);transition:background .12s,color .12s}
+.b-ib:hover{background:var(--surface2);color:var(--text)}
+.b-ib.del:hover{background:var(--bad-soft);color:var(--bad)}
+.b-ib svg{width:14px;height:14px}
+.b-days{display:flex;gap:2px}
+.b-day{width:19px;height:22px;border-radius:6px;font-size:10px;font-weight:700;color:var(--text3);background:var(--surface2);transition:background .12s,color .12s}
+.b-day:hover{color:var(--text)}
+.b-day.on{background:var(--accent);color:var(--accent-contrast)}
+.b-wk{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3)}
+.b-wk .inp{width:52px;text-align:center;font-family:var(--f-mono)}
+.b-dash{color:var(--text3);font-size:12px;padding-left:8px}
+.b-pro-tg{display:inline-flex;align-items:center;justify-content:center;gap:5px;cursor:pointer;font-size:11px;font-weight:700;color:var(--text3);user-select:none}
+.b-pro-tg input{accent-color:var(--accent);width:14px;height:14px;margin:0}
+.b-pro-tg:has(input:checked){color:var(--ember)}
+.b-color{width:36px !important;height:28px !important;min-height:28px !important;padding:2px !important;border-radius:7px !important;cursor:pointer;background:var(--surface2) !important}
+.b-prev{height:18px;border-radius:6px;border:1px solid var(--glass-border)}
+.b-empty-cell{padding:26px;text-align:center;color:var(--text2);font-size:12.5px}
+@media(max-width:820px){
+  .b-thead{display:none}
+  .b-trow{display:flex;flex-wrap:wrap;gap:6px;padding:9px 12px}
+  .b-trow .b-emo{width:44px}
+  .b-trow .b-f-name{flex:1 1 150px;min-width:0}
+  .b-trow .b-f-desc{flex:1 1 100%}
+  .b-trow .sel{flex:1 1 120px;width:auto}
+}
+
+/* tiles & chips (icons / colors / categories) */
+.b-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(38px,1fr));gap:6px}
+.b-tile{position:relative;height:38px;border-radius:9px;background:var(--surface2);border:1px solid var(--border);font-size:18px;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-color .12s,transform .12s}
+.b-tile:hover{border-color:var(--bad);transform:translateY(-1px)}
+.b-tile::after{content:'×';position:absolute;top:-5px;right:-5px;width:15px;height:15px;border-radius:50%;background:var(--bad);color:#fff;
+  font-size:11px;font-weight:700;line-height:15px;text-align:center;opacity:0;transition:opacity .12s}
+.b-tile:hover::after{opacity:1}
+.b-tile.col{border:2px solid transparent}
+.b-chips{display:flex;flex-wrap:wrap;gap:7px}
+.b-chip{display:inline-flex;align-items:center;gap:7px;padding:4px 5px 4px 11px;border-radius:20px;background:var(--surface2);border:1px solid var(--border);font-size:12.5px;font-weight:600}
+.b-chip em{font-style:normal;font-family:var(--f-mono);font-size:10.5px;color:var(--text3)}
+.b-chip button{width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:var(--text3)}
+.b-chip button:hover{background:var(--bad-soft);color:var(--bad)}
+.b-chip button svg{width:11px;height:11px}
+
+/* setting rows (plan limits) */
+.b-set{display:flex;align-items:center;gap:14px;padding:11px 14px;border-bottom:1px solid var(--border)}
+.b-set:last-child{border-bottom:none}
+.b-set-txt{flex:1;min-width:0}
+.b-set-txt b{font-size:13px;font-weight:600;display:block}
+.b-set-txt span{font-size:11.5px;color:var(--text3)}
+.b-set-ctl{width:170px;flex-shrink:0}
+.b-step{display:flex;align-items:center;border:1.5px solid var(--border);border-radius:9px;background:var(--surface2);overflow:hidden}
+.b-step:focus-within{border-color:var(--accent)}
+.b-step button{width:32px;height:32px;color:var(--text2);font-size:15px;flex-shrink:0}
+.b-step button:hover{background:var(--surface3)}
+.b-step input{width:100%;min-width:0;text-align:center;background:transparent;border:none;font-family:var(--f-mono);font-size:13px;color:var(--text);outline:none;height:32px;padding:0;-moz-appearance:textfield}
+.b-step input::-webkit-inner-spin-button,.b-step input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.b-cmp{width:100%;border-collapse:collapse;font-size:12.5px}
+.b-cmp th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);font-weight:700;padding:8px 14px;border-bottom:1px solid var(--border)}
+.b-cmp td{padding:9px 14px;border-bottom:1px solid var(--border)}
+.b-cmp tr:last-child td{border-bottom:none}
+.b-cmp td:first-child{color:var(--text2)}
+.b-cmp b{font-family:var(--f-mono);font-weight:600}
+.b-cmp .pro{color:var(--ember)}
+@media(max-width:560px){.b-set{flex-wrap:wrap}.b-set-ctl{width:100%}}
+
+/* greeting preview */
+.b-greet-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+@media(max-width:560px){.b-greet-grid{grid-template-columns:1fr}}
+.b-prev-box{border:1px dashed var(--border2);border-radius:11px;padding:14px 16px;margin-bottom:10px}
+.b-prev-box small{display:block;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text3);margin-bottom:4px}
+.b-prev-box div{font-size:20px;font-weight:600;letter-spacing:-.02em}
+
+/* sticky save bar */
+.b-savebar{position:sticky;bottom:12px;z-index:5;display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:12px;
+  border:1px solid var(--glass-border);background:var(--glass-bg-strong);box-shadow:var(--shadow-widget);margin-top:12px;flex-wrap:wrap;
+  -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(180%);backdrop-filter:blur(var(--glass-blur)) saturate(180%)}
+.b-dirty{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--text2)}
+.b-dirty i{width:7px;height:7px;border-radius:50%;background:var(--ok);transition:background .15s}
+.b-dirty em{font-style:normal}
+.b-dirty.on{color:var(--text)}
+.b-dirty.on i{background:var(--warn);box-shadow:0 0 0 3px var(--warn-soft)}
+.b-note-inline{font-size:11.5px;color:var(--text3)}
+
+/* overview + users: tighter */
+.b-stats-row{gap:10px;margin-bottom:12px}
+.b-stat{padding:12px 14px !important;border-radius:14px !important}
+.b-stat b{font-size:22px}
+.b-stat span{font-size:10px}
+.b-table th{padding:9px 12px}
+.b-table td{padding:8px 12px}
+.b-table-wrap{border-radius:14px}
+.b-users-toolbar{margin-bottom:10px}
+.b-avatar,.b-avatar-fallback{width:28px;height:28px}
+.b-link-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
+.b-link-tile{text-align:left;padding:9px 11px;border-radius:10px;background:var(--surface2);border:1px solid var(--border);transition:border-color .12s}
+.b-link-tile:hover{border-color:var(--accent)}
+.b-link-tile b{display:block;font-family:var(--f-mono);font-size:17px}
+.b-link-tile span{font-size:11px;color:var(--text2)}
 </style>
 </head>
 <body>
@@ -2128,7 +2295,11 @@ var _bAchDraft = null;     // working copy of the achievements list while editin
 var _bDragBadgeId = null;  // id currently being dragged in the achievements reorder list
 var _bHabitItemsDraft = null; // working copy of {emojis,colors,categories} while editing
 var _bTplDraft = null;     // working copy of the templates list while editing
-var _bDragTplIdx = null;   // index currently being dragged in the templates reorder list
+var _bDragTplIdx = null;
+var _bBase = {};          // JSON of each draft as last seeded/saved (used to re-sync clean drafts with live config)
+var _bTplQ = '', _bTplCat = 'all'; // template list filters
+var _bSetTab = 'appearance'; // active tab on the backend Settings page
+var B_DAYS = ['S','M','T','W','T','F','S'];   // index currently being dragged in the templates reorder list
 
 /* ---- storage layer: one Firestore doc per signed-in user, realtime-synced ---- */
 function userDocRef(){
@@ -2295,6 +2466,7 @@ function subscribeBadgesConfig(){
     _badgesConfig = Array.isArray(data.badges) ? data.badges : null;
     if(_curPage==='achievements') renderAchievements();
     if(_curPage==='dashboard') renderDashboard();
+    if(_bAchDraft && bIsClean('ach', bAchClean(_bAchDraft))) _bAchDraft = null; // untouched draft follows live config
     if(_backendMode && _bCurSection==='achievements') renderBackendAchievements();
   }, function(err){ console.error('achievements config sync error', err); });
 }
@@ -2304,6 +2476,7 @@ function subscribeAccentsConfig(){
     var data = doc.exists ? doc.data() : {};
     _accentsConfig = Array.isArray(data.accents) ? data.accents : null;
     applyTheme();
+    if(_bAccentsDraft && bIsClean('acc', bAccClean(_bAccentsDraft))) _bAccentsDraft = null;
     if(_curPage==='settings') renderSettings();
     if(_backendMode && _bCurSection==='settings') renderBackendSettings();
   }, function(err){ console.error('appearance config sync error', err); });
@@ -2317,6 +2490,7 @@ function subscribeHabitItemsConfig(){
       colors: Array.isArray(data.colors) ? data.colors : [],
       categories: Array.isArray(data.categories) ? data.categories : []
     } : null;
+    if(_bHabitItemsDraft && bIsClean('items', _bHabitItemsDraft)) _bHabitItemsDraft = null;
     if(_backendMode && _bCurSection==='settings') renderBackendSettings();
   }, function(err){ console.error('habit items config sync error', err); });
 }
@@ -2325,6 +2499,7 @@ function subscribeTemplatesConfig(){
   _unsubTemplatesConfig = db.collection('config').doc('habitTemplates').onSnapshot(function(doc){
     var data = doc.exists ? doc.data() : {};
     _templatesConfig = Array.isArray(data.templates) ? data.templates : null;
+    if(_bTplDraft && bIsClean('tpl', bTplClean(_bTplDraft))) _bTplDraft = null;
     if(_backendMode && _bCurSection==='templates') renderBackendTemplates();
   }, function(err){ console.error('templates config sync error', err); });
 }
@@ -2467,20 +2642,28 @@ function renderBackendOverview(){
   var suspended = users.filter(function(u){ return u.status==='suspended'; }).length;
   var habitsSum = users.reduce(function(a,u){ return a+(u.activeHabitsCount||0); },0);
   var goalsSum = users.reduce(function(a,u){ return a+(u.activeGoalsCount||0); },0);
-  var html = '<div class="page-head"><div><div class="page-title">Overview</div><div class="page-sub">A live snapshot of every HabitOS account</div></div></div>';
+  var html = bPageHead('Overview','A live snapshot of every HabitOS account');
   html += '<div class="b-stats-row">'+
     '<div class="b-stat card"><b class="mono">'+total+'</b><span>Total users</span></div>'+
     '<div class="b-stat card"><b class="mono" style="color:var(--ember)">'+pro+'</b><span>Pro users</span></div>'+
     '<div class="b-stat card"><b class="mono">'+free+'</b><span>Free users</span></div>'+
     '<div class="b-stat card"><b class="mono" style="color:var(--bad)">'+suspended+'</b><span>Suspended</span></div>'+
   '</div>';
-  html += '<div class="card"><div class="sec-title" style="margin-top:0"><h3>Current plan limits</h3><a onclick="goBackend(\'limits\')" style="cursor:pointer">Edit</a></div>'+
-    '<div class="hint">Free accounts get up to <b>'+_planLimits.freeMaxGoals+'</b> goals and <b>'+_planLimits.freeMaxActiveHabits+'</b> active habits, '+
-    (_planLimits.freeTemplatesAccess?'with':'without')+' habit templates, and '+(_planLimits.freeAchievementsFull?'every achievement unlocked':'a limited set of achievements')+'. Pro accounts have no limits.</div>'+
+  html += '<div class="b-cols" style="grid-template-columns:repeat(2,minmax(0,1fr))">'+
+    '<div class="b-panel"><div class="b-panel-head"><h3>Current plan limits</h3><span class="b-sp"></span><button class="btn sm" onclick="goBackend(\'limits\')">'+ICONS.edit+' Edit</button></div>'+
+      '<div class="b-panel-body"><div class="hint" style="margin:0;font-size:12.5px;line-height:1.6">Free accounts get up to <b>'+_planLimits.freeMaxGoals+'</b> goals and <b>'+_planLimits.freeMaxActiveHabits+'</b> active habits, '+
+      (_planLimits.freeTemplatesAccess?'with':'without')+' habit templates, and '+(_planLimits.freeAchievementsFull?'every achievement unlocked':'a limited set of achievements')+'. Pro accounts have no limits.</div></div></div>'+
+    '<div class="b-panel"><div class="b-panel-head"><h3>Habits + goals tracked</h3></div>'+
+      '<div class="b-panel-body"><div class="hint" style="margin:0;font-size:12.5px;line-height:1.6">Across every account, people are tracking <b>'+habitsSum+'</b> active habits and <b>'+goalsSum+'</b> goals right now.</div></div></div>'+
   '</div>';
-  html += '<div class="card"><div class="sec-title"><h3>Habits + goals tracked</h3></div><div class="hint">Across every account, people are tracking <b>'+habitsSum+'</b> active habits and <b>'+goalsSum+'</b> goals right now.</div></div>';
+  html += '<div class="b-panel"><div class="b-panel-head"><h3>Configuration</h3><span class="sub">What every user currently sees</span></div><div class="b-panel-body"><div class="b-link-tiles">'+
+    [['templates','Templates',effTemplates().length],['settings','Categories',effCategories().length],['settings','Habit icons',effEmojis().length],
+     ['settings','Habit colors',effHabitColors().length],['achievements','Achievements',effBadges().length],['settings','Accent colors',effAccents().length]].map(function(x){
+      return '<button class="b-link-tile" onclick="goBackend(\''+x[0]+'\')"><b>'+x[2]+'</b><span>'+x[1]+'</span></button>';
+    }).join('')+'</div></div></div>';
   el.innerHTML = html;
 }
+
 /* ---- Users page: merges real accounts (userDirectory, keyed by uid) with
    pending / manually-provisioned accounts (userDirectoryPending, keyed by
    email) into one unified, filterable, searchable table. ---- */
@@ -2570,24 +2753,100 @@ function toggleUserPlan(kind, id, newPlan){
     toast('Plan updated to '+(newPlan==='pro'?'Pro':'Free'));
   }).catch(function(err){ toast('Could not update: '+err.message, true); });
 }
+/* ==================================================================
+   ADMIN UI HELPERS — shared by every Backend section
+   (pure presentation: dirty-state tracking, save bar, small icons)
+   ================================================================== */
+var B_ICO = {
+  search:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>',
+  copy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>',
+  undo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-15-6.7L3 13"/></svg>'
+};
+function bJSON(o){ try{ return JSON.stringify(o); }catch(e){ return ''; } }
+function bSeed(key, val){ _bBase[key] = bJSON(val); }
+function bIsClean(key, cur){ return _bBase[key]===undefined || _bBase[key]===bJSON(cur); }
+function bSetDirty(d){
+  var el = document.querySelector('#bMain .page.active .b-dirty'); if(!el) return;
+  el.classList.toggle('on', !!d);
+  var em = el.querySelector('em'); if(em) em.textContent = d ? 'Unsaved changes' : 'All changes saved';
+}
+function bPageHead(title, sub, actions){
+  return '<div class="page-head"><div><div class="page-title">'+title+'</div><div class="page-sub">'+sub+'</div></div>'+(actions||'')+'</div>';
+}
+function bSaveBar(o){
+  return '<div class="b-savebar"><span class="b-dirty"><i></i><em>All changes saved</em></span>'+
+    (o.note?'<span class="b-note-inline">'+o.note+'</span>':'')+'<span class="b-sp"></span>'+
+    (o.discard?'<button class="btn ghost" onclick="'+o.discard+'">'+B_ICO.undo+' Discard</button>':'')+
+    (o.reset?'<button class="btn ghost" onclick="'+o.reset+'">Reset to defaults</button>':'')+
+    '<button class="btn primary" onclick="'+o.save+'">'+ICONS.check+' '+(o.saveLabel||'Save changes')+'</button></div>';
+}
+
+/* ==================================================================
+   BACKEND — PLAN LIMITS  (config/planLimits — unchanged)
+   ================================================================== */
+function bLimVals(){
+  function n(id){ var e=document.getElementById(id); return Math.max(0, parseInt(e && e.value,10)||0); }
+  return {
+    freeMaxGoals: n('bl-goals'),
+    freeMaxActiveHabits: n('bl-habits'),
+    freeTemplatesAccess: (document.getElementById('bl-templates')||{}).value==='1',
+    freeAchievementsFull: (document.getElementById('bl-ach')||{}).value==='1'
+  };
+}
+function bLimDirty(){
+  var v = bLimVals(), p = _planLimits;
+  return v.freeMaxGoals!==p.freeMaxGoals || v.freeMaxActiveHabits!==p.freeMaxActiveHabits ||
+    v.freeTemplatesAccess!==!!p.freeTemplatesAccess || v.freeAchievementsFull!==!!p.freeAchievementsFull;
+}
+function bLimPreviewHTML(v){
+  return '<table class="b-cmp"><thead><tr><th></th><th>Free</th><th>Pro</th></tr></thead><tbody>'+
+    '<tr><td>Active goals</td><td><b>'+v.freeMaxGoals+'</b></td><td class="pro"><b>Unlimited</b></td></tr>'+
+    '<tr><td>Active habits</td><td><b>'+v.freeMaxActiveHabits+'</b></td><td class="pro"><b>Unlimited</b></td></tr>'+
+    '<tr><td>Habit templates</td><td><b>'+(v.freeTemplatesAccess?'Included':'Locked')+'</b></td><td class="pro"><b>Included</b></td></tr>'+
+    '<tr><td>Achievements</td><td><b>'+(v.freeAchievementsFull?'All unlocked':'Some locked')+'</b></td><td class="pro"><b>All unlocked</b></td></tr>'+
+  '</tbody></table>';
+}
+function bLimTouch(){
+  var box = document.getElementById('bLimPreview'); if(box) box.innerHTML = bLimPreviewHTML(bLimVals());
+  bSetDirty(bLimDirty());
+}
+function bLimStep(id, delta){
+  var e = document.getElementById(id); if(!e) return;
+  e.value = Math.max(0, (parseInt(e.value,10)||0)+delta);
+  bLimTouch();
+}
+function bLimReset(){
+  var d = DEFAULT_PLAN_LIMITS;
+  document.getElementById('bl-goals').value = d.freeMaxGoals;
+  document.getElementById('bl-habits').value = d.freeMaxActiveHabits;
+  document.getElementById('bl-templates').value = d.freeTemplatesAccess?'1':'0';
+  document.getElementById('bl-ach').value = d.freeAchievementsFull?'1':'0';
+  bLimTouch();
+}
 function renderBackendLimits(){
   var el = document.getElementById('page-b-limits'); if(!el) return;
-  var html = '<div class="page-head"><div><div class="page-title">Plan limits</div><div class="page-sub">Changes apply live to every Free account</div></div></div>';
-  html += '<div class="card"><div class="b-limits-form">'+
-    '<div class="field"><span class="field-label">Max goals (Free)</span><input class="inp" type="number" min="0" id="bl-goals" value="'+_planLimits.freeMaxGoals+'"/></div>'+
-    '<div class="field"><span class="field-label">Max active habits (Free)</span><input class="inp" type="number" min="0" id="bl-habits" value="'+_planLimits.freeMaxActiveHabits+'"/></div>'+
-    '<div class="field"><span class="field-label">Habit templates</span><select class="sel" id="bl-templates">'+
-      '<option value="0"'+(!_planLimits.freeTemplatesAccess?' selected':'')+'>Pro only</option>'+
-      '<option value="1"'+(_planLimits.freeTemplatesAccess?' selected':'')+'>Free + Pro</option>'+
-    '</select></div>'+
-    '<div class="field"><span class="field-label">Achievements</span><select class="sel" id="bl-ach">'+
-      '<option value="0"'+(!_planLimits.freeAchievementsFull?' selected':'')+'>Some Pro-only</option>'+
-      '<option value="1"'+(_planLimits.freeAchievementsFull?' selected':'')+'>All unlocked for everyone</option>'+
-    '</select></div>'+
+  var p = _planLimits;
+  function stepper(id,val){
+    return '<div class="b-step"><button type="button" onclick="bLimStep(\''+id+'\',-1)" aria-label="Decrease">−</button>'+
+      '<input type="number" min="0" id="'+id+'" value="'+val+'" oninput="bLimTouch()"/>'+
+      '<button type="button" onclick="bLimStep(\''+id+'\',1)" aria-label="Increase">+</button></div>';
+  }
+  var html = bPageHead('Plan limits','Changes apply live to every Free account · Pro accounts are always unlimited');
+  html += '<div class="b-cols"><div class="b-panel">'+
+    '<div class="b-panel-head"><h3>Free plan</h3><span class="sub">What Free accounts can do</span></div>'+
+    '<div class="b-set"><div class="b-set-txt"><b>Max goals</b><span>Active goals a Free account can keep</span></div><div class="b-set-ctl">'+stepper('bl-goals',p.freeMaxGoals)+'</div></div>'+
+    '<div class="b-set"><div class="b-set-txt"><b>Max active habits</b><span>Habits tracked at the same time</span></div><div class="b-set-ctl">'+stepper('bl-habits',p.freeMaxActiveHabits)+'</div></div>'+
+    '<div class="b-set"><div class="b-set-txt"><b>Habit templates</b><span>Who can add ready-made habits</span></div><div class="b-set-ctl"><select class="sel" id="bl-templates" onchange="bLimTouch()">'+
+      '<option value="0"'+(!p.freeTemplatesAccess?' selected':'')+'>Pro only</option>'+
+      '<option value="1"'+(p.freeTemplatesAccess?' selected':'')+'>Free + Pro</option></select></div></div>'+
+    '<div class="b-set"><div class="b-set-txt"><b>Achievements</b><span>Pro-only badges for Free accounts</span></div><div class="b-set-ctl"><select class="sel" id="bl-ach" onchange="bLimTouch()">'+
+      '<option value="0"'+(!p.freeAchievementsFull?' selected':'')+'>Some Pro-only</option>'+
+      '<option value="1"'+(p.freeAchievementsFull?' selected':'')+'>All unlocked for everyone</option></select></div></div>'+
   '</div>'+
-  '<button class="btn primary" style="margin-top:18px" onclick="saveBackendLimits()">'+ICONS.check+' Save limits</button>'+
-  '</div>';
+  '<div class="b-panel"><div class="b-panel-head"><h3>Plan comparison</h3><span class="sub">Live preview</span></div><div id="bLimPreview"></div></div></div>';
+  html += bSaveBar({save:'saveBackendLimits()', reset:'bLimReset()', discard:'renderBackendLimits()', saveLabel:'Save limits'});
   el.innerHTML = html;
+  bLimTouch();
 }
 function saveBackendLimits(){
   var vals = {
@@ -2606,28 +2865,38 @@ function saveBackendLimits(){
    Root-level setting: every signed-in user's dashboard headline is built
    from these three pieces via greetingLine(name) — "{prefix} {name} {suffix}".
    ================================================================== */
+function bGreetVals(){
+  function v(id){ var e=document.getElementById(id); return e ? e.value : ''; }
+  return {prefix:v('bg-prefix').trim(), suffix:v('bg-suffix').trim(), fallbackName:v('bg-fallback').trim()||'there'};
+}
+function bGreetDirty(){
+  var g = _greetingConfig || DEFAULT_GREETING_CONFIG, v = bGreetVals();
+  return v.prefix!==(g.prefix||'').trim() || v.suffix!==(g.suffix||'').trim() || v.fallbackName!==((g.fallbackName||'').trim()||'there');
+}
 function renderBackendDashboard(){
   var g = _greetingConfig || DEFAULT_GREETING_CONFIG;
-  var previewName = 'Alex';
-  var html = '<div class="page-head"><div><div class="page-title">Dashboard</div><div class="page-sub">Customize the greeting headline shown on every user\'s dashboard</div></div></div>';
-  html += '<div class="card">'+
-    '<div class="sec-title" style="margin-top:0"><h3>Greeting title</h3></div>'+
-    '<div class="hint" style="margin-bottom:16px">Built from prefix + the signed-in user\'s own name + suffix. If someone hasn\'t set a name yet, the fallback name is used instead.</div>'+
-    '<div class="field-row">'+
-      '<div class="field"><span class="field-label">Prefix</span><input class="inp" id="bg-prefix" placeholder="e.g. Hi" value="'+esc(g.prefix)+'"/></div>'+
-      '<div class="field"><span class="field-label">Suffix</span><input class="inp" id="bg-suffix" placeholder="e.g. 👋" value="'+esc(g.suffix)+'"/></div>'+
-    '</div>'+
-    '<div class="field"><span class="field-label">Fallback name</span><input class="inp" id="bg-fallback" placeholder="there" value="'+esc(g.fallbackName)+'"/>'+
-      '<div class="hint" style="margin-top:6px">Used when a user hasn\'t set their own name in Settings.</div></div>'+
-    '<div class="field"><span class="field-label">Live preview</span><div class="card" style="box-shadow:none;border:1px solid var(--border);padding:14px 16px" id="bg-preview">'+
-      esc(greetingLineWith(g, previewName))+'</div></div>'+
-    '<button class="btn primary" onclick="saveBackendGreeting()">'+ICONS.check+' Save greeting</button>'+
-  '</div>';
+  var html = bPageHead('Dashboard','Customize the greeting headline shown on every user\'s dashboard');
+  html += '<div class="b-cols"><div class="b-panel">'+
+    '<div class="b-panel-head"><h3>Greeting title</h3><span class="sub">prefix + user\'s name + suffix</span></div>'+
+    '<div class="b-panel-body">'+
+      '<div class="b-greet-grid">'+
+        '<div class="field"><span class="field-label">Prefix</span><input class="inp" id="bg-prefix" placeholder="e.g. Hi" value="'+esc(g.prefix)+'"/></div>'+
+        '<div class="field"><span class="field-label">Suffix</span><input class="inp" id="bg-suffix" placeholder="e.g. 👋" value="'+esc(g.suffix)+'"/></div>'+
+        '<div class="field"><span class="field-label">Fallback name</span><input class="inp" id="bg-fallback" placeholder="there" value="'+esc(g.fallbackName)+'"/></div>'+
+      '</div>'+
+      '<div class="hint">The fallback name is used when a user hasn\'t set their own name in Settings.</div>'+
+    '</div></div>'+
+    '<div class="b-panel"><div class="b-panel-head"><h3>Live preview</h3></div><div class="b-panel-body">'+
+      '<div class="b-prev-box"><small>User with a name</small><div id="bg-preview">'+esc(greetingLineWith(g,'Alex'))+'</div></div>'+
+      '<div class="b-prev-box" style="margin-bottom:0"><small>No name set</small><div id="bg-preview2">'+esc(greetingLineWith(g,''))+'</div></div>'+
+    '</div></div></div>';
+  html += bSaveBar({save:'saveBackendGreeting()', discard:'renderBackendDashboard()', saveLabel:'Save greeting'});
   el_bDash().innerHTML = html;
   ['bg-prefix','bg-suffix','bg-fallback'].forEach(function(id){
     var inp = document.getElementById(id);
     if(inp) inp.oninput = updateBackendGreetingPreview;
   });
+  bSetDirty(false);
 }
 function el_bDash(){ return document.getElementById('page-b-dashboard'); }
 function greetingLineWith(g, name){
@@ -2638,12 +2907,10 @@ function greetingLineWith(g, name){
 }
 function updateBackendGreetingPreview(){
   var prev = document.getElementById('bg-preview'); if(!prev) return;
-  var draft = {
-    prefix: document.getElementById('bg-prefix').value,
-    suffix: document.getElementById('bg-suffix').value,
-    fallbackName: document.getElementById('bg-fallback').value
-  };
-  prev.textContent = greetingLineWith(draft, 'Alex');
+  var d = bGreetVals();
+  prev.textContent = greetingLineWith(d, 'Alex');
+  var p2 = document.getElementById('bg-preview2'); if(p2) p2.textContent = greetingLineWith(d, '');
+  bSetDirty(bGreetDirty());
 }
 function saveBackendGreeting(){
   var vals = {
@@ -2662,48 +2929,57 @@ function saveBackendGreeting(){
    / edit icon+title+description+threshold, then Save publishes to
    config/achievements and every signed-in user's effBadges() picks it up.
    ================================================================== */
-function ensureAchDraft(){
-  if(!_bAchDraft) _bAchDraft = JSON.parse(JSON.stringify(effBadges()));
+/* ==================================================================
+   BACKEND — ACHIEVEMENTS (badge catalog editor)
+   Working copy in _bAchDraft; inline edit / add / delete / reorder,
+   then Save publishes to config/achievements (unchanged).
+   ================================================================== */
+function bAchClean(list){
+  return (list||[]).map(function(b){
+    return {id:b.id, type:b.type||'custom', n:b.n||0, icon:(b.icon||'⭐').trim()||'⭐', name:(b.name||'').trim()||'Untitled', desc:(b.desc||'').trim(), pro:!!b.pro};
+  });
 }
+function ensureAchDraft(){
+  if(!_bAchDraft){ _bAchDraft = JSON.parse(JSON.stringify(effBadges())); bSeed('ach', bAchClean(_bAchDraft)); }
+}
+function bAchDirty(){ return bJSON(bAchClean(_bAchDraft)) !== bJSON(bAchClean(effBadges())); }
 function renderBackendAchievements(){
   ensureAchDraft();
   var el = document.getElementById('page-b-achievements'); if(!el) return;
-  var html = '<div class="page-head"><div><div class="page-title">Achievements</div><div class="page-sub">Add, remove, reorder and edit the badges everyone can earn</div></div>'+
-    '<button class="btn primary" onclick="addBackendBadge()">'+ICONS.plus+' New achievement</button></div>';
-  html += '<div class="card"><div id="bAchList" style="display:flex;flex-direction:column;gap:8px">';
-  if(!_bAchDraft.length){
-    html += '<div class="b-empty-cell">No achievements yet — add one above.</div>';
-  } else {
-    html += _bAchDraft.map(function(b,i){ return bAchRowHTML(b,i); }).join('');
-  }
-  html += '</div>'+
-    '<div style="display:flex;gap:8px;margin-top:16px">'+
-      '<button class="btn primary" onclick="saveBackendAchievements()">'+ICONS.check+' Save achievements</button>'+
-      '<button class="btn ghost" onclick="resetBackendAchievements()">Reset to defaults</button>'+
-    '</div>'+
-  '</div>';
+  var html = bPageHead('Achievements','Badges everyone can earn · edit inline, drag to reorder',
+    '<button class="btn primary" onclick="addBackendBadge()">'+ICONS.plus+' New achievement</button>');
+  html += '<div class="b-panel"><div class="b-panel-head"><h3>Badge catalog</h3><span class="b-sp"></span><span class="sub">'+_bAchDraft.length+' achievements</span></div>'+
+    '<div class="b-thead ach"><span></span><span>Icon</span><span>Title</span><span>Description</span><span>Access</span><span></span></div>'+
+    '<div id="bAchList">'+
+    (_bAchDraft.length ? _bAchDraft.map(function(b,i){ return bAchRowHTML(b,i); }).join('') : '<div class="b-empty-cell">No achievements yet — click “New achievement”.</div>')+
+    '</div></div>';
+  html += bSaveBar({save:'saveBackendAchievements()', reset:'resetBackendAchievements()', discard:'bAchDiscard()', saveLabel:'Save achievements'});
   el.innerHTML = html;
+  bSetDirty(bAchDirty());
 }
 function bAchRowHTML(b,i){
-  return '<div class="b-row" draggable="true" data-idx="'+i+'" '+
+  return '<div class="b-row b-trow ach" data-idx="'+i+'" '+
       'ondragstart="bAchDragStart(event,\''+b.id+'\')" ondragover="bAchDragOver(event)" ondrop="bAchDrop(event,\''+b.id+'\')" ondragend="bAchDragEnd(event)">'+
-    '<div class="journey-drag-handle" style="cursor:grab">'+ICONS.grip+'</div>'+
-    '<input class="inp b-row-emoji" maxlength="4" value="'+esc(b.icon)+'" oninput="updateAchField(\''+b.id+'\',\'icon\',this.value)"/>'+
-    '<div class="b-row-fields">'+
-      '<input class="inp" placeholder="Title" value="'+esc(b.name)+'" oninput="updateAchField(\''+b.id+'\',\'name\',this.value)"/>'+
-      '<input class="inp" placeholder="Description" value="'+esc(b.desc)+'" oninput="updateAchField(\''+b.id+'\',\'desc\',this.value)"/>'+
-    '</div>'+
-    '<label class="b-row-check" title="Pro-only badge"><input type="checkbox" '+(b.pro?'checked':'')+' onchange="updateAchField(\''+b.id+'\',\'pro\',this.checked)"/><span>Pro</span></label>'+
-    '<button class="icon-btn" title="Delete" onclick="deleteBackendBadge(\''+b.id+'\')">'+ICONS.trash+'</button>'+
+    '<div class="b-grip" title="Drag to reorder" onmousedown="this.parentNode.setAttribute(\'draggable\',\'true\')">'+ICONS.grip+'</div>'+
+    '<input class="inp b-emo" maxlength="4" value="'+esc(b.icon)+'" oninput="updateAchField(\''+b.id+'\',\'icon\',this.value)"/>'+
+    '<input class="inp b-f-name" placeholder="Title" value="'+esc(b.name)+'" oninput="updateAchField(\''+b.id+'\',\'name\',this.value)"/>'+
+    '<input class="inp b-f-desc" placeholder="Description" value="'+esc(b.desc)+'" oninput="updateAchField(\''+b.id+'\',\'desc\',this.value)"/>'+
+    '<label class="b-pro-tg" title="Pro-only badge"><input type="checkbox" '+(b.pro?'checked':'')+' onchange="updateAchField(\''+b.id+'\',\'pro\',this.checked)"/>Pro</label>'+
+    '<div class="b-acts"><button class="b-ib del" title="Delete" onclick="deleteBackendBadge(\''+b.id+'\')">'+ICONS.trash+'</button></div>'+
   '</div>';
 }
 function updateAchField(id, field, val){
   var b = _bAchDraft.find(function(x){ return x.id===id; }); if(!b) return;
   b[field] = val;
+  bSetDirty(bAchDirty());
 }
 function addBackendBadge(){
   _bAchDraft.push({id:'badge'+Date.now().toString(36)+Math.random().toString(36).slice(2,6), type:'custom', n:0, icon:'⭐', name:'New badge', desc:'Description', pro:false});
   renderBackendAchievements();
+  setTimeout(function(){
+    var rows = document.querySelectorAll('#bAchList .b-trow'); var last = rows[rows.length-1];
+    if(last){ last.scrollIntoView({block:'center',behavior:'smooth'}); var inp = last.querySelector('.b-f-name'); if(inp){ inp.focus(); inp.select(); } }
+  }, 30);
 }
 function deleteBackendBadge(id){
   _bAchDraft = _bAchDraft.filter(function(b){ return b.id!==id; });
@@ -2712,6 +2988,10 @@ function deleteBackendBadge(id){
 function resetBackendAchievements(){
   _bAchDraft = JSON.parse(JSON.stringify(BADGES));
   renderBackendAchievements();
+}
+function bAchDiscard(){ _bAchDraft = null; renderBackendAchievements(); }
+function bAchClearDrag(){
+  document.querySelectorAll('#bAchList .b-trow').forEach(function(x){ x.classList.remove('dragging'); x.removeAttribute('draggable'); });
 }
 function bAchDragStart(e,id){
   e.stopPropagation();
@@ -2724,7 +3004,7 @@ function bAchDrop(e,overId){
   e.preventDefault(); e.stopPropagation();
   var draggedId = _bDragBadgeId;
   _bDragBadgeId = null;
-  document.querySelectorAll('#bAchList .b-row.dragging').forEach(function(x){ x.classList.remove('dragging'); });
+  bAchClearDrag();
   if(!draggedId || draggedId===overId) return;
   var fromIdx = _bAchDraft.findIndex(function(x){ return x.id===draggedId; });
   var toIdx = _bAchDraft.findIndex(function(x){ return x.id===overId; });
@@ -2733,18 +3013,15 @@ function bAchDrop(e,overId){
   _bAchDraft.splice(toIdx,0,item);
   renderBackendAchievements();
 }
-function bAchDragEnd(e){
-  _bDragBadgeId = null;
-  document.querySelectorAll('#bAchList .b-row.dragging').forEach(function(x){ x.classList.remove('dragging'); });
-}
+function bAchDragEnd(e){ _bDragBadgeId = null; bAchClearDrag(); }
 function saveBackendAchievements(){
-  var clean = _bAchDraft.map(function(b){
-    return {id:b.id, type:b.type||'custom', n:b.n||0, icon:(b.icon||'⭐').trim()||'⭐', name:(b.name||'').trim()||'Untitled', desc:(b.desc||'').trim(), pro:!!b.pro};
-  });
+  var clean = bAchClean(_bAchDraft);
   db.collection('config').doc('achievements').set({badges:clean}, {merge:true}).then(function(){
+    bSeed('ach', clean);
     toast('Achievements saved');
   }).catch(function(err){ toast('Could not save: '+err.message, true); });
 }
+
 
 /* ==================================================================
    BACKEND — SETTINGS
@@ -2753,96 +3030,100 @@ function saveBackendAchievements(){
    2) New Habit catalogs: emojis / colors / categories
       (config/habitItems → replaces EMOJIS / HABIT_COLORS / CATEGORIES)
    ================================================================== */
+function bAccClean(list){
+  return (list||[]).filter(function(a){ return a.id && a.a; }).map(function(a){ return {id:a.id.trim(), a:a.a, a2:a.a2||a.a}; });
+}
 function ensureHabitItemsDraft(){
-  if(!_bHabitItemsDraft) _bHabitItemsDraft = {
-    emojis: effEmojis().slice(),
-    colors: effHabitColors().slice(),
-    categories: effCategories().slice()
-  };
+  if(!_bHabitItemsDraft){
+    _bHabitItemsDraft = {emojis:effEmojis().slice(), colors:effHabitColors().slice(), categories:effCategories().slice()};
+    bSeed('items', _bHabitItemsDraft);
+  }
 }
 var _bAccentsDraft = null;
 function ensureAccentsDraft(){
-  if(!_bAccentsDraft) _bAccentsDraft = JSON.parse(JSON.stringify(effAccents()));
+  if(!_bAccentsDraft){ _bAccentsDraft = JSON.parse(JSON.stringify(effAccents())); bSeed('acc', bAccClean(_bAccentsDraft)); }
+}
+function bAccDirty(){ return bJSON(bAccClean(_bAccentsDraft)) !== bJSON(bAccClean(effAccents())); }
+function bItemsDirty(){
+  return bJSON(_bHabitItemsDraft) !== bJSON({emojis:effEmojis(), colors:effHabitColors(), categories:effCategories()});
+}
+function bSettingsTouch(){ bSetDirty(_bSetTab==='appearance' ? bAccDirty() : bItemsDirty()); }
+function bSetTab(t){ _bSetTab = t; renderBackendSettings(); }
+function bSetDiscard(){
+  if(_bSetTab==='appearance') _bAccentsDraft = null; else _bHabitItemsDraft = null;
+  renderBackendSettings();
+}
+function bCatUsage(c){
+  return (_bTplDraft||effTemplates()).filter(function(t){ return t.cat===c; }).length;
 }
 function renderBackendSettings(){
   ensureAccentsDraft();
   ensureHabitItemsDraft();
   var el = document.getElementById('page-b-settings'); if(!el) return;
-  var html = '<div class="page-head"><div><div class="page-title">Settings</div><div class="page-sub">Manage the colors and New Habit catalogs every user sees</div></div></div>';
+  var d = _bHabitItemsDraft;
+  var accDirty = bAccDirty(), itemsDirty = bItemsDirty();
+  var tabs = [
+    ['appearance','Appearance',_bAccentsDraft.length,accDirty],
+    ['icons','Habit icons',d.emojis.length,itemsDirty],
+    ['colors','Habit colors',d.colors.length,itemsDirty],
+    ['categories','Categories',d.categories.length,itemsDirty]
+  ];
+  var html = bPageHead('Settings','Colors and New Habit catalogs every user sees');
+  html += '<div class="seg-tabs">'+tabs.map(function(t){
+    return '<button class="seg-tab'+(_bSetTab===t[0]?' active':'')+'" onclick="bSetTab(\''+t[0]+'\')">'+t[1]+' <span class="b-count">'+t[2]+'</span>'+(t[3]?'<span class="b-tdot" title="Unsaved changes"></span>':'')+'</button>';
+  }).join('')+'</div>';
 
-  /* ---- Appearance colors ---- */
-  html += '<div class="card" style="margin-bottom:16px">'+
-    '<div class="sec-title" style="margin-top:0"><h3>Appearance colors</h3>'+
+  if(_bSetTab==='appearance'){
+    html += '<div class="b-panel"><div class="b-panel-head"><h3>Accent colors</h3><span class="sub">Shown in every user\'s Settings → Appearance</span><span class="b-sp"></span>'+
       '<button class="btn sm" onclick="addBackendAccent()">'+ICONS.plus+' Add color</button></div>'+
-    '<div class="hint" style="margin-bottom:12px">Accent options shown in every user\'s Settings → Appearance.</div>'+
-    '<div id="bAccentList" style="display:flex;flex-direction:column;gap:8px">'+
-      _bAccentsDraft.map(function(a,i){ return bAccentRowHTML(a,i); }).join('')+
-    '</div>'+
-    '<div style="display:flex;gap:8px;margin-top:16px">'+
-      '<button class="btn primary" onclick="saveBackendAccents()">'+ICONS.check+' Save colors</button>'+
-      '<button class="btn ghost" onclick="resetBackendAccents()">Reset to defaults</button>'+
-    '</div>'+
-  '</div>';
-
-  /* ---- New Habit: emojis ---- */
-  html += '<div class="card" style="margin-bottom:16px">'+
-    '<div class="sec-title" style="margin-top:0"><h3>New Habit — icons</h3></div>'+
-    '<div class="hint" style="margin-bottom:12px">Emoji choices offered when someone creates or edits a habit.</div>'+
-    '<div class="field-row" style="margin-bottom:12px">'+
-      '<input class="inp" id="bhi-emoji-input" maxlength="4" placeholder="Add emoji, e.g. 🔥" style="max-width:220px"/>'+
-      '<button class="btn" onclick="addBackendEmoji()">'+ICONS.plus+' Add</button>'+
-    '</div>'+
-    '<div class="emoji-grid" id="bEmojiGrid" style="max-height:none">'+
-      _bHabitItemsDraft.emojis.map(function(e,i){ return '<div class="emoji-opt sel" title="Remove" onclick="removeBackendEmoji('+i+')">'+e+'</div>'; }).join('')+
-    '</div>'+
-  '</div>';
-
-  /* ---- New Habit: colors ---- */
-  html += '<div class="card" style="margin-bottom:16px">'+
-    '<div class="sec-title" style="margin-top:0"><h3>New Habit — colors</h3></div>'+
-    '<div class="hint" style="margin-bottom:12px">Color swatches offered when someone creates or edits a habit.</div>'+
-    '<div class="field-row" style="margin-bottom:12px">'+
-      '<input class="inp" type="color" id="bhi-color-input" value="#FF6B35" style="max-width:70px;padding:4px"/>'+
-      '<button class="btn" onclick="addBackendHabitColor()">'+ICONS.plus+' Add</button>'+
-    '</div>'+
-    '<div class="swatch-row" id="bColorRow">'+
-      _bHabitItemsDraft.colors.map(function(c,i){ return '<div class="swatch sel" style="background:'+c+'" title="Remove" onclick="removeBackendHabitColor('+i+')">'+ICONS.x+'</div>'; }).join('')+
-    '</div>'+
-  '</div>';
-
-  /* ---- New Habit: categories ---- */
-  html += '<div class="card" style="margin-bottom:16px">'+
-    '<div class="sec-title" style="margin-top:0"><h3>New Habit — categories</h3></div>'+
-    '<div class="hint" style="margin-bottom:12px">Category options offered when someone creates or edits a habit.</div>'+
-    '<div class="field-row" style="margin-bottom:12px">'+
-      '<input class="inp" id="bhi-cat-input" placeholder="Add category, e.g. Travel" style="max-width:220px"/>'+
-      '<button class="btn" onclick="addBackendCategory()">'+ICONS.plus+' Add</button>'+
-    '</div>'+
-    '<div style="display:flex;flex-wrap:wrap;gap:8px" id="bCatRow">'+
-      _bHabitItemsDraft.categories.map(function(c,i){ return '<div class="b-pill free" style="cursor:pointer;display:flex;align-items:center;gap:6px" title="Remove" onclick="removeBackendCategory('+i+')">'+esc(c)+' '+ICONS.x+'</div>'; }).join('')+
-    '</div>'+
-  '</div>';
-
-  html += '<div class="card">'+
-    '<div style="display:flex;gap:8px;flex-wrap:wrap">'+
-      '<button class="btn primary" onclick="saveBackendHabitItems()">'+ICONS.check+' Save New Habit catalogs</button>'+
-      '<button class="btn ghost" onclick="resetBackendHabitItems()">Reset to defaults</button>'+
-    '</div>'+
-  '</div>';
-
+      '<div class="b-thead acc"><span>Primary</span><span>ID (unique)</span><span>Second</span><span>Preview</span><span></span></div>'+
+      '<div id="bAccentList">'+_bAccentsDraft.map(function(a,i){ return bAccentRowHTML(a,i); }).join('')+'</div></div>';
+    html += bSaveBar({save:'saveBackendAccents()', reset:'resetBackendAccents()', discard:'bSetDiscard()', saveLabel:'Save colors'});
+  } else {
+    var keep = '<div class="b-sp"></div>';
+    if(_bSetTab==='icons'){
+      html += '<div class="b-panel"><div class="b-panel-head"><h3>Habit icons</h3><span class="sub">Emoji offered when creating or editing a habit · click to remove</span><span class="b-sp"></span>'+
+        '<div class="b-add-inline"><input class="inp" id="bhi-emoji-input" maxlength="4" placeholder="Add emoji, e.g. 🔥" onkeydown="if(event.key===\'Enter\')addBackendEmoji()"/>'+
+        '<button class="btn" onclick="addBackendEmoji()">'+ICONS.plus+' Add</button></div></div>'+
+        '<div class="b-panel-body"><div class="b-tiles" id="bEmojiGrid">'+
+        d.emojis.map(function(e,i){ return '<div class="b-tile" title="Remove" onclick="removeBackendEmoji('+i+')">'+esc(e)+'</div>'; }).join('')+
+        '</div></div></div>';
+    } else if(_bSetTab==='colors'){
+      html += '<div class="b-panel"><div class="b-panel-head"><h3>Habit colors</h3><span class="sub">Swatches offered when creating or editing a habit · click to remove</span><span class="b-sp"></span>'+
+        '<div class="b-add-inline"><input class="inp b-color" type="color" id="bhi-color-input" value="#FF6B35"/>'+
+        '<button class="btn" onclick="addBackendHabitColor()">'+ICONS.plus+' Add</button></div></div>'+
+        '<div class="b-panel-body"><div class="b-tiles" id="bColorRow">'+
+        d.colors.map(function(c,i){ return '<div class="b-tile col" style="background:'+esc(c)+'" title="Remove '+esc(c)+'" onclick="removeBackendHabitColor('+i+')"></div>'; }).join('')+
+        '</div></div></div>';
+    } else {
+      html += '<div class="b-panel"><div class="b-panel-head"><h3>Categories</h3><span class="sub">Options offered when creating or editing a habit · number = templates using it</span><span class="b-sp"></span>'+
+        '<div class="b-add-inline"><input class="inp" id="bhi-cat-input" placeholder="Add category, e.g. Travel" onkeydown="if(event.key===\'Enter\')addBackendCategory()"/>'+
+        '<button class="btn" onclick="addBackendCategory()">'+ICONS.plus+' Add</button></div></div>'+
+        '<div class="b-panel-body"><div class="b-chips" id="bCatRow">'+
+        d.categories.map(function(c,i){ return '<span class="b-chip">'+esc(c)+' <em>'+bCatUsage(c)+'</em><button title="Remove" onclick="removeBackendCategory('+i+')">'+ICONS.x+'</button></span>'; }).join('')+
+        '</div></div></div>';
+    }
+    html += bSaveBar({save:'saveBackendHabitItems()', reset:'resetBackendHabitItems()', discard:'bSetDiscard()', saveLabel:'Save catalogs', note:'Icons, colors &amp; categories save together'});
+  }
   el.innerHTML = html;
+  bSettingsTouch();
 }
 function bAccentRowHTML(a,i){
-  return '<div class="b-row">'+
-    '<input class="inp" type="color" value="'+esc(a.a)+'" style="max-width:56px;padding:4px" onchange="updateAccentField('+i+',\'a\',this.value)"/>'+
-    '<div class="b-row-fields">'+
-      '<input class="inp" placeholder="id (unique)" value="'+esc(a.id)+'" oninput="updateAccentField('+i+',\'id\',this.value)"/>'+
-      '<input class="inp" type="color" value="'+esc(a.a2||a.a)+'" style="max-width:100%" onchange="updateAccentField('+i+',\'a2\',this.value)"/>'+
-    '</div>'+
-    '<button class="icon-btn" title="Delete" onclick="removeBackendAccent('+i+')">'+ICONS.trash+'</button>'+
+  return '<div class="b-row b-trow acc">'+
+    '<input class="inp b-color" type="color" value="'+esc(a.a)+'" onchange="updateAccentField('+i+',\'a\',this.value)"/>'+
+    '<input class="inp" placeholder="id (unique)" value="'+esc(a.id)+'" oninput="updateAccentField('+i+',\'id\',this.value)"/>'+
+    '<input class="inp b-color" type="color" value="'+esc(a.a2||a.a)+'" onchange="updateAccentField('+i+',\'a2\',this.value)"/>'+
+    '<div class="b-prev" id="bAccPrev'+i+'" style="background:linear-gradient(135deg,'+esc(a.a)+','+esc(a.a2||a.a)+')"></div>'+
+    '<div class="b-acts"><button class="b-ib del" title="Delete" onclick="removeBackendAccent('+i+')">'+ICONS.trash+'</button></div>'+
   '</div>';
 }
-function updateAccentField(i, field, val){ if(_bAccentsDraft[i]) _bAccentsDraft[i][field]=val; }
+function updateAccentField(i, field, val){
+  if(!_bAccentsDraft[i]) return;
+  _bAccentsDraft[i][field]=val;
+  var p = document.getElementById('bAccPrev'+i);
+  if(p) p.style.background = 'linear-gradient(135deg,'+_bAccentsDraft[i].a+','+(_bAccentsDraft[i].a2||_bAccentsDraft[i].a)+')';
+  bSettingsTouch();
+}
 function addBackendAccent(){
   _bAccentsDraft.push({id:'color'+(_bAccentsDraft.length+1), a:'#3B82F6', a2:'#2563EB'});
   renderBackendSettings();
@@ -2850,24 +3131,26 @@ function addBackendAccent(){
 function removeBackendAccent(i){ _bAccentsDraft.splice(i,1); renderBackendSettings(); }
 function resetBackendAccents(){ _bAccentsDraft = JSON.parse(JSON.stringify(ACCENTS)); renderBackendSettings(); }
 function saveBackendAccents(){
-  var clean = _bAccentsDraft.filter(function(a){ return a.id && a.a; })
-    .map(function(a){ return {id:a.id.trim(), a:a.a, a2:a.a2||a.a}; });
+  var clean = bAccClean(_bAccentsDraft);
   if(!clean.length){ toast('Add at least one color', true); return; }
   db.collection('config').doc('appearance').set({accents:clean}, {merge:true}).then(function(){
+    bSeed('acc', clean);
     toast('Colors saved');
   }).catch(function(err){ toast('Could not save: '+err.message, true); });
 }
+function bRefocus(id){ setTimeout(function(){ var e=document.getElementById(id); if(e) e.focus(); }, 20); }
 function addBackendEmoji(){
   var inp = document.getElementById('bhi-emoji-input');
   var v = (inp.value||'').trim();
   if(!v){ return; }
+  if(_bHabitItemsDraft.emojis.indexOf(v)!==-1){ toast('That icon is already in the list', true); return; }
   _bHabitItemsDraft.emojis.push(v);
-  inp.value = '';
-  renderBackendSettings();
+  renderBackendSettings(); bRefocus('bhi-emoji-input');
 }
 function removeBackendEmoji(i){ _bHabitItemsDraft.emojis.splice(i,1); renderBackendSettings(); }
 function addBackendHabitColor(){
   var v = document.getElementById('bhi-color-input').value;
+  if(_bHabitItemsDraft.colors.map(function(c){ return String(c).toLowerCase(); }).indexOf(v.toLowerCase())!==-1){ toast('That color is already in the list', true); return; }
   _bHabitItemsDraft.colors.push(v);
   renderBackendSettings();
 }
@@ -2876,9 +3159,9 @@ function addBackendCategory(){
   var inp = document.getElementById('bhi-cat-input');
   var v = (inp.value||'').trim();
   if(!v) return;
+  if(_bHabitItemsDraft.categories.some(function(c){ return c.toLowerCase()===v.toLowerCase(); })){ toast('That category already exists', true); return; }
   _bHabitItemsDraft.categories.push(v);
-  inp.value = '';
-  renderBackendSettings();
+  renderBackendSettings(); bRefocus('bhi-cat-input');
 }
 function removeBackendCategory(i){ _bHabitItemsDraft.categories.splice(i,1); renderBackendSettings(); }
 function resetBackendHabitItems(){
@@ -2894,9 +3177,11 @@ function saveBackendHabitItems(){
     colors: _bHabitItemsDraft.colors,
     categories: _bHabitItemsDraft.categories
   }, {merge:true}).then(function(){
+    bSeed('items', _bHabitItemsDraft);
     toast('New Habit catalogs saved');
   }).catch(function(err){ toast('Could not save: '+err.message, true); });
 }
+
 
 /* ==================================================================
    BACKEND — HABIT TEMPLATES
@@ -2904,61 +3189,134 @@ function saveBackendHabitItems(){
    then Save publishes to config/habitTemplates and every user's "New
    Habit → Templates" picker (effTemplates()) reflects it live.
    ================================================================== */
-function ensureTplDraft(){
-  if(!_bTplDraft) _bTplDraft = JSON.parse(JSON.stringify(effTemplates()));
+function bTplClean(list){
+  return (list||[]).filter(function(t){ return (t.name||'').trim(); }).map(function(t){
+    var out = {name:t.name.trim(), icon:(t.icon||'✨').trim()||'✨', cat:t.cat||'Other', freqType:t.freqType||'daily'};
+    if(out.freqType==='weekly') out.freqCount = t.freqCount||3;
+    if(out.freqType==='days') out.freqDays = t.freqDays||[1,2,3,4,5];
+    return out;
+  });
 }
+function ensureTplDraft(){
+  if(!_bTplDraft){ _bTplDraft = JSON.parse(JSON.stringify(effTemplates())); bSeed('tpl', bTplClean(_bTplDraft)); }
+}
+function bTplDirty(){ return bJSON(bTplClean(_bTplDraft)) !== bJSON(bTplClean(effTemplates())); }
 function renderBackendTemplates(){
   ensureTplDraft();
   var el = document.getElementById('page-b-templates'); if(!el) return;
-  var html = '<div class="page-head"><div><div class="page-title">Habit Templates</div><div class="page-sub">Add, remove, reorder and edit the ready-made habits people can add instantly</div></div>'+
-    '<button class="btn primary" onclick="addBackendTemplate()">'+ICONS.plus+' New template</button></div>';
-  html += '<div class="card"><div id="bTplList" style="display:flex;flex-direction:column;gap:8px">';
-  if(!_bTplDraft.length){
-    html += '<div class="b-empty-cell">No templates yet — add one above.</div>';
-  } else {
-    html += _bTplDraft.map(function(t,i){ return bTplRowHTML(t,i); }).join('');
-  }
-  html += '</div>'+
-    '<div style="display:flex;gap:8px;margin-top:16px">'+
-      '<button class="btn primary" onclick="saveBackendTemplates()">'+ICONS.check+' Save templates</button>'+
-      '<button class="btn ghost" onclick="resetBackendTemplates()">Reset to defaults</button>'+
-    '</div>'+
-  '</div>';
+  var cats = effCategories();
+  if(_bTplCat!=='all' && cats.indexOf(_bTplCat)===-1) _bTplCat = 'all';
+  var html = bPageHead('Habit Templates','Ready-made habits people can add instantly · edit inline, drag to reorder',
+    '<button class="btn primary" onclick="addBackendTemplate()">'+ICONS.plus+' New template</button>');
+  html += '<div class="b-panel"><div class="b-panel-head">'+
+    '<div class="b-sbox">'+B_ICO.search+'<input class="inp" id="bTplSearch" placeholder="Search templates…" value="'+esc(_bTplQ)+'" oninput="bTplFilter(this.value,null)"/></div>'+
+    '<select class="sel b-fsel" onchange="bTplFilter(null,this.value)"><option value="all">All categories</option>'+
+      cats.map(function(c){ return '<option value="'+esc(c)+'"'+(_bTplCat===c?' selected':'')+'>'+esc(c)+'</option>'; }).join('')+'</select>'+
+    '<span class="b-sp"></span><span class="sub" id="bTplCount"></span></div>'+
+    '<div class="b-thead tpl"><span></span><span>Icon</span><span>Name</span><span>Category</span><span>Frequency</span><span>Schedule</span><span></span></div>'+
+    '<div id="bTplList"></div></div>';
+  html += bSaveBar({save:'saveBackendTemplates()', reset:'resetBackendTemplates()', discard:'bTplDiscard()', saveLabel:'Save templates'});
   el.innerHTML = html;
+  bTplRenderRows();
+  bSetDirty(bTplDirty());
 }
-function bTplRowHTML(t,i){
-  var catOpts = effCategories().map(function(c){ return '<option'+(t.cat===c?' selected':'')+'>'+esc(c)+'</option>'; }).join('');
+function bTplFilter(q, cat){
+  if(q!==null) _bTplQ = q;
+  if(cat!==null) _bTplCat = cat;
+  bTplRenderRows();
+}
+function bTplRenderRows(){
+  var box = document.getElementById('bTplList'); if(!box) return;
+  var q = _bTplQ.trim().toLowerCase();
+  var filtered = !!q || _bTplCat!=='all';
+  var rows = [];
+  _bTplDraft.forEach(function(t,i){
+    if(q && (t.name||'').toLowerCase().indexOf(q)===-1) return;
+    if(_bTplCat!=='all' && t.cat!==_bTplCat) return;
+    rows.push(bTplRowHTML(t,i,filtered));
+  });
+  box.innerHTML = rows.length ? rows.join('') :
+    '<div class="b-empty-cell">'+(_bTplDraft.length ? 'No templates match the filter.' : 'No templates yet — click “New template”.')+'</div>';
+  var c = document.getElementById('bTplCount');
+  if(c) c.textContent = rows.length===_bTplDraft.length ? _bTplDraft.length+' templates' : rows.length+' of '+_bTplDraft.length;
+}
+function bTplRowHTML(t,i,filtered){
+  var cats = effCategories().slice();
+  if(t.cat && cats.indexOf(t.cat)===-1) cats.push(t.cat); // keep a removed category visible instead of silently changing it
+  var catOpts = cats.map(function(c){ return '<option'+(t.cat===c?' selected':'')+'>'+esc(c)+'</option>'; }).join('');
   var freqOpts = ['daily','weekly','days'].map(function(f){
     return '<option value="'+f+'"'+(t.freqType===f?' selected':'')+'>'+(f==='daily'?'Every day':f==='weekly'?'X per week':'Specific days')+'</option>';
   }).join('');
-  return '<div class="b-row" draggable="true" data-idx="'+i+'" '+
-      'ondragstart="bTplDragStart(event,'+i+')" ondragover="bTplDragOver(event)" ondrop="bTplDrop(event,'+i+')" ondragend="bTplDragEnd(event)">'+
-    '<div class="journey-drag-handle" style="cursor:grab">'+ICONS.grip+'</div>'+
-    '<input class="inp b-row-emoji" maxlength="4" value="'+esc(t.icon)+'" oninput="updateTplField('+i+',\'icon\',this.value)"/>'+
-    '<div class="b-row-fields">'+
-      '<input class="inp" placeholder="Name" value="'+esc(t.name)+'" oninput="updateTplField('+i+',\'name\',this.value)"/>'+
-      '<div class="field-row" style="gap:6px">'+
-        '<select class="sel" onchange="updateTplField('+i+',\'cat\',this.value)">'+catOpts+'</select>'+
-        '<select class="sel" onchange="updateTplField('+i+',\'freqType\',this.value)">'+freqOpts+'</select>'+
-        (t.freqType==='weekly' ? '<input class="inp" type="number" min="1" max="7" style="max-width:70px" value="'+(t.freqCount||3)+'" oninput="updateTplField('+i+',\'freqCount\',parseInt(this.value,10)||1)"/>' : '')+
-      '</div>'+
-    '</div>'+
-    '<button class="icon-btn" title="Delete" onclick="deleteBackendTemplate('+i+')">'+ICONS.trash+'</button>'+
+  var extra;
+  if(t.freqType==='weekly'){
+    extra = '<div class="b-wk"><input class="inp" type="number" min="1" max="7" value="'+(t.freqCount||3)+'" oninput="updateTplField('+i+',\'freqCount\',parseInt(this.value,10)||1)"/>/ week</div>';
+  } else if(t.freqType==='days'){
+    var on = t.freqDays || [1,2,3,4,5];
+    extra = '<div class="b-days">'+B_DAYS.map(function(l,d){
+      return '<button type="button" class="b-day'+(on.indexOf(d)!==-1?' on':'')+'" title="'+DAY_LABELS_FULL[d]+'" onclick="bTplToggleDay('+i+','+d+')">'+l+'</button>';
+    }).join('')+'</div>';
+  } else {
+    extra = '<span class="b-dash">—</span>';
+  }
+  return '<div class="b-row b-trow tpl" data-idx="'+i+'" ondragstart="bTplDragStart(event,'+i+')" ondragover="bTplDragOver(event)" ondrop="bTplDrop(event,'+i+')" ondragend="bTplDragEnd(event)">'+
+    (filtered ? '<div class="b-grip off" title="Clear filters to reorder">'+ICONS.grip+'</div>'
+              : '<div class="b-grip" title="Drag to reorder" onmousedown="this.parentNode.setAttribute(\'draggable\',\'true\')">'+ICONS.grip+'</div>')+
+    '<input class="inp b-emo" maxlength="4" value="'+esc(t.icon)+'" oninput="updateTplField('+i+',\'icon\',this.value)"/>'+
+    '<input class="inp b-f-name" placeholder="Name" value="'+esc(t.name)+'" oninput="updateTplField('+i+',\'name\',this.value)"/>'+
+    '<select class="sel" onchange="updateTplField('+i+',\'cat\',this.value)">'+catOpts+'</select>'+
+    '<select class="sel" onchange="updateTplField('+i+',\'freqType\',this.value)">'+freqOpts+'</select>'+
+    extra+
+    '<div class="b-acts"><button class="b-ib" title="Duplicate" onclick="bTplDup('+i+')">'+B_ICO.copy+'</button>'+
+    '<button class="b-ib del" title="Delete" onclick="deleteBackendTemplate('+i+')">'+ICONS.trash+'</button></div>'+
   '</div>';
 }
+/* Typing never re-renders (keeps focus); only a frequency-type change redraws the rows. */
 function updateTplField(i, field, val){
-  if(!_bTplDraft[i]) return;
-  _bTplDraft[i][field] = val;
-  if(field==='freqType' && val!=='days') delete _bTplDraft[i].freqDays;
-  if(field==='freqType' && val==='days' && !_bTplDraft[i].freqDays) _bTplDraft[i].freqDays=[1,2,3,4,5];
-  renderBackendTemplates();
+  var t = _bTplDraft[i]; if(!t) return;
+  t[field] = val;
+  if(field==='freqType'){
+    if(val!=='days') delete t.freqDays;
+    if(val==='days' && !t.freqDays) t.freqDays=[1,2,3,4,5];
+    bTplRenderRows();
+  }
+  bSetDirty(bTplDirty());
+}
+function bTplToggleDay(i,d){
+  var t = _bTplDraft[i]; if(!t) return;
+  var a = (t.freqDays||[]).slice(), k = a.indexOf(d);
+  if(k===-1) a.push(d);
+  else { if(a.length===1){ toast('Pick at least one day', true); return; } a.splice(k,1); }
+  a.sort(function(x,y){ return x-y; });
+  t.freqDays = a;
+  bTplRenderRows();
+  bSetDirty(bTplDirty());
+}
+function bTplFocusRow(idx){
+  setTimeout(function(){
+    var row = document.querySelector('#bTplList .b-trow[data-idx="'+idx+'"]'); if(!row) return;
+    row.scrollIntoView({block:'center',behavior:'smooth'});
+    var inp = row.querySelector('.b-f-name'); if(inp){ inp.focus(); inp.select(); }
+  }, 30);
 }
 function addBackendTemplate(){
   _bTplDraft.push({name:'New Habit', icon:'✨', cat:effCategories()[0]||'Other', freqType:'daily'});
+  _bTplQ = ''; _bTplCat = 'all';
   renderBackendTemplates();
+  bTplFocusRow(_bTplDraft.length-1);
 }
-function deleteBackendTemplate(i){ _bTplDraft.splice(i,1); renderBackendTemplates(); }
+function bTplDup(i){
+  var t = _bTplDraft[i]; if(!t) return;
+  var c = JSON.parse(JSON.stringify(t)); c.name = (c.name||'')+' copy';
+  _bTplDraft.splice(i+1,0,c);
+  bTplRenderRows(); bSetDirty(bTplDirty());
+  bTplFocusRow(i+1);
+}
+function deleteBackendTemplate(i){ _bTplDraft.splice(i,1); bTplRenderRows(); bSetDirty(bTplDirty()); }
 function resetBackendTemplates(){ _bTplDraft = JSON.parse(JSON.stringify(TEMPLATES)); renderBackendTemplates(); }
+function bTplDiscard(){ _bTplDraft = null; renderBackendTemplates(); }
+function bTplClearDrag(){
+  document.querySelectorAll('#bTplList .b-trow').forEach(function(x){ x.classList.remove('dragging'); x.removeAttribute('draggable'); });
+}
 function bTplDragStart(e,i){
   e.stopPropagation();
   _bDragTplIdx = i;
@@ -2970,25 +3328,18 @@ function bTplDrop(e,overIdx){
   e.preventDefault(); e.stopPropagation();
   var fromIdx = _bDragTplIdx;
   _bDragTplIdx = null;
-  document.querySelectorAll('#bTplList .b-row.dragging').forEach(function(x){ x.classList.remove('dragging'); });
+  bTplClearDrag();
   if(fromIdx===null || fromIdx===undefined || fromIdx===overIdx) return;
   var item = _bTplDraft.splice(fromIdx,1)[0];
   _bTplDraft.splice(overIdx,0,item);
-  renderBackendTemplates();
+  bTplRenderRows(); bSetDirty(bTplDirty());
 }
-function bTplDragEnd(e){
-  _bDragTplIdx = null;
-  document.querySelectorAll('#bTplList .b-row.dragging').forEach(function(x){ x.classList.remove('dragging'); });
-}
+function bTplDragEnd(e){ _bDragTplIdx = null; bTplClearDrag(); }
 function saveBackendTemplates(){
-  var clean = _bTplDraft.filter(function(t){ return (t.name||'').trim(); }).map(function(t){
-    var out = {name:t.name.trim(), icon:(t.icon||'✨').trim()||'✨', cat:t.cat||'Other', freqType:t.freqType||'daily'};
-    if(out.freqType==='weekly') out.freqCount = t.freqCount||3;
-    if(out.freqType==='days') out.freqDays = t.freqDays||[1,2,3,4,5];
-    return out;
-  });
+  var clean = bTplClean(_bTplDraft);
   if(!clean.length){ toast('Add at least one template', true); return; }
   db.collection('config').doc('habitTemplates').set({templates:clean}, {merge:true}).then(function(){
+    bSeed('tpl', clean);
     toast('Templates saved');
   }).catch(function(err){ toast('Could not save: '+err.message, true); });
 }
