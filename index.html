@@ -1288,6 +1288,11 @@ html.day .brain-folds{opacity:.5;mix-blend-mode:multiply}
 }
 .tpl-card:hover::after{transform:translateX(120%)}
 .tpl-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-widget),0 0 0 1px rgba(255,255,255,.06) inset}
+.tpl-card{position:relative}
+.tpl-card.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset;background:var(--surface2)}
+.tpl-card .tpl-tick{position:absolute;top:6px;right:6px;width:18px;height:18px;border-radius:50%;background:var(--accent);color:#fff;display:none;align-items:center;justify-content:center;z-index:2}
+.tpl-card .tpl-tick svg{width:11px;height:11px}
+.tpl-card.sel .tpl-tick{display:flex}
 .tpl-icon{width:34px;height:34px;border-radius:10px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
 .tpl-name{font-size:12px;font-weight:700}
 .tpl-freq{font-size:9.5px;color:var(--text2)}
@@ -4464,23 +4469,65 @@ function habitStatsHTML(h){
 /* ==================================================================
    TODAY PAGE
    ================================================================== */
+var _tplSel = {}; // selected template indexes in the picker: {index:true}
 function templateGridHTML(){
   var locked = !templatesAllowed();
-  return '<div class="tpl-grid">'+
+  return '<div class="hint" style="margin-bottom:12px">Tap templates to select or deselect them, then press Add.</div>'+
+    '<div class="tpl-grid">'+
     TEMPLATES.map(function(t,i){
-      return '<button class="tpl-card" onclick="'+(locked?"openUpgradeModal('templates')":'addFromTemplate('+i+')')+'">'+
-        (locked?'<div class="lock-overlay">'+ICONS.shield+'<span>Pro</span></div>':'')+
+      return '<button type="button" class="tpl-card'+(_tplSel[i]?' sel':'')+'" data-i="'+i+'" onclick="'+(locked?"openUpgradeModal('templates')":'toggleTemplateSelect('+i+')')+'">'+
+        (locked?'<div class="lock-overlay">'+ICONS.shield+'<span>Pro</span></div>':'<span class="tpl-tick">'+ICONS.check+'</span>')+
         '<div class="tpl-icon">'+t.icon+'</div>'+
         '<div><div class="tpl-name">'+esc(t.name)+'</div><div class="tpl-freq">'+esc(freqLabel(t))+'</div></div>'+
       '</button>';
     }).join('')+
+  '</div>'+
+  '<div class="modal-foot">'+
+    '<button class="btn" onclick="closeTemplateModal()">Cancel</button>'+
+    '<button class="btn primary block" id="tplAddBtn" onclick="addSelectedTemplates()" disabled>Add</button>'+
   '</div>';
 }
+function tplSelectedCount(){ return Object.keys(_tplSel).length; }
+function updateTplAddBtn(){
+  var n = tplSelectedCount(), btn = document.getElementById('tplAddBtn');
+  if(!btn) return;
+  btn.disabled = n===0;
+  btn.textContent = n ? 'Add '+n+' habit'+(n===1?'':'s') : 'Add';
+}
+function toggleTemplateSelect(i){
+  if(_tplSel[i]){ delete _tplSel[i]; }
+  else{
+    if(!isPro() && activeHabits().length + tplSelectedCount() >= _planLimits.freeMaxActiveHabits){
+      openUpgradeModal('habits'); return;
+    }
+    _tplSel[i] = true;
+  }
+  var card = document.querySelector('#tplModalBody .tpl-card[data-i="'+i+'"]');
+  if(card) card.classList.toggle('sel', !!_tplSel[i]);
+  updateTplAddBtn();
+}
+function addSelectedTemplates(){
+  var idxs = Object.keys(_tplSel).map(Number).sort(function(a,b){ return a-b; });
+  if(!idxs.length) return;
+  idxs.forEach(function(i){
+    var t = TEMPLATES[i]; if(!t) return;
+    S.habits.push({
+      id:uid(), name:t.name, icon:t.icon, color:HABIT_COLORS[S.habits.length % HABIT_COLORS.length],
+      cat:t.cat, freqType:t.freqType, freqDays:t.freqDays||[1,2,3,4,5], freqCount:t.freqCount||3,
+      reminder:null, createdAt:_todayStr, logs:{}, archived:false
+    });
+  });
+  save();
+  toast(idxs.length===1 ? 'Added "'+TEMPLATES[idxs[0]].name+'"' : 'Added '+idxs.length+' habits');
+  closeTemplateModal();
+  reRenderCurrent(); go(_curPage);
+}
 function openTemplateModal(){
+  _tplSel = {};
   document.getElementById('tplModalBody').innerHTML = templateGridHTML();
   document.getElementById('tplVeil').classList.add('open');
 }
-function closeTemplateModal(){ document.getElementById('tplVeil').classList.remove('open'); }
+function closeTemplateModal(){ document.getElementById('tplVeil').classList.remove('open'); _tplSel = {}; }
 /* ==================================================================
    CALENDAR PAGE
    ================================================================== */
