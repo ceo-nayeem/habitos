@@ -4194,20 +4194,40 @@ function calProgressAnchorWeekStart(){
   var refStr = (_todayStr < monthStart) ? monthStart : (_todayStr > monthEnd ? monthEnd : _todayStr);
   return weekStartDate(refStr);
 }
+/* Progress widget (Calendar View). Everything is scoped to the month being viewed (_calMonth):
+   the month is split into 4 parts — 1–7, 8–14, 15–21 and 22–end — so each part has its own
+   ring, and the Monthly ring is the average of every day in that same month. Data from other
+   months never leaks in, and checking a habit on a date updates exactly the part (and month)
+   that date belongs to. Only days up to today count, so future days never lower a score. */
+function calMonthParts(){
+  var p = _calMonth.split('-').map(Number); var yr=p[0], mo=p[1];
+  var dim = new Date(yr,mo,0).getDate();
+  var ranges = [[1,7],[8,14],[15,21],[22,dim]];
+  return ranges.map(function(r){
+    return {from: yr+'-'+pad2(mo)+'-'+pad2(r[0]), to: yr+'-'+pad2(mo)+'-'+pad2(r[1])};
+  });
+}
+function rangeProgress(fromStr,toStr){
+  var d = parseDate(fromStr), end = parseDate(toStr), sum=0, cnt=0;
+  while(d<=end){
+    var ds = dateStr(d);
+    if(ds<=_todayStr){ var pc = dayCompletionPct(ds); if(pc!==null){ sum+=pc; cnt++; } }
+    d = addDays(d,1);
+  }
+  return cnt ? sum/cnt : 0;
+}
 function calProgressWidgetHTML(){
-  var wkStart0 = calProgressAnchorWeekStart();
-  var todayWeekStr = dateStr(weekStartDate(_todayStr));
-  var weeks = []; for(var i=3;i>=0;i--){ weeks.push(addDays(wkStart0,-7*i)); } // oldest -> current (last)
-  var monthly = monthlyProgressFromWeeks(4, wkStart0);
+  var parts = calMonthParts();
+  var monthly = rangeProgress(parts[0].from, parts[3].to);
 
-  var weeklyHTML = weeks.map(function(wk){
-    var p = weekProgressPct(wk); if(p===null) p=0;
-    var isCurrent = dateStr(wk) === todayWeekStr;
+  var weeklyHTML = parts.map(function(pt,i){
+    var p = rangeProgress(pt.from, pt.to);
+    var isCurrent = _todayStr>=pt.from && _todayStr<=pt.to;
     return '<div class="mini-ring-row">'+
         '<div class="ring-wrap" style="width:76px;height:76px">'+ringSVG(p,76,7)+
           '<div class="ring-center"><div class="ring-pct mono" style="font-size:15px">'+pct(p)+'%</div></div>'+
         '</div>'+
-        '<div class="mini-ring-text"><b>'+(isCurrent?'This week':weekRangeLabel(wk))+'</b>'+(isCurrent?weekRangeLabel(wk):'')+'</div>'+
+        '<div class="mini-ring-text"><b>Week '+(i+1)+(isCurrent?' · now':'')+'</b>'+shortDate(pt.from)+' – '+shortDate(pt.to)+'</div>'+
       '</div>';
   }).join('');
 
@@ -4218,7 +4238,7 @@ function calProgressWidgetHTML(){
         '<div class="ring-center"><div class="ring-pct mono" style="font-size:32px">'+pct(monthly)+'%</div><div class="ring-lbl" style="font-size:10.5px">Monthly</div></div>'+
       '</div>'+
     '</div>'+
-    '<div class="field-label" style="text-align:center;margin-bottom:12px">Last 4 weeks</div>'+
+    '<div class="field-label" style="text-align:center;margin-bottom:12px">Weekly progress</div>'+
     '<div style="display:flex;gap:22px;flex-wrap:wrap;justify-content:center">'+
       weeklyHTML+
     '</div>'+
