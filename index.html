@@ -2157,6 +2157,7 @@ html.day .lock-overlay{background:rgba(244,245,249,.76)}
     <div class="ai-head-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 0-5 5v2a5 5 0 0 0 10 0V7a5 5 0 0 0-5-5Z"/><path d="M12 14v3M8 22h8M9 19h6"/></svg></div>
     <div class="ai-head-txt"><b>Habit Coach</b><span>AI · KNOWS YOUR HABITS</span></div>
     <div class="nav-spacer"></div>
+    <button class="icon-btn" title="API key &amp; connection test" onclick="aiSettings()" style="font-size:15px">🔑</button>
     <button class="icon-btn" onclick="toggleAI()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
   </div>
   <div class="ai-msgs" id="aiMsgs"></div>
@@ -6897,9 +6898,11 @@ function aiHideThinking(){ var el=document.getElementById('ai-thinking-el'); if(
    move the call behind a small backend so the key never reaches browsers.
    ================================================================== */
 var GEMINI_API_KEY = "AQ.Ab8RN6LR2jSgPlslYE7aOLM-7mzULr6ddItSFuIIBRGD8qPgmg";
-/* Tried in order; if one is retired (404 / "no longer available") the next is used and remembered. */
-var GEMINI_MODELS = ["gemini-3.5-flash","gemini-3.6-flash","gemini-3.7-flash"];
-var _geminiModelIdx = 0;
+/* The key can also be pasted in-app (🔑 button in the coach panel) — that copy is saved only in that browser and wins over this one. */
+var AI_KEY_STORE = 'habitos_gemini_key';
+/* Used only if the model list can't be fetched. Normally the newest available Flash model is discovered automatically. */
+var GEMINI_FALLBACK_MODELS = ["gemini-3.5-flash","gemini-3.6-flash","gemini-3.7-flash","gemini-3-flash-preview"];
+var _aiRoute = null;   // {backend:'gemini'|'vertex', models:[…], idx} — detected once, then reused
 
 /* ---------------- tools the assistant can use ---------------- */
 function aiToolDefs(){
@@ -7168,33 +7171,117 @@ function aiTrimHistory(){
     _aiHistory.splice(0,i);
   }
 }
-async function geminiRequest(body){
-  var lastErr = null;
-  for(var k=0; k<GEMINI_MODELS.length; k++){
-    var idx = (_geminiModelIdx+k) % GEMINI_MODELS.length;
-    var url = 'https://generativelanguage.googleapis.com/v1beta/models/'+GEMINI_MODELS[idx]+':generateContent';
-    var resp = await fetch(url, {
-      method:'POST',
-      headers:{'Content-Type':'application/json','x-goog-api-key':GEMINI_API_KEY},
-      body: JSON.stringify(body)
-    });
-    if(resp.ok){ _geminiModelIdx = idx; return resp.json(); }
-    var txt = await resp.text(), msg = '', reason = '';
-    try{
-      var ej = JSON.parse(txt);
-      msg = (ej.error && ej.error.message) || '';
-      reason = JSON.stringify((ej.error && ej.error.details) || '');
-    }catch(e){ msg = txt; }
-    lastErr = {status:resp.status, message:msg || ('HTTP '+resp.status)};
-    var modelGone = resp.status===404 || /no longer available|is not found|not supported for generateContent/i.test(msg) || /ACCESS_TOKEN_TYPE_UNSUPPORTED/.test(reason);
-    if(!modelGone) break;      // a real problem (bad request, quota, key…) — don't hide it behind other models
-  }
-  var m = lastErr.message;
-  if(lastErr.status===429) m = 'Rate limit or quota reached for this API key. Wait a minute or check your Gemini quota.';
-  else if(lastErr.status===403) m = 'The API key was rejected (403). Check that it is enabled for the Gemini API and that its website restriction allows this page. '+m;
-  else if(lastErr.status===401 || /api key not valid|API_KEY_INVALID/i.test(m)) m = 'The API key is not accepted. Check or regenerate it in Google AI Studio. '+m;
-  throw new Error(m);
+function aiKey(){
+  try{ var k = localStorage.getItem(AI_KEY_STORE); if(k && k.trim()) return k.trim(); }catch(e){}
+  return (GEMINI_API_KEY||'').trim();
 }
+function aiKeyHint(k){ return k ? '…'+k.slice(-4) : 'none'; }
+function aiUrl(backend, model){
+  return backend==='vertex'
+    ? 'https://aiplatform.googleapis.com/v1/publishers/google/models/'+model+':generateContent'
+    : 'https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent';
+}
+async function aiPost(backend, model, body){
+  var resp = await fetch(aiUrl(backend,model), {
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-goog-api-key':aiKey()},
+    body: JSON.stringify(body)
+  });
+  if(resp.ok) return {ok:true, data:await resp.json()};
+  var txt = await resp.text(), msg = txt, reason = '';
+  try{ var ej = JSON.parse(txt); msg = (ej.error && ej.error.message) || txt; reason = JSON.stringify((ej.error && ej.error.details) || ''); }catch(e){}
+  return {ok:false, status:resp.status, message:msg, reason:reason};
+}
+function aiModelGone(r){ return r.status===404 || /no longer available|is not found|not supported for generateContent/i.test(r.message||''); }
+function aiAuthFail(r){ return r.status===401 || r.status===403 || /API_KEY_INVALID|ACCESS_TOKEN_TYPE_UNSUPPORTED|api key not valid/i.test((r.message||'')+(r.reason||'')); }
+function aiFriendly(r){
+  var m = (r.message||'').replace(/\s*See https?:\/\/\S+/,'').trim();
+  if(r.status===429) return 'Rate limit or quota reached for this API key. Wait a minute or check your Gemini quota.';
+  if(aiAuthFail(r)) return 'Google rejected the API key ('+r.status+'). '+m;
+  return m || ('HTTP '+r.status);
+}
+/* Ask Google which models this key can use. A failure here means the KEY itself is being rejected (not a model problem). */
+async function aiListGeminiModels(){
+  var resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200', {headers:{'x-goog-api-key':aiKey()}});
+  if(!resp.ok){
+    var t = await resp.text(), m = t; try{ m = JSON.parse(t).error.message; }catch(e){}
+    return {ok:false, status:resp.status, message:m};
+  }
+  var j = await resp.json();
+  var names = (j.models||[]).filter(function(x){ return (x.supportedGenerationMethods||[]).indexOf('generateContent')!==-1; })
+    .map(function(x){ return String(x.name).replace(/^models\//,''); });
+  return {ok:true, names:names};
+}
+function aiRankModels(names){
+  var good = names.filter(function(n){
+    return /^gemini-\d/.test(n) && /flash|pro/.test(n) && !/image|tts|audio|live|embed|robot|computer|native|vision|customtools|research|latest/.test(n);
+  });
+  function ver(n){ var m = n.match(/^gemini-(\d+)(?:\.(\d+))?/); return m ? (+m[1])*100 + (+(m[2]||0)) : 0; }
+  function tier(n){ return /flash-lite/.test(n) ? 1 : (/flash/.test(n) ? 3 : 2); }       // Flash first, then Pro, then Lite
+  function stable(n){ return /preview|exp/.test(n) ? 0 : 1; }
+  good.sort(function(a,b){ return (tier(b)-tier(a)) || (stable(b)-stable(a)) || (ver(b)-ver(a)); });
+  return good;
+}
+/* Work out how to talk to Google with this key: Gemini API first, then Vertex AI (express-mode keys). */
+async function aiResolveRoute(){
+  if(!aiKey()) throw new Error('No API key set. Tap the 🔑 button in this panel and paste your Gemini API key.');
+  var diag = [];
+  var list = await aiListGeminiModels();
+  if(list.ok){
+    var ranked = aiRankModels(list.names);
+    return {backend:'gemini', models:(ranked.length?ranked:GEMINI_FALLBACK_MODELS).slice(0,6), idx:0};
+  }
+  diag.push('• Gemini API: '+list.status+' — '+String(list.message||'').replace(/\s*See https?:\/\/\S+/,''));
+  var ping = {contents:[{role:'user',parts:[{text:'ping'}]}], generationConfig:{maxOutputTokens:8}};
+  var vModels = GEMINI_FALLBACK_MODELS.concat(['gemini-2.5-flash']);
+  for(var i=0;i<vModels.length;i++){
+    var r = await aiPost('vertex', vModels[i], ping);
+    if(r.ok) return {backend:'vertex', models:vModels.slice(i).concat(vModels.slice(0,i)), idx:0};
+    if(i===0 || aiAuthFail(r)) diag.push('• Vertex AI: '+r.status+' — '+String(r.message||'').replace(/\s*See https?:\/\/\S+/,''));
+    if(aiAuthFail(r)) break;
+  }
+  throw new Error('Google is rejecting this API key ('+aiKeyHint(aiKey())+').\n'+diag.join('\n')+
+    '\n\nFix: open aistudio.google.com/apikey, create a NEW key (make sure it is for the Gemini API), then tap the 🔑 button here and paste it.');
+}
+async function geminiRequest(body){
+  if(!_aiRoute) _aiRoute = await aiResolveRoute();
+  var lastErr = null;
+  for(var k=0; k<_aiRoute.models.length; k++){
+    var i = (_aiRoute.idx+k) % _aiRoute.models.length;
+    var r = await aiPost(_aiRoute.backend, _aiRoute.models[i], body);
+    if(r.ok){ _aiRoute.idx = i; return r.data; }
+    lastErr = r;
+    if(aiModelGone(r)) continue;          // this model is retired — try the next one
+    if(aiAuthFail(r)) _aiRoute = null;    // re-detect on the next message
+    break;
+  }
+  throw new Error(aiFriendly(lastErr));
+}
+/* 🔑 button: paste/replace the key (kept only in this browser) and test the connection. */
+async function aiSettings(){
+  var cur = aiKey();
+  var v = window.prompt('Gemini API key for the coach\nCurrent key: '+aiKeyHint(cur)+
+    '\n\nPaste a new key to replace it (saved only in this browser).\nType RESET to go back to the built-in key.\nLeave empty to just test the current key.', '');
+  if(v===null) return;
+  v = v.trim();
+  try{
+    if(v.toUpperCase()==='RESET') localStorage.removeItem(AI_KEY_STORE);
+    else if(v) localStorage.setItem(AI_KEY_STORE, v);
+  }catch(e){}
+  await aiTestConnection();
+}
+async function aiTestConnection(){
+  _aiRoute = null;
+  aiAppendMsg('system','Testing connection (key '+aiKeyHint(aiKey())+')…');
+  try{
+    await geminiRequest({contents:[{role:'user',parts:[{text:'Reply with the single word: ok'}]}], generationConfig:{maxOutputTokens:16}});
+    aiAppendMsg('system','✓ Connected — '+(_aiRoute.backend==='vertex'?'Vertex AI':'Gemini API')+' · '+_aiRoute.models[_aiRoute.idx]);
+  }catch(e){
+    _aiRoute = null;
+    aiAppendMsg('agent','Connection failed:\n'+(e && e.message || e));
+  }
+}
+
 async function callGemini(){
   var maxRounds = 8, finalText = '', didAct = false;
   for(var round=0; round<maxRounds; round++){
