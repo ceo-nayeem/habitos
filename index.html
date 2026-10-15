@@ -420,6 +420,17 @@ a{color:inherit}
 }
 .chip.on{background:var(--accent-soft);color:var(--accent);border-color:transparent}
 
+/* ---- Habits view tabs: hover "Set as default" + static daily cards ---- */
+.seg-wrap{position:relative;display:inline-flex}
+.seg-star{font-size:10px;margin-left:3px;opacity:.85}
+.seg-def-wrap{position:absolute;left:50%;top:100%;transform:translateX(-50%);padding-top:8px;opacity:0;pointer-events:none;transition:opacity .15s;z-index:30}
+.seg-wrap:hover .seg-def-wrap,.seg-wrap:focus-within .seg-def-wrap{opacity:1;pointer-events:auto}
+.seg-def{display:inline-block;white-space:nowrap;font-size:11px;font-weight:700;padding:6px 11px;border-radius:9px;background:var(--surface);color:var(--accent);border:1px solid var(--border2);box-shadow:var(--shadow-widget-sm);cursor:pointer}
+.seg-def:hover{background:var(--accent-soft)}
+.seg-def.is-def{cursor:default;color:var(--text2)}
+.seg-def.is-def:hover{background:var(--surface)}
+.hab-item.hab-item-static{cursor:default}
+.hab-item.hab-item-static:hover{transform:none;border-color:var(--glass-border)}
 /* ---- Achievement rules ---- */
 .badge-rule{font-size:10px;color:var(--text3);margin-top:7px;line-height:1.35;font-weight:700}
 .badge-prog{height:4px;border-radius:4px;background:var(--surface2);margin-top:8px;overflow:hidden}
@@ -2261,7 +2272,7 @@ var BADGES = [
    STATE
    ================================================================== */
 var S = {
-  profile:{ name:'', theme:'night', accent:'indigo', weekStart:1, notif:false, sidebarExpanded:false },
+  profile:{ name:'', theme:'night', accent:'indigo', weekStart:1, notif:false, sidebarExpanded:false, defaultHabitsView:'daily' },
   habits:[],
   goals:[],
   trash:[] // deleted habits: {habit, deletedAt} — auto-purged after 7 days
@@ -2414,6 +2425,7 @@ function startRealtimeSync(){
     }
     if(_firstSnapshot){
       _firstSnapshot = false;
+      _habitsView = defaultHabitsView();   // open the Habits page in the user's chosen default view
       if(!doc.exists) save();   // brand-new account — create its document
       initApp();
     } else if(!doc.metadata.hasPendingWrites){
@@ -4113,6 +4125,7 @@ function renderNav(){
 }
 
 function go(pageId){
+  if(pageId==='calendar' && _curPage!=='calendar') _habitsView = defaultHabitsView();
   _curPage = pageId;
   document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
   document.getElementById('page-'+pageId).classList.add('active');
@@ -4512,7 +4525,7 @@ function dailyHabitListHTML(viewDate){
   var archived = S.habits.filter(function(h){ return h.archived; });
   if(archived.length){
     html += '<div class="sec-title"><h3>Archived</h3></div><div class="hab-list">'+archived.map(function(h){
-      return '<div class="hab-item" style="--hc:'+h.color+';--hc-soft:'+h.color+'26;opacity:.55" onclick="openHabitAction(\''+h.id+'\')">'+
+      return '<div class="hab-item hab-item-static" style="--hc:'+h.color+';--hc-soft:'+h.color+'26;opacity:.55">'+
         '<div class="hab-icon" style="background:'+h.color+'26">'+h.icon+'</div>'+
         '<div class="hab-info"><div class="hab-name">'+esc(h.name)+'</div><div class="hab-meta">Archived</div></div>'+
       '</div>';
@@ -4666,7 +4679,7 @@ function habitItemHTML(h, dStr){
   var cls = st==='done' ? 'done' : (st==='missed' ? 'missed' : '');
   var checkIcon = st==='done' ? ICONS.check : (st==='missed' ? ICONS.x : '');
   var checkTitle = isFuture(dStr) ? 'Future day' : 'Click to mark done · double-click to mark missed';
-  return '<div class="hab-item '+cls+'" style="--hc:'+h.color+';--hc-soft:'+h.color+'26" onclick="openHabitAction(\''+h.id+'\')">'+
+  return '<div class="hab-item hab-item-static '+cls+'" style="--hc:'+h.color+';--hc-soft:'+h.color+'26">'+
     '<div class="hab-icon" style="background:'+h.color+'26">'+h.icon+'</div>'+
     '<div class="hab-info"><div class="hab-name">'+esc(h.name)+'</div>'+
       '<div class="hab-meta">'+(streak>0?'<span class="flame">🔥 '+streak+'</span> · ':'')+esc(freqLabel(h))+(h.reminder?' · ⏰ '+fmtTime(h.reminder):'')+'</div></div>'+
@@ -4930,11 +4943,28 @@ function calNav(dir){
   renderCalendar();
 }
 function switchHabitsView(v){ _habitsView = v; renderCalendar(); }
+/* Default view for the Habits page: 'daily' or 'calendar' (Habit Manager is never a default). */
+function defaultHabitsView(){ return S.profile.defaultHabitsView==='calendar' ? 'calendar' : 'daily'; }
+function setDefaultHabitsView(v){
+  S.profile.defaultHabitsView = (v==='calendar' ? 'calendar' : 'daily');
+  save();
+  toast((v==='calendar'?'Calendar View':'Daily View')+' is now your default');
+  if(_curPage==='calendar') renderCalendar();
+}
+function habitsTabHTML(v,label){
+  var isDef = defaultHabitsView()===v;
+  return '<span class="seg-wrap">'+
+    '<button class="seg-tab'+(_habitsView===v?' active':'')+'" onclick="switchHabitsView(\''+v+'\')">'+label+(isDef?' <span class="seg-star" title="Default view">★</span>':'')+'</button>'+
+    '<span class="seg-def-wrap">'+(isDef
+      ? '<span class="seg-def is-def">✓ Default view</span>'
+      : '<button type="button" class="seg-def" onclick="event.stopPropagation();setDefaultHabitsView(\''+v+'\')">Set as default</button>')+
+    '</span></span>';
+}
 function habitsViewTabsHTML(){
   return '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:20px">'+
     '<div class="seg-tabs" style="margin-bottom:0">'+
-      '<button class="seg-tab'+(_habitsView==='daily'?' active':'')+'" onclick="switchHabitsView(\'daily\')">Daily View</button>'+
-      '<button class="seg-tab'+(_habitsView==='calendar'?' active':'')+'" onclick="switchHabitsView(\'calendar\')">Calendar View</button>'+
+      habitsTabHTML('daily','Daily View')+
+      habitsTabHTML('calendar','Calendar View')+
     '</div>'+
     '<button class="btn sm'+(_habitsView==='manage'?' primary':' ghost')+'" onclick="switchHabitsView(\'manage\')">'+ICONS.settings+' Habit Manager</button>'+
   '</div>';
@@ -4965,6 +4995,13 @@ function renderCalendar(){
 
   if(_habitsView==='manage'){
     purgeExpiredTrash();
+    var _dv = defaultHabitsView();
+    html += '<div class="card" style="margin-bottom:16px"><div class="sec-title" style="margin-top:0"><h3>Default view</h3></div>'+
+      '<div class="hint" style="margin:0 0 12px">Choose which view the Habits page opens with.</div>'+
+      '<div class="seg-tabs" style="margin-bottom:0">'+
+        '<button class="seg-tab'+(_dv==='daily'?' active':'')+'" onclick="setDefaultHabitsView(\'daily\')">Daily View'+(_dv==='daily'?' ✓':'')+'</button>'+
+        '<button class="seg-tab'+(_dv==='calendar'?' active':'')+'" onclick="setDefaultHabitsView(\'calendar\')">Calendar View'+(_dv==='calendar'?' ✓':'')+'</button>'+
+      '</div></div>';
     html += '<div class="card"><div class="sec-title" style="margin-top:0"><h3>All habits</h3><span class="faint mono" style="font-size:11px">'+S.habits.length+' total</span>'+
       (S.habits.length ? '<div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn sm" onclick="openResetTracking()">'+ICONS.x+' Reset tracking data</button><button class="btn sm danger" onclick="resetMyHabits()">'+ICONS.trash+' Reset my habits</button></div>' : '')+'</div>'+
       (S.habits.length ? '<div class="hab-list">'+S.habits.map(manageHabitRowHTML).join('')+'</div>' : emptyState('No habits yet','Tap the + button above to create one.'))+
@@ -6309,7 +6346,7 @@ function renderSettings(){
   el.innerHTML = html;
 }
 function manageHabitRowHTML(h){
-  return '<div class="hab-item hab-item-manage" style="--hc:'+h.color+';--hc-soft:'+h.color+'26'+(h.archived?';opacity:.5':'')+'" onclick="openHabitModal(\''+h.id+'\')">'+
+  return '<div class="hab-item hab-item-manage" style="--hc:'+h.color+';--hc-soft:'+h.color+'26'+(h.archived?';opacity:.5':'')+'" onclick="openHabitAction(\''+h.id+'\')">'+
     '<div class="hab-icon" style="background:'+h.color+'26">'+h.icon+'</div>'+
     '<div class="hab-info"><div class="hab-name">'+esc(h.name)+'</div><div class="hab-meta">'+esc(h.cat)+' · '+esc(freqLabel(h))+(h.reminder?' · ⏰ '+fmtTime(h.reminder):'')+(h.archived?' · Archived':'')+'</div></div>'+
     '<div class="hab-row-actions">'+
