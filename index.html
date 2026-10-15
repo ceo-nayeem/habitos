@@ -420,6 +420,29 @@ a{color:inherit}
 }
 .chip.on{background:var(--accent-soft);color:var(--accent);border-color:transparent}
 
+/* ---- Goal templates (user picker + backend editor) ---- */
+.gt-list{display:flex;flex-direction:column;gap:10px}
+.gt-card{position:relative;display:flex;gap:12px;align-items:flex-start;text-align:left;width:100%;padding:12px 14px;border-radius:14px;border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer;transition:border-color .15s,box-shadow .15s,background .15s}
+.gt-card:hover{border-color:var(--accent)}
+.gt-card.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset;background:var(--accent-soft)}
+.gt-card .gt-ico{font-size:26px;line-height:1;flex:none;margin-top:2px}
+.gt-card .gt-title{font-size:14px;font-weight:700;margin-bottom:2px;padding-right:22px}
+.gt-card .gt-meta{font-size:11.5px;color:var(--text2);font-weight:600;margin-bottom:5px}
+.gt-card .gt-desc{font-size:12px;color:var(--text2);line-height:1.45}
+.gt-card .gt-steps{font-size:11px;color:var(--text3);margin-top:6px;line-height:1.5}
+.gt-card .gt-tick{position:absolute;top:10px;right:10px;width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;display:none;align-items:center;justify-content:center}
+.gt-card .gt-tick svg{width:12px;height:12px}
+.gt-card.sel .gt-tick{display:flex}
+.gt-bcard{border-bottom:1px solid var(--border)}
+.gt-bcard:last-child{border-bottom:0}
+.gt-bhead{display:grid;grid-template-columns:44px minmax(120px,1fr) auto auto;gap:8px;align-items:center;padding:10px 12px}
+.gt-bsum{font-size:11.5px;color:var(--text3);white-space:nowrap}
+.gt-bbody{padding:4px 14px 16px 14px;display:flex;flex-direction:column;gap:12px}
+.gt-ms{border:1px solid var(--border);border-radius:12px;padding:10px;background:var(--surface2);display:flex;flex-direction:column;gap:8px}
+.gt-ms-head{display:flex;gap:8px;align-items:center}
+.gt-ms-head .b-f-name{flex:1}
+.gt-ms-n{font-size:11px;font-weight:800;color:var(--text3);min-width:22px}
+.gt-ms textarea{width:100%;resize:vertical;min-height:96px;line-height:1.5;font-size:12.5px}
 /* ---- Reset tracking data modal ---- */
 button.chip{cursor:pointer;transition:transform .15s ease,background .15s ease,color .15s ease}
 button.chip:hover{transform:translateY(-1px)}
@@ -1994,6 +2017,7 @@ html.day .lock-overlay{background:rgba(244,245,249,.76)}
     <section class="page" id="page-b-achievements"></section>
     <section class="page" id="page-b-settings"></section>
     <section class="page" id="page-b-templates"></section>
+    <section class="page" id="page-b-goalTemplates"></section>
     <section class="page" id="page-b-limits"></section>
   </main>
 </div>
@@ -2034,6 +2058,11 @@ html.day .lock-overlay{background:rgba(244,245,249,.76)}
 <!-- ============ ADD/EDIT GOAL MODAL ============ -->
 <div class="modal-veil" id="goalVeil" onclick="if(event.target===this)closeGoalModal()">
   <div class="modal" id="goalModal" style="max-width:480px"></div>
+</div>
+
+<!-- ============ GOAL TEMPLATES (picker) ============ -->
+<div class="modal-veil" id="goalTplVeil" onclick="if(event.target===this)closeGoalTemplates()">
+  <div class="modal" id="goalTplModal" style="max-width:520px"></div>
 </div>
 
 <!-- ============ GOAL JOURNEY (detail) MODAL — milestones + tasks ============ -->
@@ -2316,6 +2345,10 @@ var _bDragBadgeId = null;  // id currently being dragged in the achievements reo
 var _bHabitItemsDraft = null; // working copy of {emojis,colors,categories} while editing
 var _bTplDraft = null;     // working copy of the templates list while editing
 var _bDragTplIdx = null;
+var _goalTemplatesConfig = null; // null = use built-in GOAL_TEMPLATES; array = admin-customized list
+var _unsubGoalTemplatesConfig = null;
+var _bGtDraft = null;      // working copy of the goal templates while editing in the backend
+var _bGtOpen = {};         // which backend goal-template cards are expanded (by index)
 var _bBase = {};          // JSON of each draft as last seeded/saved (used to re-sync clean drafts with live config)
 var _bTplQ = '', _bTplCat = 'all'; // template list filters
 var _bSetTab = 'appearance'; // active tab on the backend Settings page
@@ -2523,6 +2556,15 @@ function subscribeTemplatesConfig(){
     if(_backendMode && _bCurSection==='templates') renderBackendTemplates();
   }, function(err){ console.error('templates config sync error', err); });
 }
+function subscribeGoalTemplatesConfig(){
+  if(_unsubGoalTemplatesConfig) return;
+  _unsubGoalTemplatesConfig = db.collection('config').doc('goalTemplates').onSnapshot(function(doc){
+    var data = doc.exists ? doc.data() : {};
+    _goalTemplatesConfig = Array.isArray(data.templates) ? data.templates : null;
+    if(_bGtDraft && bIsClean('gtpl', bGtClean(_bGtDraft))) _bGtDraft = null;
+    if(_backendMode && _bCurSection==='goalTemplates') renderBackendGoalTemplates();
+  }, function(err){ console.error('goal templates config sync error', err); });
+}
 function stopDirectorySync(){
   if(_unsubMyDirectory){ _unsubMyDirectory(); _unsubMyDirectory=null; }
   if(_unsubPlanLimits){ _unsubPlanLimits(); _unsubPlanLimits=null; }
@@ -2531,6 +2573,7 @@ function stopDirectorySync(){
   if(_unsubAccentsConfig){ _unsubAccentsConfig(); _unsubAccentsConfig=null; }
   if(_unsubHabitItemsConfig){ _unsubHabitItemsConfig(); _unsubHabitItemsConfig=null; }
   if(_unsubTemplatesConfig){ _unsubTemplatesConfig(); _unsubTemplatesConfig=null; }
+  if(_unsubGoalTemplatesConfig){ _unsubGoalTemplatesConfig(); _unsubGoalTemplatesConfig=null; }
   if(_unsubAllUsers){ _unsubAllUsers(); _unsubAllUsers=null; }
   if(_unsubPendingUsers){ _unsubPendingUsers(); _unsubPendingUsers=null; }
   _myRole='member'; _myPlan='free'; _backendMode=false;
@@ -2546,6 +2589,55 @@ function effEmojis(){ return (_habitItemsConfig && _habitItemsConfig.emojis && _
 function effHabitColors(){ return (_habitItemsConfig && _habitItemsConfig.colors && _habitItemsConfig.colors.length) ? _habitItemsConfig.colors : HABIT_COLORS; }
 function effCategories(){ return (_habitItemsConfig && _habitItemsConfig.categories && _habitItemsConfig.categories.length) ? _habitItemsConfig.categories : CATEGORIES; }
 function effTemplates(){ return (_templatesConfig && _templatesConfig.length) ? _templatesConfig : TEMPLATES; }
+/* ---- Goal Templates: built-in starter library (admin can replace it from Backend → Goal Templates).
+   Shape: {title, icon, note, milestones:[{title, tasks:[string,…]}]} ---- */
+var GOAL_TEMPLATES = [
+  {title:'Run Your First 5K', icon:'🏃', note:'Go from zero to running 5 km non-stop in about 8–10 weeks, at a pace your body can handle.',
+   milestones:[
+    {title:'Get set up', tasks:['Get a basic health check-up if you are unsure about your fitness','Buy comfortable running shoes','Pick 3 fixed days per week for running','Choose a safe running route near home','Install a run-tracking app','Block your run slots in your calendar']},
+    {title:'Weeks 1–2: Walk / jog intervals', tasks:['Warm up with a 5-minute brisk walk','Do 1 min jog + 2 min walk × 8 rounds','Repeat the same session on your next two run days','Stretch for 5 minutes after every session','Note how each session felt','Drink water before and after each run']},
+    {title:'Weeks 3–4: Longer jogging blocks', tasks:['Do 3 min jog + 1 min walk × 6 rounds','Keep a pace where you can still talk','Add one extra easy 20-minute walk each week','Do two short mobility sessions','Track your total weekly minutes','Treat yourself after finishing week 4']},
+    {title:'Weeks 5–6: Jog 10 minutes non-stop', tasks:['Jog 5 min, walk 1 min, jog 5 min','Jog 8 minutes non-stop','Jog 10 minutes non-stop','Add a light strength session (squats, lunges, plank)','Sleep at least 7 hours before long run days']},
+    {title:'Weeks 7–8: Reach 25 minutes', tasks:['Jog 15 minutes non-stop','Jog 20 minutes non-stop','Jog 25 minutes non-stop','Try a slightly new route to stay motivated','Review your weekly progress in the app','Plan your 5K day and date']},
+    {title:'5K day', tasks:['Run an easy 3 km without stopping','Rest for two days before the run','Prepare your outfit, shoes and water the night before','Warm up properly on the day','Run your first 5 km non-stop','Record your time and celebrate']}
+   ]},
+  {title:'Read 12 Books This Year', icon:'📚', note:'One book a month, built on a small daily reading routine you can actually keep.',
+   milestones:[
+    {title:'Set up your reading system', tasks:['Choose your first 12 books and write the list','Decide on a daily 20-minute reading slot','Keep your current book where you can see it','Pick a tracking method (notebook or app)','Create a notes file for key takeaways','Move one distracting app off your home screen']},
+    {title:'Books 1–3', tasks:['Finish book 1 and write a 5-line takeaway','Finish book 2 and write a 5-line takeaway','Finish book 3 and write a 5-line takeaway','Read at least 5 days every week','Share one idea from a book with a friend']},
+    {title:'Books 4–6', tasks:['Finish book 4 and write a takeaway','Finish book 5 and write a takeaway','Finish book 6 and write a takeaway','Do a mid-year check: are you on pace?','Swap any book on your list that is not working for you']},
+    {title:'Books 7–9', tasks:['Finish book 7 and write a takeaway','Finish book 8 and write a takeaway','Finish book 9 and write a takeaway','Try one audiobook for commute or chores','Pick up one idea and apply it in real life']},
+    {title:'Books 10–12 and review', tasks:['Finish book 10 and write a takeaway','Finish book 11 and write a takeaway','Finish book 12 and write a takeaway','Rank your 12 books from best to worst','Write a one-page summary of what you learned','Plan next year\'s reading list']}
+   ]},
+  {title:'Build an Emergency Fund', icon:'💰', note:'Save enough to cover 3 months of essential expenses so a surprise bill never becomes a crisis.',
+   milestones:[
+    {title:'Know your numbers', tasks:['List every monthly income source','List all essential monthly expenses (rent, food, bills, transport)','Add up your 3-month essential total','Find what you can realistically save each month','Review the last 3 months of spending for leaks']},
+    {title:'Set up the system', tasks:['Open a separate savings account for the fund','Name the account "Emergency Fund"','Set a fixed monthly saving amount','Automate a transfer right after payday','Remove the card or app for this account from daily use']},
+    {title:'Reach the first month', tasks:['Cut one non-essential expense this month','Move any spare cash into the fund','Save your first 25% of the target','Save 50% of one month of expenses','Reach one full month of essential expenses']},
+    {title:'Reach three months', tasks:['Keep the monthly transfer running without skipping','Put any bonus or extra income into the fund','Review your budget every month','Reach 2 months of essential expenses','Reach the full 3-month target']},
+    {title:'Protect and maintain', tasks:['Write down what counts as a real emergency','Keep the money in a safe, easy-to-access place','Refill the fund quickly after any withdrawal','Re-check your target every 6 months','Redirect the monthly amount to your next goal']}
+   ]},
+  {title:'Learn a New Language', icon:'🌍', note:'Reach comfortable everyday conversation in 6 months with short daily practice.',
+   milestones:[
+    {title:'Foundations', tasks:['Pick your language and a clear reason for learning it','Choose one main course or app and stick with it','Learn the alphabet and basic pronunciation','Learn 50 most common words','Set a daily 20-minute study slot','Make a simple notebook for new words']},
+    {title:'Basic conversation', tasks:['Learn greetings and introductions','Learn numbers, days and time','Learn 20 useful everyday questions','Practise ordering food and asking for directions','Record yourself introducing yourself','Learn 150 words in total']},
+    {title:'Grammar and vocabulary', tasks:['Learn the present tense and common verbs','Learn the past and future tense basics','Review flashcards every day','Learn 400 words in total','Write 5 simple sentences every day','Fix your three most common mistakes']},
+    {title:'Listening practice', tasks:['Listen to a beginner podcast three times a week','Watch a short video with subtitles daily','Switch subtitles to the target language','Shadow (repeat after) a speaker for 5 minutes a day','Understand a 2-minute clip without subtitles']},
+    {title:'Speaking with real people', tasks:['Find a language partner or tutor','Have your first 10-minute conversation','Hold a conversation every week for a month','Ask your partner to correct your mistakes','Describe your day out loud in the language','Have a 20-minute conversation']},
+    {title:'Use it in real life', tasks:['Change your phone language for one week','Read a short article or story in the language','Write a one-page piece and get it corrected','Take a level test (A2 or B1 target)','Plan your next level and study routine']}
+   ]},
+  {title:'Launch a Side Project', icon:'🚀', note:'Take an idea from your head to your first real users in about 90 days.',
+   milestones:[
+    {title:'Pick and validate the idea', tasks:['Write down 3 project ideas','Choose the one you can finish in 90 days','Describe the problem and who has it in one paragraph','Talk to 5 people who have this problem','Check what similar solutions already exist','Decide go or no-go']},
+    {title:'Plan the MVP', tasks:['List the must-have features only','Cut the list down to what you can build in 4 weeks','Sketch the main screens or steps on paper','Choose your tools and keep them simple','Break the work into weekly targets','Set a launch date']},
+    {title:'Build the MVP', tasks:['Set up the project, accounts and hosting','Build the core feature first','Build the basic user flow end to end','Add the minimum design polish','Fix the obvious bugs','Work on it for 5 hours every week']},
+    {title:'Test with early users', tasks:['Ask 5 people to try it','Watch them use it without helping','Write down every point where they get stuck','Fix the top 3 problems','Collect one short testimonial or feedback quote']},
+    {title:'Prepare the launch', tasks:['Write a clear one-line description','Prepare 3 screenshots or a short demo video','Set up a simple landing page or post','Prepare a short launch message','List 20 places or people to share it with']},
+    {title:'Launch', tasks:['Publish the project','Share it with your 20 people or places','Reply to every comment and message in the first week','Track visits and sign-ups daily','Post one update about what you learned']},
+    {title:'Review and decide', tasks:['Count users, sign-ups and feedback','List what worked and what did not','Pick the 3 improvements that matter most','Decide: continue, change direction or stop','Plan the next 30 days']}
+   ]}
+];
+function effGoalTemplates(){ return (_goalTemplatesConfig && _goalTemplatesConfig.length) ? _goalTemplatesConfig : GOAL_TEMPLATES; }
 function greetingLine(name){
   var g = _greetingConfig || DEFAULT_GREETING_CONFIG;
   var nm = name ? name : (g.fallbackName || 'there');
@@ -2605,6 +2697,7 @@ function goBackend(section){
   else if(section==='achievements') renderBackendAchievements();
   else if(section==='settings') renderBackendSettings();
   else if(section==='templates') renderBackendTemplates();
+  else if(section==='goalTemplates') renderBackendGoalTemplates();
   else if(section==='limits') renderBackendLimits();
   var main = document.getElementById('bMain'); if(main) main.scrollTop = 0;
   window.scrollTo(0,0);
@@ -2677,7 +2770,7 @@ function renderBackendOverview(){
       '<div class="b-panel-body"><div class="hint" style="margin:0;font-size:12.5px;line-height:1.6">Across every account, people are tracking <b>'+habitsSum+'</b> active habits and <b>'+goalsSum+'</b> goals right now.</div></div></div>'+
   '</div>';
   html += '<div class="b-panel"><div class="b-panel-head"><h3>Configuration</h3><span class="sub">What every user currently sees</span></div><div class="b-panel-body"><div class="b-link-tiles">'+
-    [['templates','Templates',effTemplates().length],['settings','Categories',effCategories().length],['settings','Habit icons',effEmojis().length],
+    [['templates','Templates',effTemplates().length],['goalTemplates','Goal templates',effGoalTemplates().length],['settings','Categories',effCategories().length],['settings','Habit icons',effEmojis().length],
      ['settings','Habit colors',effHabitColors().length],['achievements','Achievements',effBadges().length],['settings','Accent colors',effAccents().length]].map(function(x){
       return '<button class="b-link-tile" onclick="goBackend(\''+x[0]+'\')"><b>'+x[2]+'</b><span>'+x[1]+'</span></button>';
     }).join('')+'</div></div></div>';
@@ -3364,6 +3457,131 @@ function saveBackendTemplates(){
   }).catch(function(err){ toast('Could not save: '+err.message, true); });
 }
 
+/* ==================================================================
+   BACKEND — GOAL TEMPLATES
+   Working copy in _bGtDraft; each template = icon, title, note and a list
+   of milestones, each with its tasks (one per line). Save publishes to
+   config/goalTemplates and every user's Goals → Templates picker
+   (effGoalTemplates()) reflects it live.
+   ================================================================== */
+function bGtClean(list){
+  return (list||[]).filter(function(t){ return (t.title||'').trim(); }).map(function(t){
+    return {
+      title:t.title.trim(), icon:(t.icon||'🎯').trim()||'🎯', note:(t.note||'').trim(),
+      milestones:(t.milestones||[]).filter(function(m){ return (m.title||'').trim(); }).map(function(m){
+        return {title:m.title.trim(), tasks:(m.tasks||[]).map(function(x){ return String(x).trim(); }).filter(Boolean)};
+      })
+    };
+  });
+}
+function ensureGtDraft(){
+  if(!_bGtDraft){ _bGtDraft = JSON.parse(JSON.stringify(effGoalTemplates())); bSeed('gtpl', bGtClean(_bGtDraft)); }
+}
+function bGtDirty(){ return bJSON(bGtClean(_bGtDraft)) !== bJSON(bGtClean(effGoalTemplates())); }
+function renderBackendGoalTemplates(){
+  ensureGtDraft();
+  var el = document.getElementById('page-b-goalTemplates'); if(!el) return;
+  var html = bPageHead('Goal Templates','Ready-made goals with milestones and tasks people can add instantly · one task per line',
+    '<button class="btn primary" onclick="addBackendGoalTemplate()">'+ICONS.plus+' New template</button>');
+  html += '<div class="b-panel"><div class="b-panel-head"><h3>Templates</h3><span class="b-sp"></span><span class="sub" id="bGtCount"></span></div><div id="bGtList"></div></div>';
+  html += bSaveBar({save:'saveBackendGoalTemplates()', reset:'resetBackendGoalTemplates()', discard:'bGtDiscard()', saveLabel:'Save templates'});
+  el.innerHTML = html;
+  bGtRenderList();
+  bSetDirty(bGtDirty());
+}
+function bGtCounts(t){
+  var m = (t.milestones||[]).length, k = 0;
+  (t.milestones||[]).forEach(function(x){ k += (x.tasks||[]).filter(function(y){ return String(y).trim(); }).length; });
+  return m+' milestone'+(m===1?'':'s')+' · '+k+' task'+(k===1?'':'s');
+}
+function bGtRenderList(){
+  var box = document.getElementById('bGtList'); if(!box) return;
+  box.innerHTML = _bGtDraft.length ? _bGtDraft.map(bGtCardHTML).join('') :
+    '<div class="b-empty-cell">No goal templates yet — click “New template”.</div>';
+  var c = document.getElementById('bGtCount'); if(c) c.textContent = _bGtDraft.length+' template'+(_bGtDraft.length===1?'':'s');
+}
+function bGtCardHTML(t,i){
+  var open = !!_bGtOpen[i];
+  var out = '<div class="gt-bcard" data-idx="'+i+'">'+
+    '<div class="gt-bhead">'+
+      '<input class="inp b-emo" maxlength="4" value="'+esc(t.icon)+'" oninput="updateGtField('+i+',\'icon\',this.value)"/>'+
+      '<input class="inp b-f-name" placeholder="Goal title" value="'+esc(t.title)+'" oninput="updateGtField('+i+',\'title\',this.value)"/>'+
+      '<span class="gt-bsum" id="gtSum'+i+'">'+bGtCounts(t)+'</span>'+
+      '<div class="b-acts">'+
+        '<button class="b-ib" title="Move up" onclick="bGtMove('+i+',-1)">↑</button>'+
+        '<button class="b-ib" title="Move down" onclick="bGtMove('+i+',1)">↓</button>'+
+        '<button class="b-ib" title="Duplicate" onclick="bGtDup('+i+')">'+B_ICO.copy+'</button>'+
+        '<button class="b-ib del" title="Delete" onclick="deleteBackendGoalTemplate('+i+')">'+ICONS.trash+'</button>'+
+        '<button class="b-ib" title="'+(open?'Collapse':'Edit milestones & tasks')+'" onclick="bGtToggle('+i+')">'+(open?'▾':'▸')+'</button>'+
+      '</div>'+
+    '</div>';
+  if(open){
+    out += '<div class="gt-bbody">'+
+      '<div><span class="field-label">Description</span><input class="inp" placeholder="One line about this goal" value="'+esc(t.note||'')+'" oninput="updateGtField('+i+',\'note\',this.value)"/></div>';
+    (t.milestones||[]).forEach(function(m,j){
+      out += '<div class="gt-ms">'+
+        '<div class="gt-ms-head"><span class="gt-ms-n mono">#'+(j+1)+'</span>'+
+          '<input class="inp b-f-name" placeholder="Milestone title" value="'+esc(m.title)+'" oninput="updateGtMs('+i+','+j+',this.value)"/>'+
+          '<button class="b-ib" title="Move up" onclick="bGtMoveMs('+i+','+j+',-1)">↑</button>'+
+          '<button class="b-ib" title="Move down" onclick="bGtMoveMs('+i+','+j+',1)">↓</button>'+
+          '<button class="b-ib del" title="Remove milestone" onclick="bGtDelMs('+i+','+j+')">'+ICONS.trash+'</button></div>'+
+        '<textarea class="inp" placeholder="One task per line" oninput="updateGtTasks('+i+','+j+',this.value)">'+esc((m.tasks||[]).join('\n'))+'</textarea>'+
+      '</div>';
+    });
+    out += '<div><button class="btn sm" onclick="bGtAddMs('+i+')">'+ICONS.plus+' Add milestone</button></div></div>';
+  }
+  return out+'</div>';
+}
+function bGtTouch(i){
+  var sum = document.getElementById('gtSum'+i); if(sum && _bGtDraft[i]) sum.textContent = bGtCounts(_bGtDraft[i]);
+  bSetDirty(bGtDirty());
+}
+/* Typing never re-renders (keeps focus); structural changes redraw the list. */
+function updateGtField(i,field,val){ var t=_bGtDraft[i]; if(!t) return; t[field]=val; bGtTouch(i); }
+function updateGtMs(i,j,val){ var m=(_bGtDraft[i]||{}).milestones; if(!m||!m[j]) return; m[j].title=val; bGtTouch(i); }
+function updateGtTasks(i,j,val){ var m=(_bGtDraft[i]||{}).milestones; if(!m||!m[j]) return; m[j].tasks=val.split('\n'); bGtTouch(i); }
+function bGtToggle(i){ _bGtOpen[i] = !_bGtOpen[i]; bGtRenderList(); }
+function bGtAddMs(i){ var t=_bGtDraft[i]; if(!t) return; t.milestones=t.milestones||[]; t.milestones.push({title:'New milestone',tasks:['']}); bGtRenderList(); bGtTouch(i); }
+function bGtDelMs(i,j){ var t=_bGtDraft[i]; if(!t) return; t.milestones.splice(j,1); bGtRenderList(); bGtTouch(i); }
+function bGtMoveMs(i,j,d){
+  var t=_bGtDraft[i]; if(!t) return; var k=j+d; if(k<0||k>=t.milestones.length) return;
+  var x=t.milestones.splice(j,1)[0]; t.milestones.splice(k,0,x); bGtRenderList(); bGtTouch(i);
+}
+function bGtMove(i,d){
+  var k=i+d; if(k<0||k>=_bGtDraft.length) return;
+  var x=_bGtDraft.splice(i,1)[0]; _bGtDraft.splice(k,0,x);
+  var a=_bGtOpen[i], b=_bGtOpen[k]; _bGtOpen[i]=b; _bGtOpen[k]=a;
+  bGtRenderList(); bSetDirty(bGtDirty());
+}
+function bGtDup(i){
+  var t=_bGtDraft[i]; if(!t) return;
+  var c=JSON.parse(JSON.stringify(t)); c.title=(c.title||'')+' copy';
+  _bGtDraft.splice(i+1,0,c); _bGtOpen={}; _bGtOpen[i+1]=true;
+  bGtRenderList(); bSetDirty(bGtDirty());
+}
+function addBackendGoalTemplate(){
+  _bGtDraft.push({title:'New goal', icon:'🎯', note:'', milestones:[{title:'Milestone 1', tasks:['']}]});
+  _bGtOpen={}; _bGtOpen[_bGtDraft.length-1]=true;
+  bGtRenderList(); bSetDirty(bGtDirty());
+  setTimeout(function(){
+    var row=document.querySelector('#bGtList .gt-bcard[data-idx="'+(_bGtDraft.length-1)+'"]'); if(!row) return;
+    row.scrollIntoView({block:'center',behavior:'smooth'});
+    var inp=row.querySelector('.b-f-name'); if(inp){ inp.focus(); inp.select(); }
+  },30);
+}
+function deleteBackendGoalTemplate(i){ _bGtDraft.splice(i,1); _bGtOpen={}; bGtRenderList(); bSetDirty(bGtDirty()); }
+function resetBackendGoalTemplates(){ _bGtDraft = JSON.parse(JSON.stringify(GOAL_TEMPLATES)); _bGtOpen={}; renderBackendGoalTemplates(); }
+function bGtDiscard(){ _bGtDraft = null; _bGtOpen={}; renderBackendGoalTemplates(); }
+function saveBackendGoalTemplates(){
+  var clean = bGtClean(_bGtDraft);
+  if(!clean.length){ toast('Add at least one template', true); return; }
+  db.collection('config').doc('goalTemplates').set({templates:clean}, {merge:true}).then(function(){
+    bSeed('gtpl', clean);
+    bSetDirty(false);
+    toast('Goal templates saved');
+  }).catch(function(err){ toast('Could not save: '+err.message, true); });
+}
+
 /* ---- auth (Google sign-in via Firebase Auth) ---- */
 function signInWithGoogle(){
   document.getElementById('authGoogleBtn').disabled = true;
@@ -3394,6 +3612,7 @@ auth.onAuthStateChanged(function(user){
     subscribeAccentsConfig();
     subscribeHabitItemsConfig();
     subscribeTemplatesConfig();
+    subscribeGoalTemplatesConfig();
   } else {
     _currentUser = null;
     stopRealtimeSync();
@@ -3700,6 +3919,7 @@ var B_NAV = [
   {id:'achievements', label:'Achievements', icon:ICONS.trophy},
   {id:'settings', label:'Settings', icon:ICONS.settings},
   {id:'templates', label:'Habit Templates', icon:ICONS.calendar},
+  {id:'goalTemplates', label:'Goal Templates', icon:ICONS.target},
   {id:'limits', label:'Plan limits', icon:ICONS.sliders}
 ];
 var NAV = [
@@ -5067,6 +5287,7 @@ function renderGoals(){
     '<div class="page-sub">'+(goals.length ? active+' in progress · '+done+' achieved' : 'Turn your ambitions into a plan')+'</div></div>'+
     '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
       toggleHTML+
+      '<button class="btn" onclick="openGoalTemplates()">'+ICONS.sparkle+' Templates</button>'+
       '<button class="btn primary" onclick="openGoalModal()">'+ICONS.plus+' New Goal</button>'+
     '</div>'+
   '</div>';
@@ -5472,6 +5693,81 @@ function openGoalModal(id){
   setTimeout(function(){ var i=document.getElementById('gf-title'); if(i) i.focus(); }, 60);
 }
 function closeGoalModal(){ document.getElementById('goalVeil').classList.remove('open'); }
+
+/* ---- Goal templates picker: select several, then Add. Each template becomes a full goal
+   with its milestones and tasks (all unchecked, no dates). Respects the free-plan goal limit. ---- */
+var _gtSel = {};
+function openGoalTemplates(){
+  if(!canCreateGoal()){ openUpgradeModal('goals'); return; }
+  _gtSel = {};
+  renderGoalTemplates();
+  document.getElementById('goalTplVeil').classList.add('open');
+}
+function closeGoalTemplates(){ document.getElementById('goalTplVeil').classList.remove('open'); _gtSel = {}; }
+function gtCounts(t){
+  var m = (t.milestones||[]).length, k = 0;
+  (t.milestones||[]).forEach(function(x){ k += (x.tasks||[]).length; });
+  return m+' milestones · '+k+' tasks';
+}
+function renderGoalTemplates(){
+  var list = effGoalTemplates();
+  document.getElementById('goalTplModal').innerHTML =
+    '<div class="modal-head"><div class="modal-title">Goal Templates</div><button class="icon-btn" onclick="closeGoalTemplates()">'+ICONS.x+'</button></div>'+
+    '<div class="hint" style="margin-bottom:12px">Tap templates to select or deselect them, then press Add. Each one becomes a goal with its milestones and tasks ready to tick off.</div>'+
+    '<div class="gt-list">'+
+    list.map(function(t,i){
+      var steps = (t.milestones||[]).slice(0,3).map(function(m){ return esc(m.title); }).join(' → ') + ((t.milestones||[]).length>3 ? ' → …' : '');
+      return '<button type="button" class="gt-card'+(_gtSel[i]?' sel':'')+'" data-i="'+i+'" onclick="toggleGoalTemplateSelect('+i+')">'+
+        '<span class="gt-tick">'+ICONS.check+'</span>'+
+        '<span class="gt-ico">'+esc(t.icon||'🎯')+'</span>'+
+        '<span><div class="gt-title">'+esc(t.title)+'</div><div class="gt-meta">'+gtCounts(t)+'</div>'+
+        (t.note?'<div class="gt-desc">'+esc(t.note)+'</div>':'')+
+        (steps?'<div class="gt-steps">'+steps+'</div>':'')+'</span>'+
+      '</button>';
+    }).join('')+
+    '</div>'+
+    '<div class="modal-foot">'+
+      '<button class="btn" onclick="closeGoalTemplates()">Cancel</button>'+
+      '<button class="btn primary block" id="gtAddBtn" onclick="addSelectedGoalTemplates()" disabled>Add</button>'+
+    '</div>';
+}
+function updateGtAddBtn(){
+  var n = Object.keys(_gtSel).length, btn = document.getElementById('gtAddBtn'); if(!btn) return;
+  btn.disabled = n===0;
+  btn.textContent = n ? 'Add '+n+' goal'+(n===1?'':'s') : 'Add';
+}
+function toggleGoalTemplateSelect(i){
+  if(_gtSel[i]){ delete _gtSel[i]; }
+  else{
+    if(!isPro() && (S.goals||[]).length + Object.keys(_gtSel).length >= _planLimits.freeMaxGoals){ openUpgradeModal('goals'); return; }
+    _gtSel[i] = true;
+  }
+  var card = document.querySelector('#goalTplModal .gt-card[data-i="'+i+'"]');
+  if(card) card.classList.toggle('sel', !!_gtSel[i]);
+  updateGtAddBtn();
+}
+function addSelectedGoalTemplates(){
+  var list = effGoalTemplates();
+  var idxs = Object.keys(_gtSel).map(Number).sort(function(a,b){ return a-b; });
+  if(!idxs.length) return;
+  var added = [];
+  idxs.forEach(function(i){
+    var t = list[i]; if(!t) return;
+    var g = {
+      id:uid(), title:t.title, icon:t.icon||'🎯', note:t.note||'',
+      targetDate:null, createdAt:_todayStr, status:'active',
+      milestones:(t.milestones||[]).map(function(m){
+        return {id:uid(), title:m.title, targetDate:null, done:false,
+          tasks:(m.tasks||[]).map(function(x){ return {id:uid(), title:String(x), done:false, targetDate:null}; })};
+      })
+    };
+    S.goals.push(g); added.push(g);
+  });
+  save();
+  closeGoalTemplates();
+  if(_curPage==='goals') renderGoals(); else go('goals');
+  toast(added.length===1 ? 'Added goal "'+added[0].title+'"' : 'Added '+added.length+' goals');
+}
 function goalFormHTML(g){
   var isEdit = !!g;
   var out = '<div class="modal-head"><div class="modal-title">'+(isEdit?'Edit Goal':'New Goal')+'</div>'+
@@ -6610,7 +6906,7 @@ function refreshTodayIfChanged(){
   checkReminders();
 }
 document.addEventListener('keydown', function(e){
-  if(e.key==='Escape'){ closeTimePicker(); closeDatePickerDropdown(); closeHabitModal(); closeMore(); closeTemplateModal(); closeHabitAction(); closeHabitStats(); closeTrashConfirm(); closeResetTracking(); if(_aiOpen) toggleAI(); }
+  if(e.key==='Escape'){ closeTimePicker(); closeDatePickerDropdown(); closeHabitModal(); closeMore(); closeTemplateModal(); closeHabitAction(); closeHabitStats(); closeTrashConfirm(); closeResetTracking(); closeGoalTemplates(); if(_aiOpen) toggleAI(); }
 });
 
 _todayStr = dateStr(new Date());
