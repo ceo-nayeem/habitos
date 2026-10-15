@@ -6842,12 +6842,12 @@ function toggleArchive(id){
 }
 
 /* ==================================================================
-   AI HABIT COACH  (uses the built-in Claude API — no key needed)
+   AI HABIT COACH  (Google Gemini — chat + can change your habits & goals)
    ================================================================== */
 var _aiOpen = false;
 var _aiHistory = [];
 var _aiBusy = false;
-var AI_SUGGESTIONS = ["How am I doing this week?","Add a habit for better sleep","What should I focus on today?","Suggest a new habit to try"];
+var AI_SUGGESTIONS = ["How am I doing this week?","Mark all my habits done for today","Show my goals progress","Add a habit for better sleep"];
 
 function toggleAI(){
   _aiOpen = !_aiOpen;
@@ -6859,7 +6859,7 @@ function toggleAI(){
   }
 }
 function aiInit(){
-  aiAppendMsg('system', 'Hi'+(S.profile.name?' '+esc(S.profile.name):'')+'! I\'m your Habit Coach. I can see your habits, add new ones, log a check-in, or just talk through your progress.');
+  aiAppendMsg('system', 'Hi'+(S.profile.name?' '+esc(S.profile.name):'')+'! I\'m your Habit Coach. I can see your habits and goals, check or uncheck habits (for any past date), complete goal tasks and milestones, add or edit things, or just talk through your progress. Just tell me what to do — in Bangla or English.');
   var row = document.getElementById('aiSuggestRow');
   row.innerHTML = AI_SUGGESTIONS.map(function(s){ return '<button class="ai-suggest" onclick="aiFillSuggest(this)">'+esc(s)+'</button>'; }).join('');
 }
@@ -6873,7 +6873,9 @@ function aiAppendMsg(role,text){
   var box = document.getElementById('aiMsgs');
   var el = document.createElement('div');
   el.className = 'ai-msg '+role;
-  el.innerHTML = esc(text).replace(/\n/g,'<br>');
+  var html = esc(text).replace(/\n/g,'<br>');
+  if(role==='agent') html = html.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
+  el.innerHTML = html;
   box.appendChild(el);
   box.scrollTop = box.scrollHeight;
   return el;
@@ -6886,81 +6888,121 @@ function aiShowThinking(){
 }
 function aiHideThinking(){ var el=document.getElementById('ai-thinking-el'); if(el) el.remove(); }
 
-var AI_TOOLS = [
-  { name:'add_habit', description:'Create a new habit for the user to track.',
-    input_schema:{ type:'object', properties:{
-      name:{type:'string', description:'Short name of the habit'},
-      icon:{type:'string', description:'A single emoji representing the habit'},
-      category:{type:'string', enum:CATEGORIES},
-      frequency_type:{type:'string', enum:['daily','days','weekly'], description:'daily = every day, days = specific weekdays, weekly = X times per week on any days'},
-      frequency_days:{type:'array', items:{type:'integer', minimum:0, maximum:6}, description:'Weekdays for frequency_type=days, 0=Sunday..6=Saturday'},
-      frequency_count:{type:'integer', minimum:1, maximum:7, description:'Times per week for frequency_type=weekly'}
-    }, required:['name'] } },
-  { name:'log_habit', description:"Mark a habit done, missed, or clear its status for a given date (defaults to today). Use fuzzy matching on the habit name.",
-    input_schema:{ type:'object', properties:{
-      name:{type:'string', description:'Habit name (or part of it) to match'},
-      status:{type:'string', enum:['done','missed','clear']},
-      date:{type:'string', description:'YYYY-MM-DD, defaults to today if omitted'}
-    }, required:['name','status'] } },
-  { name:'list_habits', description:"List all of the user's habits with their schedule, current streak, and today's status.",
-    input_schema:{ type:'object', properties:{} } },
-  { name:'get_stats', description:'Get aggregate stats: today\'s completion, best streak, total check-ins, 30-day rate, badges earned.',
-    input_schema:{ type:'object', properties:{} } },
-  { name:'delete_habit', description:'Permanently delete a habit by name (fuzzy match).',
-    input_schema:{ type:'object', properties:{ name:{type:'string'} }, required:['name'] } },
-  { name:'archive_habit', description:'Archive or unarchive a habit by name (fuzzy match), removing/restoring it from active tracking without deleting history.',
-    input_schema:{ type:'object', properties:{ name:{type:'string'}, archived:{type:'boolean'} }, required:['name','archived'] } }
-];
-
 /* ==================================================================
    GEMINI — Habit Coach runs on Google's Gemini API (client-side call).
    Get/rotate your key at https://aistudio.google.com/apikey
-   NOTE: shipping an API key inside client-side HTML/JS means anyone who
-   views source can read and reuse it. Fine for a personal/local build;
-   for anything public-facing, proxy this call through a small backend
-   instead so the key never reaches the browser.
+   SECURITY: a key inside client-side HTML/JS can be read by anyone who
+   opens the page source. In Google Cloud Console → Credentials, restrict
+   this key (allowed websites + only the Gemini API) and set a quota, or
+   move the call behind a small backend so the key never reaches browsers.
    ================================================================== */
-var GEMINI_API_KEY = "AQ.Ab8RN6K_5T9iKoJL-7_nLh9nZrduQMqYL7q5jaz1z-R1x8n2mg";
-var GEMINI_MODEL = "gemini-2.5-flash";
-var GEMINI_TOOLS = [{ functionDeclarations: AI_TOOLS.map(function(t){
-  return { name:t.name, description:t.description, parameters:t.input_schema };
-}) }];
+var GEMINI_API_KEY = "AQ.Ab8RN6LR2jSgPlslYE7aOLM-7mzULr6ddItSFuIIBRGD8qPgmg";
+/* Tried in order; if one is retired (404 / "no longer available") the next is used and remembered. */
+var GEMINI_MODELS = ["gemini-3.5-flash","gemini-3.6-flash","gemini-3.7-flash"];
+var _geminiModelIdx = 0;
 
-function findHabitFuzzy(name){
-  if(!name) return null;
-  var nl = name.toLowerCase();
-  return S.habits.find(function(h){ return h.name.toLowerCase()===nl; }) ||
-         S.habits.find(function(h){ return h.name.toLowerCase().indexOf(nl)!==-1 || nl.indexOf(h.name.toLowerCase())!==-1; }) || null;
+/* ---------------- tools the assistant can use ---------------- */
+function aiToolDefs(){
+  var cats = effCategories();
+  var S_ = function(d){ return {type:'string', description:d}; };
+  return [
+    { name:'list_habits', description:"List every habit with schedule, category, streaks, archived flag and today's status.", properties:{} },
+    { name:'get_stats', description:"Aggregate stats: today's completion, best streak, total check-ins, 30-day rate, badges, active habits.", properties:{} },
+    { name:'add_habit', description:'Create a new habit.', required:['name'], properties:{
+        name:S_('Short name of the habit'),
+        icon:S_('A single emoji for the habit'),
+        category:{type:'string', enum:cats},
+        frequency_type:{type:'string', enum:['daily','days','weekly'], description:'daily = every day, days = specific weekdays, weekly = X times per week'},
+        frequency_days:{type:'array', items:{type:'integer'}, description:'Weekdays for frequency_type=days, 0=Sunday..6=Saturday'},
+        frequency_count:{type:'integer', description:'Times per week for frequency_type=weekly (1-7)'} } },
+    { name:'update_habit', description:'Edit an existing habit: rename, change icon, category or schedule.', required:['name'], properties:{
+        name:S_('Current habit name (or part of it)'),
+        new_name:S_('New name'), icon:S_('New emoji'), category:{type:'string', enum:cats},
+        frequency_type:{type:'string', enum:['daily','days','weekly']},
+        frequency_days:{type:'array', items:{type:'integer'}, description:'0=Sunday..6=Saturday'},
+        frequency_count:{type:'integer'} } },
+    { name:'log_habit', description:"Check (done), mark missed, or clear (uncheck) a habit for one or more dates. Past dates are allowed, future dates are not. Defaults to today.", required:['name','status'], properties:{
+        name:S_('Habit name (or part of it)'),
+        status:{type:'string', enum:['done','missed','clear']},
+        date:S_('YYYY-MM-DD, defaults to today'),
+        dates:{type:'array', items:{type:'string'}, description:'Several YYYY-MM-DD dates at once'} } },
+    { name:'archive_habit', description:'Archive or unarchive a habit (keeps its history).', required:['name','archived'], properties:{ name:S_('Habit name'), archived:{type:'boolean'} } },
+    { name:'delete_habit', description:'Move a habit to Trash (restorable for 7 days). Only after the user clearly asked for deletion.', required:['name'], properties:{ name:S_('Habit name') } },
+
+    { name:'list_goals', description:'List all goals with progress, milestones and tasks (and which are done).', properties:{} },
+    { name:'add_goal', description:'Create a goal, optionally with milestones and their tasks.', required:['title'], properties:{
+        title:S_('Goal title'), icon:S_('A single emoji'), note:S_('Why it matters'), target_date:S_('YYYY-MM-DD'),
+        milestones:{type:'array', description:'Milestones in order', items:{type:'object', properties:{
+          title:S_('Milestone title'), tasks:{type:'array', items:{type:'string'}, description:'Task titles'} }, required:['title']}} } },
+    { name:'add_milestone', description:'Add a milestone (stage) to an existing goal.', required:['goal','title'], properties:{
+        goal:S_('Goal title (or part)'), title:S_('Milestone title'), target_date:S_('YYYY-MM-DD'),
+        tasks:{type:'array', items:{type:'string'}, description:'Task titles'} } },
+    { name:'add_task', description:'Add a task to a milestone of a goal.', required:['goal','milestone','title'], properties:{
+        goal:S_('Goal title (or part)'), milestone:S_('Milestone title (or part)'), title:S_('Task title'), target_date:S_('YYYY-MM-DD') } },
+    { name:'set_task_done', description:'Check or uncheck a goal task.', required:['goal','task','done'], properties:{
+        goal:S_('Goal title (or part)'), task:S_('Task title (or part)'), milestone:S_('Milestone title, only if the task name is ambiguous'), done:{type:'boolean'} } },
+    { name:'set_milestone_done', description:'Complete or reopen a milestone (also checks/unchecks all its tasks).', required:['goal','milestone','done'], properties:{
+        goal:S_('Goal title (or part)'), milestone:S_('Milestone title (or part)'), done:{type:'boolean'} } },
+    { name:'set_goal_done', description:'Complete or reopen a whole goal (all milestones and tasks).', required:['goal','done'], properties:{
+        goal:S_('Goal title (or part)'), done:{type:'boolean'} } }
+  ];
 }
+function geminiTools(){
+  return [{ functionDeclarations: aiToolDefs().map(function(t){
+    var d = { name:t.name, description:t.description };
+    if(Object.keys(t.properties).length){
+      d.parameters = { type:'object', properties:t.properties };
+      if(t.required) d.parameters.required = t.required;
+    }
+    return d;   // tools without arguments must omit "parameters" (Gemini rejects empty objects)
+  }) }];
+}
+
+/* ---------------- matching helpers ---------------- */
+function aiNorm(x){ return String(x||'').toLowerCase().trim(); }
+/* exact name wins; otherwise a single partial match; several matches → ask the user which one */
+function aiPick(list, nameOf, q, label){
+  var n = aiNorm(q);
+  if(!n) return {error:label+' name is required'};
+  var exact = list.filter(function(x){ return aiNorm(nameOf(x))===n; });
+  if(exact.length===1) return {item:exact[0]};
+  var pool = exact.length ? exact : list.filter(function(x){
+    var a = aiNorm(nameOf(x)); return a.indexOf(n)!==-1 || (a.length>2 && n.indexOf(a)!==-1);
+  });
+  if(pool.length===1) return {item:pool[0]};
+  if(!pool.length) return {error:'No '+label+' matching "'+q+'".'+(list.length?' Available: '+list.slice(0,25).map(nameOf).join(', '):' There are none yet.')};
+  return {error:'More than one '+label+' matches "'+q+'": '+pool.map(nameOf).join(', ')+'. Ask the user which one they mean.'};
+}
+function aiHabit(name){ return aiPick(S.habits, function(h){ return h.name; }, name, 'habit'); }
+function aiGoal(name){ return aiPick(S.goals||[], function(g){ return g.title; }, name, 'goal'); }
+function aiDateOk(d){ return typeof d==='string' && /^\d{4}-\d{2}-\d{2}$/.test(d) && !isNaN(parseDate(d).getTime()); }
+function aiRefresh(gid){
+  reRenderCurrent(); renderNav();
+  if(gid && typeof reRenderGoalDetail==='function') reRenderGoalDetail(gid);
+}
+function aiMakeTasks(list){
+  return (Array.isArray(list)?list:[]).map(function(t){ return String(t||'').trim(); }).filter(Boolean)
+    .map(function(t){ return {id:uid(), title:t, done:false, targetDate:null}; });
+}
+function aiGoalSummary(g){
+  return { title:g.title, status:g.status||'active', progressPct:goalPct(g), targetDate:g.targetDate||null,
+    milestones:(g.milestones||[]).map(function(m){
+      return { title:m.title, done:isMilestoneDone(m),
+        tasks:(m.tasks||[]).map(function(t){ return {title:t.title, done:!!t.done}; }) };
+    }) };
+}
+
+/* ---------------- tool execution (the only place the assistant changes data) ---------------- */
 function aiExecuteTool(name,input){
+  input = input || {};
   try{
-    if(name==='add_habit'){
-      if(!input.name) return {error:'name is required'};
-      var ft = ['daily','days','weekly'].indexOf(input.frequency_type)!==-1 ? input.frequency_type : 'daily';
-      var h = {
-        id:uid(), name:input.name, icon:input.icon||EMOJIS[Math.floor(Math.random()*EMOJIS.length)],
-        color:HABIT_COLORS[S.habits.length % HABIT_COLORS.length],
-        cat: CATEGORIES.indexOf(input.category)!==-1 ? input.category : 'Other',
-        freqType:ft, freqDays: Array.isArray(input.frequency_days)&&input.frequency_days.length?input.frequency_days:[1,2,3,4,5],
-        freqCount: input.frequency_count||3, reminder:null, createdAt:_todayStr, logs:{}, archived:false
-      };
-      S.habits.push(h); save(); reRenderCurrent(); renderNav();
-      return {ok:true, created:h.name, id:h.id};
-    }
-    if(name==='log_habit'){
-      var h = findHabitFuzzy(input.name);
-      if(!h) return {error:'No habit matching "'+input.name+'"'};
-      var ds = input.date || _todayStr;
-      var status = input.status==='done' ? 'done' : (input.status==='missed' ? 'missed' : null);
-      setStatus(h.id,ds,status); reRenderCurrent(); renderNav();
-      return {ok:true, habit:h.name, date:ds, status:input.status};
-    }
+    /* ---- habits: read ---- */
     if(name==='list_habits'){
-      return S.habits.map(function(h){
+      return {habits:S.habits.map(function(h){
         return { name:h.name, category:h.cat, schedule:freqLabel(h), archived:!!h.archived,
-          currentStreak: currentStreak(h), bestStreak: bestStreak(h), todayStatus: getStatus(h,_todayStr)||'pending',
-          scheduledToday: isScheduledOn(h,_todayStr) };
-      });
+          currentStreak:currentStreak(h), bestStreak:bestStreak(h), todayStatus:getStatus(h,_todayStr)||'pending',
+          scheduledToday:isScheduledOn(h,_todayStr) };
+      })};
     }
     if(name==='get_stats'){
       var ts = todayStats();
@@ -6969,17 +7011,131 @@ function aiExecuteTool(name,input){
         last30DayRate:pct(last30Rate()), badgesEarned:effBadges().filter(isBadgeEarned).length, badgesTotal:effBadges().length,
         activeHabits:activeHabits().length };
     }
-    if(name==='delete_habit'){
-      var h = findHabitFuzzy(input.name);
-      if(!h) return {error:'No habit matching "'+input.name+'"'};
-      S.habits = S.habits.filter(function(x){ return x.id!==h.id; }); save(); reRenderCurrent(); renderNav();
-      return {ok:true, deleted:h.name};
+    /* ---- habits: write ---- */
+    if(name==='add_habit'){
+      if(!input.name) return {error:'name is required'};
+      if(!canCreateHabit()) return {error:'The free-plan limit of active habits is reached. Tell the user to archive a habit or upgrade.'};
+      var ft = ['daily','days','weekly'].indexOf(input.frequency_type)!==-1 ? input.frequency_type : 'daily';
+      var cats = effCategories(), emos = effEmojis(), cols = effHabitColors();
+      var nh = {
+        id:uid(), name:String(input.name).trim(), icon:input.icon||emos[Math.floor(Math.random()*emos.length)],
+        color:cols[S.habits.length % cols.length],
+        cat: cats.indexOf(input.category)!==-1 ? input.category : (cats.indexOf('Other')!==-1?'Other':cats[0]),
+        freqType:ft, freqDays:Array.isArray(input.frequency_days)&&input.frequency_days.length?input.frequency_days:[1,2,3,4,5],
+        freqCount:clamp(parseInt(input.frequency_count,10)||3,1,7), reminder:null, createdAt:_todayStr, logs:{}, archived:false
+      };
+      S.habits.push(nh); save(); aiRefresh();
+      return {ok:true, created:nh.name, summary:'Added habit "'+nh.name+'"'};
+    }
+    if(name==='update_habit'){
+      var r = aiHabit(input.name); if(r.error) return r; var h = r.item, changed = [];
+      if(input.new_name && String(input.new_name).trim()){ h.name = String(input.new_name).trim(); changed.push('name'); }
+      if(input.icon){ h.icon = input.icon; changed.push('icon'); }
+      if(input.category && effCategories().indexOf(input.category)!==-1){ h.cat = input.category; changed.push('category'); }
+      if(['daily','days','weekly'].indexOf(input.frequency_type)!==-1){ h.freqType = input.frequency_type; changed.push('schedule'); }
+      if(Array.isArray(input.frequency_days) && input.frequency_days.length){ h.freqDays = input.frequency_days; changed.push('days'); }
+      if(input.frequency_count){ h.freqCount = clamp(parseInt(input.frequency_count,10)||3,1,7); changed.push('times per week'); }
+      if(!changed.length) return {error:'Nothing to change was given.'};
+      save(); aiRefresh();
+      return {ok:true, habit:h.name, changed:changed, summary:'Updated "'+h.name+'" ('+changed.join(', ')+')'};
+    }
+    if(name==='log_habit'){
+      var r2 = aiHabit(input.name); if(r2.error) return r2; var hb = r2.item;
+      var status = input.status==='done' ? 'done' : (input.status==='missed' ? 'missed' : (input.status==='clear' ? null : undefined));
+      if(status===undefined) return {error:'status must be done, missed or clear'};
+      var dates = (Array.isArray(input.dates) && input.dates.length) ? input.dates : [input.date || _todayStr];
+      var okDates = [], bad = [];
+      dates.forEach(function(d){
+        if(!aiDateOk(d)) bad.push(d+' (invalid)');
+        else if(isFuture(d)) bad.push(d+' (in the future)');
+        else okDates.push(d);
+      });
+      okDates.forEach(function(d){ setStatus(hb.id,d,status); });
+      if(okDates.length) aiRefresh();
+      if(!okDates.length) return {error:'No valid dates: '+bad.join(', ')};
+      var word = status==='done' ? 'done' : (status==='missed' ? 'missed' : 'cleared');
+      return {ok:true, habit:hb.name, status:input.status, dates:okDates, skipped:bad,
+        summary:'"'+hb.name+'" '+word+' · '+(okDates.length===1 ? okDates[0] : okDates.length+' days')};
     }
     if(name==='archive_habit'){
-      var h = findHabitFuzzy(input.name);
-      if(!h) return {error:'No habit matching "'+input.name+'"'};
-      h.archived = !!input.archived; save(); reRenderCurrent(); renderNav();
-      return {ok:true, habit:h.name, archived:h.archived};
+      var r3 = aiHabit(input.name); if(r3.error) return r3;
+      r3.item.archived = !!input.archived; save(); aiRefresh();
+      return {ok:true, habit:r3.item.name, archived:r3.item.archived, summary:(r3.item.archived?'Archived':'Restored')+' "'+r3.item.name+'"'};
+    }
+    if(name==='delete_habit'){
+      var r4 = aiHabit(input.name); if(r4.error) return r4; var dh = r4.item;
+      S.habits = S.habits.filter(function(x){ return x.id!==dh.id; });
+      if(!S.trash) S.trash = [];
+      S.trash.push({habit:dh, deletedAt:Date.now()});
+      save(); aiRefresh();
+      return {ok:true, deleted:dh.name, note:'Moved to Trash; restorable for 7 days in Settings.', summary:'Moved "'+dh.name+'" to Trash'};
+    }
+
+    /* ---- goals: read ---- */
+    if(name==='list_goals'){
+      return {goals:(S.goals||[]).map(aiGoalSummary)};
+    }
+    /* ---- goals: write ---- */
+    if(name==='add_goal'){
+      if(!input.title || !String(input.title).trim()) return {error:'title is required'};
+      if(!canCreateGoal()) return {error:'The free-plan goal limit is reached. Tell the user to delete a goal or upgrade.'};
+      var g = {
+        id:uid(), title:String(input.title).trim(), icon:input.icon||GOAL_ICONS[S.goals.length % GOAL_ICONS.length],
+        note:String(input.note||'').trim(), targetDate:aiDateOk(input.target_date)?input.target_date:null,
+        createdAt:_todayStr, status:'active',
+        milestones:(Array.isArray(input.milestones)?input.milestones:[]).filter(function(m){ return m && String(m.title||'').trim(); }).map(function(m){
+          return {id:uid(), title:String(m.title).trim(), targetDate:null, done:false, tasks:aiMakeTasks(m.tasks)};
+        })
+      };
+      S.goals.push(g); save(); aiRefresh();
+      return {ok:true, goal:g.title, milestones:g.milestones.length, summary:'Created goal "'+g.title+'"'+(g.milestones.length?' with '+g.milestones.length+' milestones':'')};
+    }
+    if(name==='add_milestone'){
+      var rg = aiGoal(input.goal); if(rg.error) return rg; var gg = rg.item;
+      if(!input.title || !String(input.title).trim()) return {error:'title is required'};
+      var nm = {id:uid(), title:String(input.title).trim(), targetDate:aiDateOk(input.target_date)?input.target_date:null, done:false, tasks:aiMakeTasks(input.tasks)};
+      gg.milestones = gg.milestones||[]; gg.milestones.push(nm);
+      syncGoalStatus(gg); save(); aiRefresh(gg.id);
+      return {ok:true, goal:gg.title, milestone:nm.title, summary:'Added milestone "'+nm.title+'" to "'+gg.title+'"'};
+    }
+    if(name==='add_task'){
+      var rg2 = aiGoal(input.goal); if(rg2.error) return rg2; var g2 = rg2.item;
+      var rm = aiPick(g2.milestones||[], function(m){ return m.title; }, input.milestone, 'milestone'); if(rm.error) return rm;
+      if(!input.title || !String(input.title).trim()) return {error:'title is required'};
+      var nt = {id:uid(), title:String(input.title).trim(), done:false, targetDate:aiDateOk(input.target_date)?input.target_date:null};
+      rm.item.tasks = rm.item.tasks||[]; rm.item.tasks.push(nt);
+      syncGoalStatus(g2); save(); aiRefresh(g2.id);
+      return {ok:true, goal:g2.title, milestone:rm.item.title, task:nt.title, summary:'Added task "'+nt.title+'" to "'+rm.item.title+'"'};
+    }
+    if(name==='set_task_done'){
+      var rg3 = aiGoal(input.goal); if(rg3.error) return rg3; var g3 = rg3.item;
+      var pool = [];
+      (g3.milestones||[]).forEach(function(m){ (m.tasks||[]).forEach(function(t){ pool.push({m:m,t:t}); }); });
+      if(input.milestone){
+        var rm3 = aiPick(g3.milestones||[], function(m){ return m.title; }, input.milestone, 'milestone'); if(rm3.error) return rm3;
+        pool = pool.filter(function(x){ return x.m.id===rm3.item.id; });
+      }
+      var rt = aiPick(pool, function(x){ return x.t.title; }, input.task, 'task'); if(rt.error) return rt;
+      rt.item.t.done = !!input.done;
+      syncGoalStatus(g3); save(); aiRefresh(g3.id);
+      return {ok:true, goal:g3.title, milestone:rt.item.m.title, task:rt.item.t.title, done:rt.item.t.done, goalProgressPct:goalPct(g3),
+        summary:(rt.item.t.done?'Checked':'Unchecked')+' task "'+rt.item.t.title+'"'};
+    }
+    if(name==='set_milestone_done'){
+      var rg4 = aiGoal(input.goal); if(rg4.error) return rg4; var g4 = rg4.item;
+      var rm4 = aiPick(g4.milestones||[], function(m){ return m.title; }, input.milestone, 'milestone'); if(rm4.error) return rm4;
+      var mm = rm4.item, dn = !!input.done;
+      mm.done = dn; (mm.tasks||[]).forEach(function(t){ t.done = dn; });
+      syncGoalStatus(g4); save(); aiRefresh(g4.id);
+      return {ok:true, goal:g4.title, milestone:mm.title, done:dn, goalProgressPct:goalPct(g4),
+        summary:(dn?'Completed':'Reopened')+' milestone "'+mm.title+'"'};
+    }
+    if(name==='set_goal_done'){
+      var rg5 = aiGoal(input.goal); if(rg5.error) return rg5; var g5 = rg5.item, dn5 = !!input.done;
+      if(!(g5.milestones||[]).length) return {error:'This goal has no milestones yet, so there is nothing to complete. Add milestones first.'};
+      (g5.milestones||[]).forEach(function(m){ m.done = dn5; (m.tasks||[]).forEach(function(t){ t.done = dn5; }); });
+      syncGoalStatus(g5); save(); aiRefresh(g5.id);
+      return {ok:true, goal:g5.title, done:dn5, goalProgressPct:goalPct(g5), summary:(dn5?'Completed':'Reopened')+' goal "'+g5.title+'"'};
     }
     return {error:'Unknown tool '+name};
   }catch(err){ return {error:String(err && err.message || err)}; }
@@ -6987,53 +7143,88 @@ function aiExecuteTool(name,input){
 
 function aiSystemPrompt(){
   var ts = todayStats();
-  return "You are the Habit Coach inside HabitOS, a habit-tracking app. Today's date is "+_todayStr+" ("+niceDate(_todayStr)+"). "+
-    "The user"+(S.profile.name?' is named '+S.profile.name:'')+" has "+activeHabits().length+" active habit(s). "+
+  return "You are the Habit Coach inside HabitOS, a habit and goal tracking app, and you can act on the user's data through tools. "+
+    "Today's date is "+_todayStr+" ("+niceDate(_todayStr)+"). "+
+    "The user"+(S.profile.name?' is named '+S.profile.name:'')+" has "+activeHabits().length+" active habit(s) and "+(S.goals||[]).length+" goal(s). "+
     "Today's completion is "+ts.done+"/"+ts.total+" ("+pct(ts.pct)+"%). Best streak ever: "+bestStreakGlobal()+" days.\n\n"+
-    "You can use tools to read or modify the user's habits (add, log, list, get stats, delete, archive). "+
-    "Always use list_habits or get_stats before answering questions about their data so you have current numbers — don't guess. "+
-    "When adding habits, pick a sensible emoji icon and category yourself unless the user specifies one. "+
-    "Be warm, brief, and specific — like a supportive coach, not a generic chatbot. Use short paragraphs, not headers or bullet-heavy answers, since this is a chat panel. "+
-    "Never fabricate streaks or numbers — always base them on tool results.";
+    "RULES:\n"+
+    "1. Reply in the language the user writes in (Bangla, English or a mix).\n"+
+    "2. When the user tells you to do something (check or uncheck a habit, complete a goal task or milestone, add or edit a habit or goal), do it with the tools right away — don't just explain how. You may call several tools in a row for multi-step requests.\n"+
+    "3. Before answering questions about their data, call list_habits, list_goals or get_stats so numbers are current. Never invent streaks, names or numbers.\n"+
+    "4. Only say something was done if the tool result says ok. If a tool returns an error, tell the user plainly and fix it or ask. If several items match a name, ask which one.\n"+
+    "5. Resolve relative dates yourself from today's date (e.g. 'yesterday', 'last 3 days'). Future dates can't be logged.\n"+
+    "6. Deleting: only call delete_habit if the user clearly asked to delete it; otherwise ask first. Habits go to Trash and can be restored.\n"+
+    "7. When adding habits or goals, choose a sensible emoji and category yourself unless the user specifies one.\n"+
+    "8. Be warm, brief and specific — a supportive coach, not a generic chatbot. Short paragraphs; no headers or heavy bullet lists, since this is a small chat panel.";
 }
 
-async function callGemini(){
-  var url = 'https://generativelanguage.googleapis.com/v1beta/models/'+GEMINI_MODEL+':generateContent';
-  var maxRounds = 5, finalText = '';
-  for(var round=0; round<maxRounds; round++){
+/* ---------------- Gemini request (with model fallback + readable errors) ---------------- */
+function aiTrimHistory(){
+  // keep the conversation bounded; only ever cut at the start of a user text turn
+  while(_aiHistory.length > 60){
+    var i = 1;
+    while(i<_aiHistory.length && !(_aiHistory[i].role==='user' && _aiHistory[i].parts && _aiHistory[i].parts[0] && typeof _aiHistory[i].parts[0].text==='string')) i++;
+    if(i>=_aiHistory.length) break;
+    _aiHistory.splice(0,i);
+  }
+}
+async function geminiRequest(body){
+  var lastErr = null;
+  for(var k=0; k<GEMINI_MODELS.length; k++){
+    var idx = (_geminiModelIdx+k) % GEMINI_MODELS.length;
+    var url = 'https://generativelanguage.googleapis.com/v1beta/models/'+GEMINI_MODELS[idx]+':generateContent';
     var resp = await fetch(url, {
       method:'POST',
       headers:{'Content-Type':'application/json','x-goog-api-key':GEMINI_API_KEY},
-      body: JSON.stringify({
-        contents: _aiHistory,
-        systemInstruction: { parts:[{ text: aiSystemPrompt() }] },
-        tools: GEMINI_TOOLS
-      })
+      body: JSON.stringify(body)
     });
-    if(!resp.ok){
-      var errText = await resp.text(); var errJson;
-      try{ errJson = JSON.parse(errText); }catch(e){}
-      throw new Error((errJson && errJson.error && errJson.error.message) || ('HTTP '+resp.status));
-    }
-    var data = await resp.json();
+    if(resp.ok){ _geminiModelIdx = idx; return resp.json(); }
+    var txt = await resp.text(), msg = '', reason = '';
+    try{
+      var ej = JSON.parse(txt);
+      msg = (ej.error && ej.error.message) || '';
+      reason = JSON.stringify((ej.error && ej.error.details) || '');
+    }catch(e){ msg = txt; }
+    lastErr = {status:resp.status, message:msg || ('HTTP '+resp.status)};
+    var modelGone = resp.status===404 || /no longer available|is not found|not supported for generateContent/i.test(msg) || /ACCESS_TOKEN_TYPE_UNSUPPORTED/.test(reason);
+    if(!modelGone) break;      // a real problem (bad request, quota, key…) — don't hide it behind other models
+  }
+  var m = lastErr.message;
+  if(lastErr.status===429) m = 'Rate limit or quota reached for this API key. Wait a minute or check your Gemini quota.';
+  else if(lastErr.status===403) m = 'The API key was rejected (403). Check that it is enabled for the Gemini API and that its website restriction allows this page. '+m;
+  else if(lastErr.status===401 || /api key not valid|API_KEY_INVALID/i.test(m)) m = 'The API key is not accepted. Check or regenerate it in Google AI Studio. '+m;
+  throw new Error(m);
+}
+async function callGemini(){
+  var maxRounds = 8, finalText = '', didAct = false;
+  for(var round=0; round<maxRounds; round++){
+    aiTrimHistory();
+    var data = await geminiRequest({
+      contents: _aiHistory,
+      systemInstruction: { parts:[{ text: aiSystemPrompt() }] },
+      tools: geminiTools()
+    });
     var cand = data.candidates && data.candidates[0];
-    if(!cand) throw new Error('No response from Gemini (possibly blocked by safety filters).');
-    var parts = (cand.content && cand.content.parts) || [];
-    _aiHistory.push({ role:'model', parts:parts });
+    if(!cand || !cand.content) throw new Error('No response from Gemini'+(cand&&cand.finishReason?' ('+cand.finishReason+')':' (possibly blocked by safety filters)')+'.');
+    var parts = cand.content.parts || [];
+    _aiHistory.push({ role:'model', parts:parts });   // parts are kept exactly as returned (incl. thought signatures)
 
     var funcCalls = parts.filter(function(p){ return !!p.functionCall; });
-    var textParts = parts.filter(function(p){ return typeof p.text === 'string'; });
-    if(textParts.length) finalText += textParts.map(function(p){ return p.text; }).join('\n');
-
+    var textParts = parts.filter(function(p){ return typeof p.text === 'string' && !p.thought; });
+    if(textParts.length) finalText += (finalText?'\n':'') + textParts.map(function(p){ return p.text; }).join('\n');
     if(!funcCalls.length) break;
 
     var responseParts = funcCalls.map(function(fc){
       var result = aiExecuteTool(fc.functionCall.name, fc.functionCall.args || {});
-      return { functionResponse: { name: fc.functionCall.name, response: result } };
+      if(result && result.ok && result.summary){ aiAppendMsg('system','✓ '+result.summary); didAct = true; }
+      var resp = (result && typeof result==='object' && !Array.isArray(result)) ? result : {result:result};
+      return { functionResponse: { name: fc.functionCall.name, response: resp } };
     });
     _aiHistory.push({ role:'user', parts:responseParts });
   }
-  return finalText.trim();
+  finalText = finalText.trim();
+  if(!finalText && didAct) finalText = 'Done.';
+  return finalText;
 }
 
 async function aiSend(){
@@ -7043,6 +7234,7 @@ async function aiSend(){
   if(!text) return;
   inp.value=''; inp.style.height='';
   aiAppendMsg('user', text);
+  var before = _aiHistory.length;
   _aiHistory.push({ role:'user', parts:[{ text:text }] });
   _aiBusy = true;
   document.getElementById('ai-send').disabled = true;
@@ -7053,7 +7245,8 @@ async function aiSend(){
     if(reply) aiAppendMsg('agent', reply);
   }catch(err){
     aiHideThinking();
-    aiAppendMsg('agent', "Sorry, I couldn't reach the coach right now (" + (err && err.message || 'unknown error') + "). Try again in a moment.");
+    _aiHistory.length = before;   // drop the failed turn so the next message starts clean
+    aiAppendMsg('agent', "Sorry, I couldn't reach the coach right now ("+(err && err.message || 'unknown error')+").");
   }finally{
     _aiBusy = false;
     document.getElementById('ai-send').disabled = false;
