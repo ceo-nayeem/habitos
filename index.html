@@ -1403,6 +1403,16 @@ html.day .brain-folds{opacity:.5;mix-blend-mode:multiply}
 .ai-suggest-row{display:flex;gap:6px;flex-wrap:wrap;padding:0 16px 10px}
 .ai-suggest{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:7px 12px;font-size:11px;font-weight:600;color:var(--text2)}
 .ai-suggest:hover{border-color:var(--accent);color:var(--accent)}
+.ai-suggest:disabled{opacity:.45;cursor:not-allowed}
+.ai-suggest:disabled:hover{border-color:var(--border);color:var(--text2)}
+#ai-input:disabled{opacity:.5;cursor:not-allowed}
+#ai-send:disabled{cursor:not-allowed}
+#aiKeyBtn:disabled{opacity:.4;cursor:not-allowed}
+.ai-soon{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:34px 22px 22px}
+.ai-soon-ico{width:56px;height:56px;border-radius:18px;background:linear-gradient(150deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:4px}
+.ai-soon-title{font-family:var(--f-display);font-size:16px;font-weight:700}
+.ai-soon-txt{font-size:12.5px;color:var(--text2);line-height:1.55;max-width:280px}
+.ai-soon-tag{margin-top:6px;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:5px 12px}
 .ai-input-row{display:flex;gap:8px;padding:12px 14px;border-top:1px solid var(--border);align-items:flex-end}
 #ai-input{
   flex:1;background:var(--surface2);border:1.5px solid var(--border);border-radius:14px;padding:10px 13px;
@@ -2155,9 +2165,9 @@ html.day .lock-overlay{background:rgba(244,245,249,.76)}
 <div id="ai-panel">
   <div class="ai-head">
     <div class="ai-head-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a5 5 0 0 0-5 5v2a5 5 0 0 0 10 0V7a5 5 0 0 0-5-5Z"/><path d="M12 14v3M8 22h8M9 19h6"/></svg></div>
-    <div class="ai-head-txt"><b>Habit Coach</b><span>AI · KNOWS YOUR HABITS</span></div>
+    <div class="ai-head-txt"><b>Habit Coach</b><span id="aiHeadSub">AI · KNOWS YOUR HABITS</span></div>
     <div class="nav-spacer"></div>
-    <button class="icon-btn" title="API key &amp; connection test" onclick="aiSettings()" style="font-size:15px">🔑</button>
+    <button class="icon-btn" id="aiKeyBtn" title="API key &amp; connection test" onclick="aiSettings()" style="font-size:15px">🔑</button>
     <button class="icon-btn" onclick="toggleAI()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
   </div>
   <div class="ai-msgs" id="aiMsgs"></div>
@@ -6854,10 +6864,28 @@ function toggleAI(){
   _aiOpen = !_aiOpen;
   document.getElementById('ai-panel').classList.toggle('open', _aiOpen);
   if(_aiOpen){
-    document.getElementById('ai-input').focus();
     document.getElementById('aiFabBadge').style.display='none';
+    if(!AI_ENABLED){ aiRenderComingSoon(); return; }
+    document.getElementById('ai-input').focus();
     if(!_aiHistory.length) aiInit();
   }
+}
+/* "Coming soon" state: same panel, but nothing can be used yet. */
+function aiRenderComingSoon(){
+  document.getElementById('aiMsgs').innerHTML =
+    '<div class="ai-soon">'+
+      '<div class="ai-soon-ico">✨</div>'+
+      '<div class="ai-soon-title">Habit Coach is coming soon</div>'+
+      '<div class="ai-soon-txt">This feature is currently unavailable. We\'re getting it ready and it will be available to all users very soon.</div>'+
+      '<span class="ai-soon-tag">Coming soon</span>'+
+    '</div>';
+  document.getElementById('aiSuggestRow').innerHTML = AI_SUGGESTIONS.map(function(t){
+    return '<button class="ai-suggest" disabled title="Coming soon">'+esc(t)+'</button>';
+  }).join('');
+  var inp = document.getElementById('ai-input'); inp.disabled = true; inp.value = ''; inp.placeholder = 'Coming soon…';
+  document.getElementById('ai-send').disabled = true;
+  var kb = document.getElementById('aiKeyBtn'); if(kb) kb.disabled = true;
+  var sub = document.getElementById('aiHeadSub'); if(sub) sub.textContent = 'AI · COMING SOON';
 }
 function aiInit(){
   aiAppendMsg('system', 'Hi'+(S.profile.name?' '+esc(S.profile.name):'')+'! I\'m your Habit Coach. I can see your habits and goals, check or uncheck habits (for any past date), complete goal tasks and milestones, add or edit things, or just talk through your progress. Just tell me what to do — in Bangla or English.');
@@ -6865,10 +6893,11 @@ function aiInit(){
   row.innerHTML = AI_SUGGESTIONS.map(function(s){ return '<button class="ai-suggest" onclick="aiFillSuggest(this)">'+esc(s)+'</button>'; }).join('');
 }
 function aiFillSuggest(el){
+  if(!AI_ENABLED) return;
   document.getElementById('ai-input').value = el.textContent;
   aiSend();
 }
-function aiKeydown(e){ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); aiSend(); } }
+function aiKeydown(e){ if(!AI_ENABLED) return; if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); aiSend(); } }
 function aiAutoGrow(el){ el.style.height=''; el.style.height=Math.min(el.scrollHeight,100)+'px'; }
 function aiAppendMsg(role,text){
   var box = document.getElementById('aiMsgs');
@@ -6899,6 +6928,9 @@ function aiHideThinking(){ var el=document.getElementById('ai-thinking-el'); if(
    ================================================================== */
 var GEMINI_API_KEY = "AQ.Ab8RN6LR2jSgPlslYE7aOLM-7mzULr6ddItSFuIIBRGD8qPgmg";
 /* The key can also be pasted in-app (🔑 button in the coach panel) — that copy is saved only in that browser and wins over this one. */
+/* FEATURE SWITCH — set to true to turn the Habit Coach back on.
+   While false, the panel opens but shows a "coming soon" notice and every control stays visible but disabled. */
+var AI_ENABLED = false;
 var AI_KEY_STORE = 'habitos_gemini_key';
 /* Used only if the model list can't be fetched. Normally the newest available Flash model is discovered automatically. */
 var GEMINI_FALLBACK_MODELS = ["gemini-3.5-flash","gemini-3.6-flash","gemini-3.7-flash","gemini-3-flash-preview"];
@@ -7259,6 +7291,7 @@ async function geminiRequest(body){
 }
 /* 🔑 button: paste/replace the key (kept only in this browser) and test the connection. */
 async function aiSettings(){
+  if(!AI_ENABLED) return;
   var cur = aiKey();
   var v = window.prompt('Gemini API key for the coach\nCurrent key: '+aiKeyHint(cur)+
     '\n\nPaste a new key to replace it (saved only in this browser).\nType RESET to go back to the built-in key.\nLeave empty to just test the current key.', '');
@@ -7315,7 +7348,7 @@ async function callGemini(){
 }
 
 async function aiSend(){
-  if(_aiBusy) return;
+  if(!AI_ENABLED || _aiBusy) return;
   var inp = document.getElementById('ai-input');
   var text = inp.value.trim();
   if(!text) return;
