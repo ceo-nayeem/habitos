@@ -420,6 +420,16 @@ a{color:inherit}
 }
 .chip.on{background:var(--accent-soft);color:var(--accent);border-color:transparent}
 
+/* ---- Reset tracking data modal ---- */
+button.chip{cursor:pointer;transition:transform .15s ease,background .15s ease,color .15s ease}
+button.chip:hover{transform:translateY(-1px)}
+.rt-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.rt-dates{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.rt-preview{border:1px solid var(--border);background:var(--surface2);border-radius:14px;padding:14px;margin:4px 0 2px;display:flex;align-items:center;gap:14px}
+.rt-preview .rt-num{font-size:30px;font-weight:800;line-height:1;color:var(--bad)}
+.rt-preview.zero .rt-num{color:var(--text2)}
+.rt-preview .rt-txt{font-size:12.5px;line-height:1.5;color:var(--text2)}
+.rt-preview .rt-txt b{color:var(--text)}
 /* ---- segmented view tabs (Habits: Daily / Calendar) ---- */
 .seg-tabs{
   display:inline-flex;gap:3px;padding:3px;border-radius:13px;margin-bottom:20px;
@@ -2004,6 +2014,11 @@ html.day .lock-overlay{background:rgba(244,245,249,.76)}
 <!-- ============ HABIT ACTION SHEET (tap a habit card) ============ -->
 <div class="modal-veil" id="habitActionVeil" onclick="if(event.target===this)closeHabitAction()">
   <div class="modal" id="habitActionModal" style="max-width:420px"></div>
+</div>
+
+<!-- ============ RESET TRACKING DATA (range) ============ -->
+<div class="modal-veil" id="resetTrackVeil" onclick="if(event.target===this)closeResetTracking()">
+  <div class="modal" id="resetTrackModal" style="max-width:480px"></div>
 </div>
 
 <!-- ============ DELETE / MOVE TO TRASH CONFIRMATION ============ -->
@@ -4574,7 +4589,7 @@ function renderCalendar(){
   if(_habitsView==='manage'){
     purgeExpiredTrash();
     html += '<div class="card"><div class="sec-title" style="margin-top:0"><h3>All habits</h3><span class="faint mono" style="font-size:11px">'+S.habits.length+' total</span>'+
-      (S.habits.length ? '<div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn sm" onclick="resetTrackingData()">'+ICONS.x+' Reset tracking data</button><button class="btn sm danger" onclick="resetMyHabits()">'+ICONS.trash+' Reset my habits</button></div>' : '')+'</div>'+
+      (S.habits.length ? '<div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn sm" onclick="openResetTracking()">'+ICONS.x+' Reset tracking data</button><button class="btn sm danger" onclick="resetMyHabits()">'+ICONS.trash+' Reset my habits</button></div>' : '')+'</div>'+
       (S.habits.length ? '<div class="hab-list">'+S.habits.map(manageHabitRowHTML).join('')+'</div>' : emptyState('No habits yet','Tap the + button above to create one.'))+
       (S.trash && S.trash.length ? '<div class="hint" style="margin-top:14px">Deleted a habit? Find it in <a onclick="goToSettingsSection(\'settingsTrashCard\')" style="color:var(--accent);font-weight:600;cursor:pointer">Settings → Trash</a> ('+S.trash.length+' item'+(S.trash.length===1?'':'s')+').</div>' : '')+
     '</div>';
@@ -5895,18 +5910,153 @@ function importData(file){
   reader.readAsText(file);
 }
 /* Removes only the habits (and their logs). Goals, profile and settings are untouched. */
-/* Blanks every habit's check-ins (done / missed) but keeps the habits themselves. */
-function resetTrackingData(){
+/* ---- Reset tracking data: pick a range (preset or custom) and which habits, preview, then clear.
+   Only check-ins (done / missed) inside the range are removed — habits themselves are untouched. ---- */
+var _rt = {preset:'last7', from:'', to:'', habits:{}};
+var RT_PRESETS = [
+  ['today','Today'],['week','This week'],['month','This month'],['year','This year'],
+  ['last7','Last 7 days'],['last30','Last 30 days'],['last365','Last 365 days'],
+  ['all','All time'],['custom','Custom range']
+];
+function rtRangeFor(key){
+  var t = parseDate(_todayStr);
+  if(key==='today') return [_todayStr,_todayStr];
+  if(key==='week') return [dateStr(weekStartDate(_todayStr)),_todayStr];
+  if(key==='month') return [_todayStr.slice(0,8)+'01',_todayStr];
+  if(key==='year') return [_todayStr.slice(0,4)+'-01-01',_todayStr];
+  if(key==='last7') return [dateStr(addDays(t,-6)),_todayStr];
+  if(key==='last30') return [dateStr(addDays(t,-29)),_todayStr];
+  if(key==='last365') return [dateStr(addDays(t,-364)),_todayStr];
+  if(key==='all') return ['',''];
+  return [_rt.from,_rt.to]; // custom
+}
+function openResetTracking(){
   if(!S.habits.length){ toast('No habits to reset', true); return; }
-  if(!confirm('This clears all check-ins (done and missed) for every habit and starts tracking fresh from today. Your habits stay. Continue?')) return;
+  _rt = {preset:'last7', from:'', to:'', habits:{}};
+  S.habits.forEach(function(h){ _rt.habits[h.id] = true; });
+  var r = rtRangeFor('last7'); _rt.from = r[0]; _rt.to = r[1];
+  renderResetTracking();
+  document.getElementById('resetTrackVeil').classList.add('open');
+}
+function closeResetTracking(){ document.getElementById('resetTrackVeil').classList.remove('open'); }
+function rtEffectiveRange(){
+  if(_rt.preset==='all') return {from:'',to:'',valid:true};
+  var r = _rt.preset==='custom' ? [_rt.from,_rt.to] : rtRangeFor(_rt.preset);
+  var valid = !!r[0] && !!r[1] && r[0]<=r[1];
+  return {from:r[0],to:r[1],valid:valid};
+}
+function rtCount(){
+  var r = rtEffectiveRange(), done=0, missed=0, habits=0;
+  if(!r.valid) return {done:0,missed:0,habits:0,total:0};
   S.habits.forEach(function(h){
-    h.logs = {};
-    h.createdAt = _todayStr;
-    delete h.origCreatedAt;
+    if(!_rt.habits[h.id]) return;
+    var any=false;
+    Object.keys(h.logs||{}).forEach(function(k){
+      if(r.from && (k<r.from || k>r.to)) return;
+      if(h.logs[k]==='done') done++; else if(h.logs[k]==='missed') missed++; else return;
+      any=true;
+    });
+    if(any) habits++;
+  });
+  return {done:done,missed:missed,habits:habits,total:done+missed};
+}
+function rtRangeLabel(){
+  var r = rtEffectiveRange();
+  if(_rt.preset==='all') return 'Every date';
+  if(!r.valid) return (r.from && r.to && r.from>r.to) ? '“From” must be before “To”' : 'Pick both dates';
+  return r.from===r.to ? niceDate(r.from) : shortDate(r.from)+' → '+shortDate(r.to)+(r.from.slice(0,4)!==r.to.slice(0,4)?'':', '+r.to.slice(0,4));
+}
+function rtPreviewHTML(){
+  var c = rtCount();
+  return '<div class="rt-preview'+(c.total?'':' zero')+'">'+
+    '<div class="rt-num mono">'+c.total+'</div>'+
+    '<div class="rt-txt"><b>'+(c.total===1?'check-in':'check-ins')+' will be cleared</b><br>'+
+      (c.total ? c.done+' done · '+c.missed+' missed · across '+c.habits+' habit'+(c.habits===1?'':'s') : 'Nothing is checked in this range')+'</div>'+
+  '</div>';
+}
+function rtRefreshPreview(){
+  var pv = document.getElementById('rtPreview'); if(pv) pv.innerHTML = rtPreviewHTML();
+  var lb = document.getElementById('rtRangeLbl'); if(lb) lb.textContent = rtRangeLabel();
+  var btn = document.getElementById('rtGoBtn'); if(btn){ var c = rtCount(); btn.disabled = c.total===0; btn.textContent = c.total ? 'Clear '+c.total+' check-in'+(c.total===1?'':'s') : 'Nothing to clear'; }
+}
+function rtSetPreset(key){
+  _rt.preset = key;
+  if(key==='custom'){
+    if(!_rt.from || !_rt.to){ var r = rtRangeFor('last7'); _rt.from = r[0]; _rt.to = r[1]; }
+  } else if(key!=='all'){
+    var rr = rtRangeFor(key); _rt.from = rr[0]; _rt.to = rr[1];
+  }
+  renderResetTracking();
+}
+function rtSetDate(which,val){
+  _rt[which] = val;
+  _rt.preset = 'custom';
+  // keep chips in sync without re-rendering (so the date input keeps focus)
+  var chips = document.querySelectorAll('#resetTrackModal [data-rtp]');
+  for(var i=0;i<chips.length;i++) chips[i].classList.toggle('on', chips[i].getAttribute('data-rtp')==='custom');
+  rtRefreshPreview();
+}
+function rtToggleHabit(id){
+  if(_rt.habits[id]) delete _rt.habits[id]; else _rt.habits[id] = true;
+  renderResetTracking();
+}
+function rtAllHabits(on){
+  _rt.habits = {};
+  if(on) S.habits.forEach(function(h){ _rt.habits[h.id] = true; });
+  renderResetTracking();
+}
+function renderResetTracking(){
+  var selN = Object.keys(_rt.habits).length;
+  var chips = RT_PRESETS.map(function(p){
+    return '<button type="button" class="chip'+(_rt.preset===p[0]?' on':'')+'" data-rtp="'+p[0]+'" onclick="rtSetPreset(\''+p[0]+'\')">'+p[1]+'</button>';
+  }).join('');
+  var dates = '<div class="rt-dates">'+
+      '<div><span class="field-label">From</span><input class="inp" type="date" value="'+esc(_rt.from)+'" max="'+_todayStr+'" onchange="rtSetDate(\'from\',this.value)"/></div>'+
+      '<div><span class="field-label">To</span><input class="inp" type="date" value="'+esc(_rt.to)+'" max="'+_todayStr+'" onchange="rtSetDate(\'to\',this.value)"/></div>'+
+    '</div>';
+  var habitChips = S.habits.map(function(h){
+    return '<button type="button" class="chip'+(_rt.habits[h.id]?' on':'')+'" onclick="rtToggleHabit(\''+h.id+'\')">'+h.icon+' '+esc(h.name)+'</button>';
+  }).join('');
+  document.getElementById('resetTrackModal').innerHTML =
+    '<div class="modal-head"><div class="modal-title">Reset tracking data</div><button class="icon-btn" onclick="closeResetTracking()">'+ICONS.x+'</button></div>'+
+    '<div class="hint" style="margin-bottom:14px">Choose what to clear. Only check-ins (done / missed) are removed — your habits stay.</div>'+
+    '<span class="field-label">Time range</span>'+
+    '<div class="rt-chips">'+chips+'</div>'+
+    (_rt.preset==='custom' ? dates : '')+
+    '<div class="faint mono" id="rtRangeLbl" style="font-size:11.5px;margin:-6px 0 16px">'+esc(rtRangeLabel())+'</div>'+
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px"><span class="field-label" style="margin:0">Habits ('+selN+'/'+S.habits.length+')</span>'+
+      '<span style="display:flex;gap:10px;font-size:11.5px;font-weight:700"><a style="color:var(--accent);cursor:pointer" onclick="rtAllHabits(true)">All</a><a style="color:var(--accent);cursor:pointer" onclick="rtAllHabits(false)">None</a></span></div>'+
+    '<div class="rt-chips" style="margin-bottom:14px">'+habitChips+'</div>'+
+    '<div id="rtPreview">'+rtPreviewHTML()+'</div>'+
+    '<div class="modal-foot">'+
+      '<button class="btn" onclick="closeResetTracking()">Cancel</button>'+
+      '<button class="btn danger block" id="rtGoBtn" onclick="confirmResetTracking()">Clear</button>'+
+    '</div>';
+  rtRefreshPreview();
+}
+function confirmResetTracking(){
+  var r = rtEffectiveRange(), c = rtCount();
+  if(!r.valid || !c.total) return;
+  var wholeHistory = (_rt.preset==='all');
+  S.habits.forEach(function(h){
+    if(!_rt.habits[h.id]) return;
+    Object.keys(h.logs||{}).forEach(function(k){
+      if(!r.from || (k>=r.from && k<=r.to)) delete h.logs[k];
+    });
+    if(wholeHistory){
+      h.createdAt = _todayStr; // fully blank: tracking starts fresh from today
+      delete h.origCreatedAt;
+    } else if(h.origCreatedAt && h.createdAt < h.origCreatedAt){
+      // start date had been moved back by backfilling — pull it forward to the earliest remaining check-in
+      var earliest = Object.keys(h.logs).sort()[0];
+      h.createdAt = (earliest && earliest < h.origCreatedAt) ? earliest : h.origCreatedAt;
+      if(h.createdAt === h.origCreatedAt) delete h.origCreatedAt;
+    }
   });
   save();
+  closeResetTracking();
   go(_curPage);
-  toast('Tracking data cleared — habits kept');
+  toast(c.total+' check-in'+(c.total===1?'':'s')+' cleared — habits kept');
 }
 function resetMyHabits(){
   if(!S.habits.length){ toast('No habits to reset', true); return; }
@@ -6460,7 +6610,7 @@ function refreshTodayIfChanged(){
   checkReminders();
 }
 document.addEventListener('keydown', function(e){
-  if(e.key==='Escape'){ closeTimePicker(); closeDatePickerDropdown(); closeHabitModal(); closeMore(); closeTemplateModal(); closeHabitAction(); closeHabitStats(); closeTrashConfirm(); if(_aiOpen) toggleAI(); }
+  if(e.key==='Escape'){ closeTimePicker(); closeDatePickerDropdown(); closeHabitModal(); closeMore(); closeTemplateModal(); closeHabitAction(); closeHabitStats(); closeTrashConfirm(); closeResetTracking(); if(_aiOpen) toggleAI(); }
 });
 
 _todayStr = dateStr(new Date());
