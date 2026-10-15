@@ -420,6 +420,24 @@ a{color:inherit}
 }
 .chip.on{background:var(--accent-soft);color:var(--accent);border-color:transparent}
 
+/* ---- Achievement rules ---- */
+.badge-rule{font-size:10px;color:var(--text3);margin-top:7px;line-height:1.35;font-weight:700}
+.badge-prog{height:4px;border-radius:4px;background:var(--surface2);margin-top:8px;overflow:hidden}
+.badge-prog i{display:block;height:100%;background:var(--accent);border-radius:4px}
+.b-ach-item{border-bottom:1px solid var(--border)}
+.b-ach-item:last-child{border-bottom:0}
+.b-ach-item .b-trow{border-bottom:0}
+.ach-rule{padding:0 12px 10px 76px}
+.ach-rule-sum{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ach-rule-tag{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--text3)}
+.ach-rule-text{font-size:12px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:3px 10px}
+.ach-rule-text.bad{color:var(--bad);background:rgba(225,29,72,.1)}
+.ach-rule-ed{margin-top:10px;border:1px solid var(--border);background:var(--surface2);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.ach-rule-match{font-size:12.5px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ach-cond{display:grid;grid-template-columns:minmax(150px,2fr) minmax(120px,1fr) 90px 48px 30px;gap:8px;align-items:center}
+.ach-unit{font-size:11.5px;color:var(--text3);font-weight:600}
+.ach-rule-btns{display:flex;gap:8px;flex-wrap:wrap}
+@media(max-width:760px){.ach-rule{padding-left:12px}.ach-cond{grid-template-columns:1fr 1fr}}
 /* ---- Goal templates (user picker + backend editor) ---- */
 .gt-list{display:flex;flex-direction:column;gap:10px}
 .gt-card{position:relative;display:flex;gap:12px;align-items:flex-start;text-align:left;width:100%;padding:12px 14px;border-radius:14px;border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer;transition:border-color .15s,box-shadow .15s,background .15s}
@@ -2219,21 +2237,24 @@ var TEMPLATES = [
   {name:'Practice Instrument',icon:'🎸',cat:'Learning',freqType:'daily'},
   {name:'Gratitude Note',icon:'🙏',cat:'Mind',freqType:'daily'}
 ];
+/* ---- Achievements are RULE-BASED. Each badge has a rule:
+   {match:'all'|'any', conds:[{metric, op, value}, …]}
+   'all' = every condition must be true, 'any' = at least one. Metrics are listed in BADGE_METRICS below. ---- */
 var BADGES = [
-  {id:'streak3',type:'streak',n:3,icon:'🔥',name:'Spark',desc:'3-day streak'},
-  {id:'streak7',type:'streak',n:7,icon:'🔥',name:'Kindling',desc:'7-day streak'},
-  {id:'streak14',type:'streak',n:14,icon:'🔥',name:'Ember',desc:'14-day streak'},
-  {id:'streak30',type:'streak',n:30,icon:'🔥',name:'Blaze',desc:'30-day streak'},
-  {id:'streak60',type:'streak',n:60,icon:'🔥',name:'Wildfire',desc:'60-day streak',pro:true},
-  {id:'streak100',type:'streak',n:100,icon:'🔥',name:'Inferno',desc:'100-day streak',pro:true},
-  {id:'streak365',type:'streak',n:365,icon:'👑',name:'Eternal Flame',desc:'365-day streak',pro:true},
-  {id:'comp25',type:'completions',n:25,icon:'✅',name:'Getting Started',desc:'25 check-ins'},
-  {id:'comp100',type:'completions',n:100,icon:'✅',name:'Century',desc:'100 check-ins'},
-  {id:'comp500',type:'completions',n:500,icon:'🏆',name:'Dedicated',desc:'500 check-ins',pro:true},
-  {id:'comp1000',type:'completions',n:1000,icon:'🏆',name:'Unstoppable',desc:'1,000 check-ins',pro:true},
-  {id:'perfectweek',type:'perfectweek',n:1,icon:'⭐',name:'Perfect Week',desc:'100% for 7 days'},
-  {id:'perfectweek4',type:'perfectweek',n:4,icon:'🌟',name:'Perfect Month',desc:'4 perfect weeks',pro:true},
-  {id:'fivehabits',type:'habitcount',n:5,icon:'🧩',name:'Builder',desc:'5 active habits'}
+  {id:'streak3',icon:'🔥',name:'Spark',desc:'3-day streak',rule:{match:'all',conds:[{metric:'best_streak',op:'>=',value:3}]}},
+  {id:'streak7',icon:'🔥',name:'Kindling',desc:'7-day streak',rule:{match:'all',conds:[{metric:'best_streak',op:'>=',value:7}]}},
+  {id:'streak14',icon:'🔥',name:'Ember',desc:'14-day streak',rule:{match:'all',conds:[{metric:'best_streak',op:'>=',value:14}]}},
+  {id:'streak30',icon:'🔥',name:'Blaze',desc:'30-day streak',rule:{match:'all',conds:[{metric:'best_streak',op:'>=',value:30}]}},
+  {id:'streak60',icon:'🔥',name:'Wildfire',desc:'60-day streak',pro:true,rule:{match:'all',conds:[{metric:'best_streak',op:'>=',value:60}]}},
+  {id:'streak100',icon:'🔥',name:'Inferno',desc:'100-day streak',pro:true,rule:{match:'all',conds:[{metric:'best_streak',op:'>=',value:100}]}},
+  {id:'streak365',icon:'👑',name:'Eternal Flame',desc:'365-day streak',pro:true,rule:{match:'all',conds:[{metric:'best_streak',op:'>=',value:365}]}},
+  {id:'comp25',icon:'✅',name:'Getting Started',desc:'25 check-ins',rule:{match:'all',conds:[{metric:'total_checkins',op:'>=',value:25}]}},
+  {id:'comp100',icon:'✅',name:'Century',desc:'100 check-ins',rule:{match:'all',conds:[{metric:'total_checkins',op:'>=',value:100}]}},
+  {id:'comp500',icon:'🏆',name:'Dedicated',desc:'500 check-ins',pro:true,rule:{match:'all',conds:[{metric:'total_checkins',op:'>=',value:500}]}},
+  {id:'comp1000',icon:'🏆',name:'Unstoppable',desc:'1,000 check-ins',pro:true,rule:{match:'all',conds:[{metric:'total_checkins',op:'>=',value:1000}]}},
+  {id:'perfectweek',icon:'⭐',name:'Perfect Week',desc:'100% for 7 days',rule:{match:'all',conds:[{metric:'perfect_weeks',op:'>=',value:1}]}},
+  {id:'perfectweek4',icon:'🌟',name:'Perfect Month',desc:'4 perfect weeks',pro:true,rule:{match:'all',conds:[{metric:'perfect_weeks',op:'>=',value:4}]}},
+  {id:'fivehabits',icon:'🧩',name:'Builder',desc:'5 active habits',rule:{match:'all',conds:[{metric:'active_habits',op:'>=',value:5}]}}
 ];
 
 /* ==================================================================
@@ -3049,17 +3070,29 @@ function saveBackendGreeting(){
    ================================================================== */
 function bAchClean(list){
   return (list||[]).map(function(b){
-    return {id:b.id, type:b.type||'custom', n:b.n||0, icon:(b.icon||'⭐').trim()||'⭐', name:(b.name||'').trim()||'Untitled', desc:(b.desc||'').trim(), pro:!!b.pro};
+    var r = badgeRuleOf(b);
+    return {
+      id:b.id, icon:(b.icon||'⭐').trim()||'⭐', name:(b.name||'').trim()||'Untitled', desc:(b.desc||'').trim(), pro:!!b.pro,
+      rule:{match:r.match, conds:r.conds.filter(badgeCondValid).map(function(c){ return {metric:c.metric, op:c.op||'>=', value:parseFloat(c.value)}; })}
+    };
+  });
+}
+function bAchNormalize(list){
+  return (list||[]).map(function(b){
+    var r = badgeRuleOf(b);
+    return {id:b.id, icon:b.icon, name:b.name, desc:b.desc, pro:!!b.pro,
+      rule:{match:r.match, conds:r.conds.map(function(c){ return {metric:c.metric, op:c.op||'>=', value:c.value}; })}};
   });
 }
 function ensureAchDraft(){
-  if(!_bAchDraft){ _bAchDraft = JSON.parse(JSON.stringify(effBadges())); bSeed('ach', bAchClean(_bAchDraft)); }
+  if(!_bAchDraft){ _bAchDraft = bAchNormalize(JSON.parse(JSON.stringify(effBadges()))); bSeed('ach', bAchClean(_bAchDraft)); }
 }
 function bAchDirty(){ return bJSON(bAchClean(_bAchDraft)) !== bJSON(bAchClean(effBadges())); }
+var _bAchOpen = {}; // badge ids whose rule editor is expanded
 function renderBackendAchievements(){
   ensureAchDraft();
   var el = document.getElementById('page-b-achievements'); if(!el) return;
-  var html = bPageHead('Achievements','Badges everyone can earn · edit inline, drag to reorder',
+  var html = bPageHead('Achievements','Badges everyone can earn · each one unlocks by a rule you define · drag to reorder',
     '<button class="btn primary" onclick="addBackendBadge()">'+ICONS.plus+' New achievement</button>');
   html += '<div class="b-panel"><div class="b-panel-head"><h3>Badge catalog</h3><span class="b-sp"></span><span class="sub">'+_bAchDraft.length+' achievements</span></div>'+
     '<div class="b-thead ach"><span></span><span>Icon</span><span>Title</span><span>Description</span><span>Access</span><span></span></div>'+
@@ -3071,7 +3104,8 @@ function renderBackendAchievements(){
   bSetDirty(bAchDirty());
 }
 function bAchRowHTML(b,i){
-  return '<div class="b-row b-trow ach" data-idx="'+i+'" '+
+  return '<div class="b-ach-item">'+
+  '<div class="b-row b-trow ach" data-idx="'+i+'" '+
       'ondragstart="bAchDragStart(event,\''+b.id+'\')" ondragover="bAchDragOver(event)" ondrop="bAchDrop(event,\''+b.id+'\')" ondragend="bAchDragEnd(event)">'+
     '<div class="b-grip" title="Drag to reorder" onmousedown="this.parentNode.setAttribute(\'draggable\',\'true\')">'+ICONS.grip+'</div>'+
     '<input class="inp b-emo" maxlength="4" value="'+esc(b.icon)+'" oninput="updateAchField(\''+b.id+'\',\'icon\',this.value)"/>'+
@@ -3079,15 +3113,59 @@ function bAchRowHTML(b,i){
     '<input class="inp b-f-desc" placeholder="Description" value="'+esc(b.desc)+'" oninput="updateAchField(\''+b.id+'\',\'desc\',this.value)"/>'+
     '<label class="b-pro-tg" title="Pro-only badge"><input type="checkbox" '+(b.pro?'checked':'')+' onchange="updateAchField(\''+b.id+'\',\'pro\',this.checked)"/>Pro</label>'+
     '<div class="b-acts"><button class="b-ib del" title="Delete" onclick="deleteBackendBadge(\''+b.id+'\')">'+ICONS.trash+'</button></div>'+
+  '</div>'+
+  '<div class="ach-rule" id="achRule-'+b.id+'">'+bAchRuleHTML(b)+'</div>'+
   '</div>';
 }
+function bAchRuleHTML(b){
+  var r = badgeRuleOf(b), open = !!_bAchOpen[b.id], valid = r.conds.filter(badgeCondValid).length;
+  var out = '<div class="ach-rule-sum"><span class="ach-rule-tag">Unlocks when</span>'+
+    '<span class="ach-rule-text'+(valid?'':' bad')+'" id="achTxt-'+b.id+'">'+esc(badgeRuleText(r))+'</span>'+
+    '<button class="btn sm ghost" onclick="bAchToggleRule(\''+b.id+'\')">'+(open?'Done':ICONS.edit+' Edit rule')+'</button></div>';
+  if(!open) return out;
+  out += '<div class="ach-rule-ed">'+
+    '<div class="ach-rule-match">Earn this badge when <select class="sel" onchange="bAchSetMatch(\''+b.id+'\',this.value)">'+
+      '<option value="all"'+(r.match==='all'?' selected':'')+'>ALL</option><option value="any"'+(r.match==='any'?' selected':'')+'>ANY</option></select> of these are true:</div>';
+  r.conds.forEach(function(c,k){
+    var mOpts = Object.keys(BADGE_METRICS).map(function(key){ return '<option value="'+key+'"'+(c.metric===key?' selected':'')+'>'+esc(BADGE_METRICS[key].label)+'</option>'; }).join('');
+    var oOpts = BADGE_OPS.map(function(o){ return '<option value="'+o[0]+'"'+((c.op||'>=')===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join('');
+    var unit = BADGE_METRICS[c.metric] ? BADGE_METRICS[c.metric].unit : '';
+    out += '<div class="ach-cond">'+
+      '<select class="sel" onchange="bAchSetCond(\''+b.id+'\','+k+',\'metric\',this.value)">'+mOpts+'</select>'+
+      '<select class="sel" onchange="bAchSetCond(\''+b.id+'\','+k+',\'op\',this.value)">'+oOpts+'</select>'+
+      '<input class="inp" type="number" min="0" step="1" value="'+esc(String(c.value))+'" oninput="bAchSetCond(\''+b.id+'\','+k+',\'value\',this.value)"/>'+
+      '<span class="ach-unit">'+esc(unit)+'</span>'+
+      '<button class="b-ib del" title="Remove condition" onclick="bAchDelCond(\''+b.id+'\','+k+')">'+ICONS.trash+'</button>'+
+    '</div>';
+  });
+  out += '<div class="ach-rule-btns"><button class="btn sm" onclick="bAchAddCond(\''+b.id+'\')">'+ICONS.plus+' Add condition</button>'+
+    '<button class="btn sm ghost" onclick="bAchRuleToDesc(\''+b.id+'\')">Use rule as description</button></div></div>';
+  return out;
+}
+function bAchById(id){ return _bAchDraft.find(function(x){ return x.id===id; }); }
+function bAchRefreshRule(id){ var box = document.getElementById('achRule-'+id), b = bAchById(id); if(box && b) box.innerHTML = bAchRuleHTML(b); bSetDirty(bAchDirty()); }
+function bAchToggleRule(id){ _bAchOpen[id] = !_bAchOpen[id]; bAchRefreshRule(id); }
+function bAchSetMatch(id,val){ var b=bAchById(id); if(!b) return; b.rule.match = (val==='any'?'any':'all'); bAchRefreshRule(id); }
+function bAchSetCond(id,k,field,val){
+  var b=bAchById(id); if(!b||!b.rule.conds[k]) return;
+  b.rule.conds[k][field] = (field==='value') ? val : val;
+  if(field==='metric'){ bAchRefreshRule(id); return; } // unit label changes
+  var t = document.getElementById('achTxt-'+id);
+  if(t){ var v = badgeRuleOf(b); t.textContent = badgeRuleText(v); t.classList.toggle('bad', !v.conds.filter(badgeCondValid).length); }
+  bSetDirty(bAchDirty());
+}
+function bAchAddCond(id){ var b=bAchById(id); if(!b) return; b.rule.conds.push({metric:'best_streak', op:'>=', value:7}); bAchRefreshRule(id); }
+function bAchDelCond(id,k){ var b=bAchById(id); if(!b) return; b.rule.conds.splice(k,1); bAchRefreshRule(id); }
+function bAchRuleToDesc(id){ var b=bAchById(id); if(!b) return; b.desc = badgeRuleText(badgeRuleOf(b)).replace(/\s{2,}/g,' '); renderBackendAchievements(); }
 function updateAchField(id, field, val){
-  var b = _bAchDraft.find(function(x){ return x.id===id; }); if(!b) return;
+  var b = bAchById(id); if(!b) return;
   b[field] = val;
   bSetDirty(bAchDirty());
 }
 function addBackendBadge(){
-  _bAchDraft.push({id:'badge'+Date.now().toString(36)+Math.random().toString(36).slice(2,6), type:'custom', n:0, icon:'⭐', name:'New badge', desc:'Description', pro:false});
+  var id = 'badge'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  _bAchDraft.push({id:id, icon:'⭐', name:'New badge', desc:'Description', pro:false, rule:{match:'all', conds:[{metric:'best_streak', op:'>=', value:7}]}});
+  _bAchOpen[id] = true;
   renderBackendAchievements();
   setTimeout(function(){
     var rows = document.querySelectorAll('#bAchList .b-trow'); var last = rows[rows.length-1];
@@ -3099,10 +3177,11 @@ function deleteBackendBadge(id){
   renderBackendAchievements();
 }
 function resetBackendAchievements(){
-  _bAchDraft = JSON.parse(JSON.stringify(BADGES));
+  _bAchDraft = bAchNormalize(JSON.parse(JSON.stringify(BADGES)));
+  _bAchOpen = {};
   renderBackendAchievements();
 }
-function bAchDiscard(){ _bAchDraft = null; renderBackendAchievements(); }
+function bAchDiscard(){ _bAchDraft = null; _bAchOpen = {}; renderBackendAchievements(); }
 function bAchClearDrag(){
   document.querySelectorAll('#bAchList .b-trow').forEach(function(x){ x.classList.remove('dragging'); x.removeAttribute('draggable'); });
 }
@@ -3129,6 +3208,8 @@ function bAchDrop(e,overId){
 function bAchDragEnd(e){ _bDragBadgeId = null; bAchClearDrag(); }
 function saveBackendAchievements(){
   var clean = bAchClean(_bAchDraft);
+  var norule = clean.filter(function(b){ return !b.rule.conds.length; }).length;
+  if(norule && !confirm(norule+' achievement'+(norule===1?' has':'s have')+' no unlock rule, so nobody can ever earn '+(norule===1?'it':'them')+'. Save anyway?')) return;
   db.collection('config').doc('achievements').set({badges:clean}, {merge:true}).then(function(){
     bSeed('ach', clean);
     toast('Achievements saved');
@@ -3869,13 +3950,89 @@ function perfectWeeksCount(){
   while(wk<=end){ if(isPerfectWeek(dateStr(wk))) n++; wk=addDays(wk,7); }
   return n;
 }
+/* ---------------- Achievement rule engine ----------------
+   Metric = something we can measure from the user's data. Rule = conditions on metrics. */
+function currentStreakGlobal(){ return activeHabits().reduce(function(m,h){ return Math.max(m,currentStreak(h)); },0); }
+function perfectDaysCount(){
+  if(!S.habits.length) return 0;
+  var earliest = S.habits.reduce(function(m,h){ return h.createdAt<m?h.createdAt:m; }, _todayStr);
+  var d = parseDate(earliest), end = parseDate(_todayStr), n = 0;
+  while(d<=end){ var p = dayCompletionPct(dateStr(d)); if(p!==null && p>=1) n++; d = addDays(d,1); }
+  return n;
+}
+function activeCheckinDaysCount(){
+  var seen = {};
+  activeHabits().forEach(function(h){ Object.keys(h.logs||{}).forEach(function(k){ if(h.logs[k]==='done') seen[k]=1; }); });
+  return Object.keys(seen).length;
+}
+function daysTrackingCount(){
+  if(!S.habits.length) return 0;
+  var earliest = S.habits.reduce(function(m,h){ return h.createdAt<m?h.createdAt:m; }, _todayStr);
+  return Math.max(1, Math.round((parseDate(_todayStr)-parseDate(earliest))/86400000)+1);
+}
+function goalsAllTaskCount(){ return (S.goals||[]).reduce(function(a,g){ return a+goalTaskCounts(g).done; },0); }
+var BADGE_METRICS = {
+  best_streak:       {label:'Longest streak (best habit)', short:'Longest streak', unit:'days',     get:function(){ return bestStreakGlobal(); }},
+  current_streak:    {label:'Current streak (best habit)', short:'Current streak', unit:'days',     get:currentStreakGlobal},
+  total_checkins:    {label:'Total check-ins (done)',      short:'Check-ins',      unit:'',         get:function(){ return totalCompletionsAll(); }},
+  active_days:       {label:'Days with a check-in',        short:'Active days',    unit:'days',     get:activeCheckinDaysCount},
+  perfect_days:      {label:'Perfect days (100% done)',    short:'Perfect days',   unit:'days',     get:perfectDaysCount},
+  perfect_weeks:     {label:'Perfect weeks',               short:'Perfect weeks',  unit:'weeks',    get:function(){ return perfectWeeksCount(); }},
+  last30_rate:       {label:'Completion rate, last 30 days', short:'30-day completion', unit:'%',   get:function(){ return Math.round(last30Rate()*100); }},
+  active_habits:     {label:'Active habits',               short:'Active habits',  unit:'',         get:function(){ return activeHabits().length; }},
+  days_tracking:     {label:'Days since tracking started', short:'Days tracking',  unit:'days',     get:daysTrackingCount},
+  goals_total:       {label:'Goals created',               short:'Goals created',  unit:'',         get:function(){ return (S.goals||[]).length; }},
+  goals_completed:   {label:'Goals achieved',              short:'Goals achieved', unit:'',         get:function(){ return (S.goals||[]).filter(function(g){ return g.status==='done'; }).length; }},
+  milestones_done:   {label:'Milestones completed',        short:'Milestones done',unit:'',         get:function(){ return (S.goals||[]).reduce(function(a,g){ return a+goalMilestonesDoneCount(g); },0); }},
+  tasks_done:        {label:'Goal tasks completed',        short:'Tasks done',     unit:'',         get:goalsAllTaskCount}
+};
+var BADGE_OPS = [['>=','≥ at least'],['>','> more than'],['=','= exactly'],['<=','≤ at most'],['<','< less than']];
+var LEGACY_BADGE_METRIC = {streak:'best_streak', completions:'total_checkins', perfectweek:'perfect_weeks', habitcount:'active_habits'};
+/* A badge saved by an older version has {type,n} instead of {rule}; convert it on the fly. */
+function badgeRuleOf(b){
+  if(b && b.rule && Array.isArray(b.rule.conds)) return {match:(b.rule.match==='any'?'any':'all'), conds:b.rule.conds};
+  if(b && LEGACY_BADGE_METRIC[b.type]) return {match:'all', conds:[{metric:LEGACY_BADGE_METRIC[b.type], op:'>=', value:+b.n||0}]};
+  return {match:'all', conds:[]};
+}
+function badgeCondValid(c){ return !!(c && BADGE_METRICS[c.metric] && isFinite(parseFloat(c.value))); }
+function badgeCondMet(c){
+  var cur = BADGE_METRICS[c.metric].get(), v = parseFloat(c.value);
+  switch(c.op){
+    case '>': return cur>v;
+    case '=': return cur===v;
+    case '<=': return cur<=v;
+    case '<': return cur<v;
+    default: return cur>=v;
+  }
+}
+function badgeRuleEarned(rule){
+  var conds = (rule.conds||[]).filter(badgeCondValid);
+  if(!conds.length) return false;
+  return rule.match==='any' ? conds.some(badgeCondMet) : conds.every(badgeCondMet);
+}
+function badgeCondText(c){
+  var m = BADGE_METRICS[c.metric]; if(!m) return '';
+  var op = {'>=':'≥','>':'>','=':'=','<=':'≤','<':'<'}[c.op] || '≥';
+  return m.short+' '+op+' '+(+c.value).toLocaleString('en-US')+(m.unit?(m.unit==='%'?'%':' '+m.unit):'');
+}
+function badgeRuleText(rule){
+  var conds = (rule.conds||[]).filter(badgeCondValid);
+  if(!conds.length) return 'No unlock rule set';
+  return conds.map(badgeCondText).join(rule.match==='any' ? '  OR  ' : '  AND  ');
+}
+/* 0..1 — how close the user is. Only "at least / more than" conditions can show progress. */
+function badgeRuleProgress(rule){
+  var conds = (rule.conds||[]).filter(badgeCondValid); if(!conds.length) return 0;
+  var parts = conds.map(function(c){
+    var cur = BADGE_METRICS[c.metric].get(), v = parseFloat(c.value);
+    if(c.op==='>=' || c.op==='>' || !c.op) return v<=0 ? 1 : Math.min(1, cur/v);
+    return badgeCondMet(c) ? 1 : 0;
+  });
+  return rule.match==='any' ? Math.max.apply(null,parts) : parts.reduce(function(a,x){ return a+x; },0)/parts.length;
+}
 function isBadgeEarned(b){
   if(badgeLocked(b)) return false;
-  if(b.type==='streak') return bestStreakGlobal() >= b.n;
-  if(b.type==='completions') return totalCompletionsAll() >= b.n;
-  if(b.type==='perfectweek') return perfectWeeksCount() >= b.n;
-  if(b.type==='habitcount') return activeHabits().length >= b.n;
-  return false;
+  return badgeRuleEarned(badgeRuleOf(b));
 }
 
 /* ==================================================================
@@ -6065,8 +6222,13 @@ function renderAchievements(){
   var html = '<div class="page-head"><div><div class="page-title">Achievements</div><div class="page-sub">'+earned.length+' of '+effBadges().length+' badges earned</div></div></div>';
   html += '<div class="badge-grid">'+effBadges().map(function(b){
     var got = isBadgeEarned(b);
+    var rule = badgeRuleOf(b);
+    var prog = (!got && !badgeLocked(b)) ? Math.round(badgeRuleProgress(rule)*100) : 0;
     return '<div class="badge'+(got?' earned':'')+'"><div class="badge-icon">'+b.icon+'</div>'+
-      '<div class="badge-name">'+esc(b.name)+'</div><div class="badge-desc">'+esc(b.desc)+'</div></div>';
+      '<div class="badge-name">'+esc(b.name)+'</div><div class="badge-desc">'+esc(b.desc)+'</div>'+
+      '<div class="badge-rule">'+(got?'✓ ':'')+esc(badgeRuleText(rule))+'</div>'+
+      (!got ? '<div class="badge-prog" title="'+prog+'% there"><i style="width:'+prog+'%"></i></div>' : '')+
+    '</div>';
   }).join('')+'</div>';
   el.innerHTML = html;
 }
