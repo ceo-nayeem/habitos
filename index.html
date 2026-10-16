@@ -4,6 +4,15 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>HabitOS — Build Better Days</title>
+<meta name="description" content="Track habits, reach goals and build better days."/>
+<meta name="theme-color" content="#08090D"/>
+<link rel="manifest" href="manifest.webmanifest"/>
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png"/>
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-title" content="HabitOS"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
@@ -420,6 +429,11 @@ a{color:inherit}
 }
 .chip.on{background:var(--accent-soft);color:var(--accent);border-color:transparent}
 
+/* ---- PWA: update notice ---- */
+.pwa-update{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:9999;display:flex;align-items:center;gap:12px;
+  background:var(--surface);color:var(--text);border:1px solid var(--accent);border-radius:14px;padding:10px 12px 10px 16px;box-shadow:0 12px 40px rgba(0,0,0,.35);font-size:13px;font-weight:600;max-width:calc(100vw - 24px)}
+.pwa-update button{background:var(--accent);color:var(--accent-contrast);border:0;border-radius:10px;padding:8px 14px;font-weight:700;font-size:12.5px;cursor:pointer;white-space:nowrap}
+.pwa-update .pwa-x{background:transparent;color:var(--text2);padding:6px 8px}
 /* ---- Habits view tabs: hover "Set as default" + static daily cards ---- */
 .seg-wrap{position:relative;display:inline-flex}
 .seg-star{font-size:10px;margin-left:3px;opacity:.85}
@@ -3691,7 +3705,17 @@ function signInWithGoogle(){
   document.getElementById('authGoogleBtn').disabled = true;
   document.getElementById('authStatus').textContent = '';
   auth.signInWithPopup(googleProvider).catch(function(err){
+    var code = err && err.code;
+    // Popups are often blocked inside installed apps — fall back to the full-page redirect flow
+    if(code==='auth/popup-blocked' || code==='auth/operation-not-supported-in-this-environment'){
+      auth.signInWithRedirect(googleProvider).catch(function(e2){
+        document.getElementById('authGoogleBtn').disabled = false;
+        document.getElementById('authStatus').textContent = e2.message || 'Sign-in failed. Please try again.';
+      });
+      return;
+    }
     document.getElementById('authGoogleBtn').disabled = false;
+    if(code==='auth/popup-closed-by-user' || code==='auth/cancelled-popup-request') return;
     document.getElementById('authStatus').textContent = err.message || 'Sign-in failed. Please try again.';
   });
 }
@@ -4190,6 +4214,7 @@ function renderQuickThemeSwatches(){
 }
 function applyTheme(){
   document.documentElement.classList.toggle('day', S.profile.theme==='day');
+  var _tc = document.querySelector('meta[name="theme-color"]'); if(_tc) _tc.setAttribute('content', S.profile.theme==='day' ? '#F4F5F9' : '#08090D');
   var acc = effAccents().find(function(a){ return a.id===S.profile.accent; }) || effAccents()[0];
   document.documentElement.style.setProperty('--accent', acc.a);
   document.documentElement.style.setProperty('--accent2', acc.a2);
@@ -6301,6 +6326,8 @@ function renderSettings(){
     '</div>'+
   '</div>';
 
+  html += pwaInstallCardHTML();
+
   html += '<div class="card" style="margin-bottom:16px"><div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">'+
     '<div class="avatar-big">'+(initials||'🙂')+'</div>'+
     '<div class="field" style="margin:0;flex:1"><div class="field-label">Your name</div>'+
@@ -6926,7 +6953,7 @@ function aiHideThinking(){ var el=document.getElementById('ai-thinking-el'); if(
    this key (allowed websites + only the Gemini API) and set a quota, or
    move the call behind a small backend so the key never reaches browsers.
    ================================================================== */
-var GEMINI_API_KEY = "AQ.Ab8RN6LR2jSgPlslYE7aOLM-7mzULr6ddItSFuIIBRGD8qPgmg";
+var GEMINI_API_KEY = "";   // leave empty in a public repo — paste your key with the 🔑 button instead
 /* The key can also be pasted in-app (🔑 button in the coach panel) — that copy is saved only in that browser and wins over this one. */
 /* FEATURE SWITCH — set to true to turn the Habit Coach back on.
    While false, the panel opens but shows a "coming soon" notice and every control stays visible but disabled. */
@@ -7433,6 +7460,75 @@ function initApp(){
   go('dashboard');
   applySidebarState(); // runs after go(), since go() always collapses the dock on navigation
   setInterval(refreshTodayIfChanged, 60000);
+}
+</script>
+<script>
+/* ==================================================================
+   PWA — service worker, install button, "new version" notice
+   ================================================================== */
+var _pwaPrompt = null, _pwaBaseTag = null, _pwaLastCheck = 0, _pwaReg = null;
+function pwaIsStandalone(){
+  return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+}
+function pwaIsIOS(){ return /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1); }
+function pwaCanRun(){ return 'serviceWorker' in navigator && /^https:$/.test(location.protocol) || location.hostname==='localhost'; }
+
+/* Install card shown at the top of Settings */
+function pwaInstallCardHTML(){
+  if(pwaIsStandalone() || !pwaCanRun()) return '';
+  var body;
+  if(_pwaPrompt){
+    body = '<button class="btn primary" onclick="pwaInstall()">Install app</button>';
+  } else if(pwaIsIOS()){
+    body = '<div class="muted" style="font-size:12.5px;line-height:1.55">On iPhone/iPad: tap the <b>Share</b> button in Safari, then <b>Add to Home Screen</b>.</div>';
+  } else {
+    body = '<div class="muted" style="font-size:12.5px;line-height:1.55">Open your browser menu and choose <b>Install app</b> (or <b>Add to Home screen</b>).</div>';
+  }
+  return '<div class="card" id="settingsInstallCard" style="margin-bottom:16px"><div class="sec-title" style="margin-top:0"><h3>Install HabitOS</h3></div>'+
+    '<div class="muted" style="font-size:12.5px;line-height:1.55;margin-bottom:12px">Get HabitOS on your home screen or desktop. It opens like a normal app, without the browser, and always loads the latest version.</div>'+
+    body+'</div>';
+}
+function pwaInstall(){
+  if(!_pwaPrompt) return;
+  _pwaPrompt.prompt();
+  _pwaPrompt.userChoice.then(function(){ _pwaPrompt = null; if(typeof _curPage!=='undefined' && _curPage==='settings') renderSettings(); });
+}
+window.addEventListener('beforeinstallprompt', function(e){
+  e.preventDefault(); _pwaPrompt = e;
+  if(typeof _curPage!=='undefined' && _curPage==='settings' && typeof renderSettings==='function') renderSettings();
+});
+window.addEventListener('appinstalled', function(){
+  _pwaPrompt = null;
+  if(typeof toast==='function') toast('HabitOS installed');
+  if(typeof _curPage!=='undefined' && _curPage==='settings') renderSettings();
+});
+
+/* "New version available" — compares the server's version tag of the page now vs. when this session started */
+function pwaShowUpdate(){
+  if(document.getElementById('pwaUpdate')) return;
+  var d = document.createElement('div'); d.id = 'pwaUpdate'; d.className = 'pwa-update';
+  d.innerHTML = '<span>A new version of HabitOS is available</span><button onclick="location.reload()">Update</button><button class="pwa-x" aria-label="Dismiss" onclick="this.parentNode.remove()">✕</button>';
+  document.body.appendChild(d);
+}
+function pwaCheckForUpdate(){
+  if(!navigator.onLine || !/^https?:$/.test(location.protocol)) return;
+  _pwaLastCheck = Date.now();
+  if(_pwaReg) { try{ _pwaReg.update(); }catch(e){} }
+  fetch(location.pathname, {method:'HEAD', cache:'no-store'}).then(function(r){
+    var tag = r.headers.get('etag') || r.headers.get('last-modified'); if(!tag) return;
+    if(_pwaBaseTag===null){ _pwaBaseTag = tag; return; }
+    if(tag !== _pwaBaseTag) pwaShowUpdate();
+  }).catch(function(){});
+}
+if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('sw.js').then(function(reg){ _pwaReg = reg; }).catch(function(err){ console.warn('SW registration failed', err); });
+    setTimeout(pwaCheckForUpdate, 4000);
+    setInterval(pwaCheckForUpdate, 30*60*1000);
+  });
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState==='visible' && Date.now()-_pwaLastCheck > 5*60*1000) pwaCheckForUpdate();
+  });
 }
 </script>
 </body>
