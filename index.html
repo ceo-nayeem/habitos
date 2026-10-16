@@ -771,7 +771,7 @@ button.chip:hover{transform:translateY(-1px)}
    ============================================================ */
 .cal-nav{display:flex;align-items:center;gap:12px;margin-bottom:16px}
 .cal-nav b{font-size:15px;font-weight:700;min-width:140px;text-align:center;font-family:var(--f-display)}
-.cal-scroll{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface)}
+.cal-scroll{overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface)}
 .cal-table{border-collapse:separate;border-spacing:0;width:100%}
 .cal-table th{
   font-size:9px;color:var(--text3);font-weight:700;padding:8px 3px;text-align:center;
@@ -781,20 +781,63 @@ button.chip:hover{transform:translateY(-1px)}
   text-align:left;padding:9px 12px;min-width:150px;position:sticky;left:0;z-index:3;background:var(--surface);
   border-right:1px solid var(--border);white-space:nowrap;
 }
-.cal-hname{font-size:12px;font-weight:700;display:flex;align-items:center;gap:7px}
+.cal-hname{font-size:12px;font-weight:700;display:flex;align-items:center;gap:7px;min-width:0}
+.cal-hn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .cal-hname .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .cal-hmeta{font-size:9.5px;color:var(--text3);margin-top:2px;padding-left:15px}
-.cal-cell{width:26px;height:26px;text-align:center;padding:2px;border-bottom:1px solid var(--border)}
+.cal-cell{width:34px;min-width:34px;height:40px;text-align:center;padding:3px;border-bottom:1px solid var(--border)}
+.cal-table td.cal-cell.today{background:var(--accent-soft)}
+.cal-table th.cal-th.today{color:var(--accent)}
 .cal-dot{
-  width:20px;height:20px;border-radius:6px;margin:0 auto;display:flex;align-items:center;justify-content:center;
-  background:var(--surface2);cursor:pointer;transition:transform .1s;font-size:10px;
+  width:28px;height:28px;border-radius:8px;margin:0 auto;display:flex;align-items:center;justify-content:center;
+  background:var(--surface2);cursor:pointer;transition:transform .1s;font-size:12px;color:#fff;
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent;
 }
-.cal-dot:hover{transform:scale(1.15)}
+.cal-dot svg{width:14px;height:14px}
+.cal-dot:active{transform:scale(.9)}
+@media(hover:hover){.cal-dot:hover{transform:scale(1.12)}}
 .cal-dot.future{cursor:default;opacity:.35}
-.cal-dot.future:hover{transform:none}
+.cal-dot.future:hover,.cal-dot.future:active{transform:none}
 .cal-dot.unsched{opacity:.25}
 .cal-row:hover .cal-habit-col{background:var(--surface2)}
 tr.cal-row:nth-child(odd) .cal-cell{background:rgba(128,128,128,.02)}
+/* ---- Calendar progress card (compact + responsive) ---- */
+.calp{margin-bottom:14px;padding:14px 16px}
+.calp-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.calp-head h3{font-size:14.5px;font-weight:700}
+.calp-head .faint{font-size:11px}
+.calp-body{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center}
+.calp .ring-wrap{width:var(--rs);height:var(--rs);margin:0;order:0}
+.calp .ring-wrap svg{width:100%;height:100%}
+.calp-month{--rs:112px}
+.calp-month .ring-pct{font-size:26px}
+.calp-weeks{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.calp-week{--rs:56px;display:flex;align-items:center;gap:10px;min-width:0}
+.calp-week .ring-pct{font-size:12px}
+.calp-wtext{min-width:0;font-size:10.5px;line-height:1.35;color:var(--text2)}
+.calp-wtext b{display:block;font-family:var(--f-mono);font-size:12px;color:var(--text);white-space:nowrap}
+.calp-wtext span{white-space:nowrap}
+.calp-week.now .calp-wtext b{color:var(--accent)}
+@media(max-width:900px){.calp-weeks{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){
+  .calp{padding:12px}
+  .calp-body{gap:12px}
+  .calp-month{--rs:92px}
+  .calp-month .ring-pct{font-size:21px}
+  .calp-month .ring-lbl{font-size:8.5px}
+  .calp-weeks{gap:10px 8px}
+  .calp-week{--rs:46px;gap:8px}
+  .calp-week .ring-pct{font-size:10px}
+  .calp-wtext b{font-size:11px}
+  .calp-wtext{font-size:10px}
+  .cal-nav{margin-bottom:12px;gap:8px}
+  .cal-nav b{min-width:0;flex:1}
+  .cal-cell{width:34px;min-width:34px}
+  .cal-habit-col{min-width:112px;max-width:112px;padding:8px 8px}
+  .cal-hmeta{padding-left:15px;overflow:hidden;text-overflow:ellipsis}
+  .cal-freq{display:none}
+}
+
 
 /* ============================================================
    STATS
@@ -4665,28 +4708,21 @@ function rangeProgress(fromStr,toStr){
 function calProgressWidgetHTML(){
   var parts = calMonthParts();
   var monthly = rangeProgress(parts[0].from, parts[3].to);
-
   var weeklyHTML = parts.map(function(pt,i){
     var p = rangeProgress(pt.from, pt.to);
     var isCurrent = _todayStr>=pt.from && _todayStr<=pt.to;
-    return '<div class="mini-ring-row">'+
-        '<div class="ring-wrap" style="width:76px;height:76px">'+ringSVG(p,76,7)+
-          '<div class="ring-center"><div class="ring-pct mono" style="font-size:15px">'+pct(p)+'%</div></div>'+
-        '</div>'+
-        '<div class="mini-ring-text"><b>Week '+(i+1)+(isCurrent?' · now':'')+'</b>'+shortDate(pt.from)+' – '+shortDate(pt.to)+'</div>'+
+    var d1 = +pt.from.slice(8), d2 = +pt.to.slice(8);
+    return '<div class="calp-week'+(isCurrent?' now':'')+'"'+(isCurrent?' title="This week"':'')+'>'+
+        '<div class="ring-wrap">'+ringSVG(p,64,7)+'<div class="ring-center"><div class="ring-pct mono">'+pct(p)+'%</div></div></div>'+
+        '<div class="calp-wtext"><b>Week '+(i+1)+'</b><span>'+d1+'–'+d2+'</span></div>'+
       '</div>';
   }).join('');
-
-  return '<div class="card" style="margin-bottom:16px">'+
-    '<div class="sec-title" style="margin-top:0"><h3>Progress</h3><span class="faint mono" style="font-size:11px">'+monthLabel(_calMonth)+'</span></div>'+
-    '<div style="display:flex;flex-direction:column;align-items:center;gap:2px;margin-bottom:24px">'+
-      '<div class="ring-wrap" style="width:156px;height:156px">'+ringSVG(monthly,156,14)+
-        '<div class="ring-center"><div class="ring-pct mono" style="font-size:32px">'+pct(monthly)+'%</div><div class="ring-lbl" style="font-size:10.5px">Monthly</div></div>'+
-      '</div>'+
-    '</div>'+
-    '<div class="field-label" style="text-align:center;margin-bottom:12px">Weekly progress</div>'+
-    '<div style="display:flex;gap:22px;flex-wrap:wrap;justify-content:center">'+
-      weeklyHTML+
+  return '<div class="card calp" id="calProgress">'+
+    '<div class="calp-head"><h3>Progress</h3><span class="faint mono">'+monthLabel(_calMonth)+'</span></div>'+
+    '<div class="calp-body">'+
+      '<div class="calp-month"><div class="ring-wrap">'+ringSVG(monthly,120,11)+
+        '<div class="ring-center"><div class="ring-pct mono">'+pct(monthly)+'%</div><div class="ring-lbl">Monthly</div></div></div></div>'+
+      '<div class="calp-weeks">'+weeklyHTML+'</div>'+
     '</div>'+
   '</div>';
 }
@@ -5009,6 +5045,8 @@ function renderCalendar(){
   if(!_calMonth) _calMonth = _todayStr.slice(0,7);
   if(!_habitsView) _habitsView = 'daily';
   var el = document.getElementById('page-calendar');
+  var _cs0 = el.querySelector('.cal-scroll');
+  var _prevScroll = _cs0 ? {y:window.pageYOffset, x:_cs0.scrollLeft, month:_calRendered.month} : null;   // so a re-render never moves the page
   var pendingCount = pendingTodayCount();
   var html = '<div class="page-head"><div><div class="page-title" style="display:flex;align-items:center;gap:10px">Habits'+
     (pendingCount>0 ? '<span class="page-title-badge" title="'+pendingCount+' pending today">'+pendingCount+'</span>' : '')+
@@ -5068,24 +5106,25 @@ function renderCalendar(){
   for(var i=1;i<=daysInMonth;i++){
     var ds = yr+'-'+pad2(mo)+'-'+pad2(i);
     var isTod = ds===_todayStr;
-    html += '<th style="'+(isTod?'color:var(--accent)':'')+'">'+DAY_LABELS[new Date(yr,mo-1,i).getDay()]+'<br>'+i+'</th>';
+    html += '<th class="cal-th'+(isTod?' today':'')+'"'+(isTod?' data-today="1"':'')+'>'+DAY_LABELS[new Date(yr,mo-1,i).getDay()]+'<br>'+i+'</th>';
   }
   html += '</tr></thead><tbody>';
 
   list.forEach(function(h){
-    html += '<tr class="cal-row"><td class="cal-habit-col"><div class="cal-hname"><span class="dot" style="background:'+h.color+'"></span>'+h.icon+' '+esc(h.name)+'</div>'+
-      '<div class="cal-hmeta">'+(currentStreak(h)>0?'🔥 '+currentStreak(h)+' · ':'')+esc(freqLabel(h))+'</div></td>';
+    html += '<tr class="cal-row"><td class="cal-habit-col"><div class="cal-hname"><span class="dot" style="background:'+h.color+'"></span><span class="cal-hn">'+h.icon+' '+esc(h.name)+'</span></div>'+
+      '<div class="cal-hmeta" id="calMeta-'+h.id+'">'+calMetaHTML(h)+'</div></td>';
     for(var i=1;i<=daysInMonth;i++){
       var ds = yr+'-'+pad2(mo)+'-'+pad2(i);
       var future = isFuture(ds);
       var sched = isScheduledIgnoringStart(h,ds);
       var st = getStatus(h,ds);
-      var dot='', cls='cal-dot'+(future?' future':'')+((!sched)?' unsched':'');
-      if(sched && st==='done') dot = '<div class="'+cls+'" style="background:var(--ok)" onclick="cycleStatus(\''+h.id+'\',\''+ds+'\');reRenderCurrent()">'+ICONS.check+'</div>';
-      else if(sched && st==='missed') dot = '<div class="'+cls+'" style="background:var(--bad)" onclick="cycleStatus(\''+h.id+'\',\''+ds+'\');reRenderCurrent()">'+ICONS.x+'</div>';
-      else if(sched) dot = '<div class="'+cls+'" onclick="cycleStatus(\''+h.id+'\',\''+ds+'\');reRenderCurrent()"></div>';
-      else dot = '<div class="'+cls+'"></div>';
-      html += '<td class="cal-cell">'+dot+'</td>';
+      var cls = 'cal-dot'+(future?' future':'')+((!sched)?' unsched':'');
+      var tap = (sched && !future) ? ' onclick="calCellTap(this,\''+h.id+'\',\''+ds+'\')"' : '';
+      var dot;
+      if(sched && st==='done') dot = '<div class="'+cls+'" style="background:var(--ok)"'+tap+'>'+ICONS.check+'</div>';
+      else if(sched && st==='missed') dot = '<div class="'+cls+'" style="background:var(--bad)"'+tap+'>'+ICONS.x+'</div>';
+      else dot = '<div class="'+cls+'"'+tap+'></div>';
+      html += '<td class="cal-cell'+(ds===_todayStr?' today':'')+'">'+dot+'</td>';
     }
     html += '</tr>';
   });
@@ -5093,6 +5132,51 @@ function renderCalendar(){
   html += '<div class="hint" style="margin-top:10px">Tap a cell to mark done, tap again for missed, tap again to clear. Works for past dates too — use the arrows to go back to earlier months.</div>';
 
   el.innerHTML = html;
+  calAfterRender(_prevScroll);
+}
+/* ---- Calendar helpers: in-place cell update + scroll handling ---- */
+var _calRendered = {month:null};
+function calMetaHTML(h){
+  var st = currentStreak(h);
+  return (st>0 ? '🔥 '+st : '')+'<span class="cal-freq">'+(st>0?' · ':'')+esc(freqLabel(h))+'</span>';
+}
+function calScrollToToday(cs){
+  var th = cs.querySelector('th[data-today="1"]');
+  if(!th){ cs.scrollLeft = 0; return; }
+  var col = cs.querySelector('th.cal-habit-col'), colW = col ? col.offsetWidth : 0;
+  var visible = cs.clientWidth - colW;
+  cs.scrollLeft = Math.max(0, th.offsetLeft - colW - (visible - th.offsetWidth)/2);
+}
+function calAfterRender(prev){
+  var cs = document.querySelector('#page-calendar .cal-scroll');
+  _calRendered.month = _calMonth;
+  if(!cs) return;
+  if(prev && prev.month===_calMonth){ cs.scrollLeft = prev.x; }
+  else {
+    calScrollToToday(cs);                                   // new month / first visit: bring today's column into view
+    requestAnimationFrame(function(){ if(!prev || prev.month!==_calMonth) calScrollToToday(cs); });
+  }
+  if(prev) window.scrollTo(0, prev.y);                      // keep the same vertical position
+}
+function calRefreshBadge(){
+  var t = document.querySelector('#page-calendar .page-title'); if(!t) return;
+  var n = pendingTodayCount(), b = t.querySelector('.page-title-badge');
+  if(n>0){ if(!b){ b = document.createElement('span'); b.className = 'page-title-badge'; t.appendChild(b); } b.textContent = n; b.title = n+' pending today'; }
+  else if(b){ b.remove(); }
+}
+/* Tapping a cell updates just that cell, the habit's streak and the progress card — the table is NOT rebuilt,
+   so the page and the table keep their exact scroll position. */
+function calCellTap(el,hId,ds){
+  var h = habitById(hId); if(!h || isFuture(ds)) return;
+  cycleStatus(hId,ds);
+  var st = getStatus(h,ds);
+  if(st==='done'){ el.style.background = 'var(--ok)'; el.innerHTML = ICONS.check; }
+  else if(st==='missed'){ el.style.background = 'var(--bad)'; el.innerHTML = ICONS.x; }
+  else { el.style.background = ''; el.innerHTML = ''; }
+  var meta = document.getElementById('calMeta-'+hId); if(meta) meta.innerHTML = calMetaHTML(h);
+  var prog = document.getElementById('calProgress');
+  if(prog){ var tmp = document.createElement('div'); tmp.innerHTML = calProgressWidgetHTML(); prog.replaceWith(tmp.firstChild); }
+  calRefreshBadge(); updateSideRing(); renderNav();
 }
 
 /* ==================================================================
