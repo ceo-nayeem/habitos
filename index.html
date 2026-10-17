@@ -1917,48 +1917,155 @@ html.day .lock-overlay{background:rgba(244,245,249,.76)}
 .b-link-tile span{font-size:11px;color:var(--text2)}
 
 /* ============================================================
-   ADMIN CONSOLE — MOBILE RESPONSIVE FIXES
-   (#backendApp is a flex row; below 860px the sidebar turns into a
-   top bar, so the app must stack vertically or <main> gets squeezed)
+   NOTIFICATIONS BELL + TRIAL CHIP (frontend, top-right)
+   ============================================================ */
+#notifWrap{position:relative;display:flex;align-items:center;gap:8px;flex-shrink:0}
+#notifBtn{position:relative;width:40px;height:40px;border-radius:50%;flex-shrink:0;
+  border:1.5px solid var(--glass-border);background:var(--glass-bg-strong);
+  -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(180%);backdrop-filter:blur(var(--glass-blur)) saturate(180%);
+  box-shadow:var(--shadow-widget-sm);display:flex;align-items:center;justify-content:center;color:var(--text2);transition:transform .15s,color .15s}
+#notifBtn:hover{transform:scale(1.05);color:var(--text)}
+#notifBtn svg{width:18px;height:18px}
+#notifBtn.has-trial{color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft),var(--shadow-widget-sm)}
+.notif-badge{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--bad);color:#fff;
+  font-size:10px;font-weight:800;font-family:var(--f-mono);align-items:center;justify-content:center;border:2px solid var(--bg)}
+.trial-chip{height:28px;padding:0 11px;border-radius:14px;font-size:11px;font-weight:800;color:var(--accent);background:var(--accent-soft);align-items:center;white-space:nowrap}
+#notifDropdown{
+  position:absolute;top:calc(100% + 10px);right:0;width:340px;max-width:calc(100vw - 24px);max-height:min(72vh,540px);overflow-y:auto;overflow-x:hidden;
+  border-radius:18px;border:1.5px solid var(--glass-border);background:var(--glass-bg-strong);
+  -webkit-backdrop-filter:blur(28px) saturate(180%);backdrop-filter:blur(28px) saturate(180%);
+  box-shadow:var(--shadow-widget);padding:10px;
+  opacity:0;pointer-events:none;transform:translateY(-6px) scale(.98);transform-origin:top right;
+  transition:opacity .16s ease,transform .16s cubic-bezier(.2,.8,.2,1);
+}
+#notifDropdown.open{opacity:1;pointer-events:auto;transform:translateY(0) scale(1)}
+.nt-head{display:flex;align-items:center;justify-content:space-between;padding:4px 6px 10px}
+.nt-head b{font-family:var(--f-display);font-size:14px}
+.nt-hero{display:flex;flex-direction:column;gap:10px;padding:12px 14px;border-radius:14px;margin-bottom:8px;
+  background:linear-gradient(150deg,var(--accent-soft),transparent);border:1px solid var(--border)}
+.nt-hero b{display:block;font-size:13px}
+.nt-hero span{display:block;font-size:11.5px;color:var(--text2);margin-top:2px}
+.nt-dots{display:flex;gap:5px}
+.nt-dots i{flex:1;max-width:44px;height:6px;border-radius:3px;background:var(--surface3)}
+.nt-dots i.used{background:var(--accent)}
+.nt-dots i.now{background:var(--accent);opacity:.45}
+.nt-item{display:flex;gap:10px;padding:10px;border-radius:12px;border:1px solid transparent;transition:background .2s}
+.nt-item + .nt-item{margin-top:2px}
+.nt-item.fresh{background:var(--accent-soft)}
+.nt-ic{width:30px;height:30px;border-radius:10px;flex:none;display:flex;align-items:center;justify-content:center;background:var(--surface2);color:var(--text2)}
+.nt-ic svg{width:15px;height:15px}
+.nt-item.ok .nt-ic{background:var(--ok-soft);color:var(--ok)}
+.nt-item.warn .nt-ic{background:var(--warn-soft);color:var(--warn)}
+.nt-item.bad .nt-ic{background:var(--bad-soft);color:var(--bad)}
+.nt-tx{min-width:0;flex:1}
+.nt-tx b{display:block;font-size:12.5px;line-height:1.35}
+.nt-tx span{display:block;font-size:11.5px;color:var(--text2);line-height:1.5;margin-top:2px}
+.nt-tx em{display:block;font-style:normal;font-size:10.5px;color:var(--text3);margin-top:4px;font-family:var(--f-mono)}
+.nt-empty{padding:26px 10px;text-align:center;font-size:13px;font-weight:600;line-height:1.6}
+.nt-empty span{font-weight:400;font-size:11.5px;color:var(--text3)}
+@media(max-width:560px){.trial-chip{display:none !important}}
+@media(max-width:640px){
+  #notifDropdown{position:fixed;left:12px;right:12px;top:64px;width:auto;max-width:none;max-height:calc(100vh - 150px)}
+}
+
+/* ============================================================
+   ADMIN — USERS v2 (access pills, filter chips, plan editor, history)
+   ============================================================ */
+.b-pill.trial{background:var(--accent-soft);color:var(--accent)}
+.b-pill.expiring{background:var(--warn-soft);color:var(--warn)}
+.b-chipfs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.b-chipf{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:12px;border:1px solid var(--border);background:var(--surface2);
+  font-size:12px;font-weight:600;color:var(--text2);transition:border-color .15s,background .15s}
+.b-chipf b{font-family:var(--f-mono);font-size:14px;color:var(--text)}
+.b-chipf.trial b{color:var(--accent)}
+.b-chipf.warn b{color:var(--warn)}
+.b-chipf.bad b{color:var(--bad)}
+.b-chipf:hover{border-color:var(--border2)}
+.b-chipf.on{border-color:var(--accent);background:var(--accent-soft);color:var(--text)}
+.b-ucards{display:none}
+.b-ucard{border:1px solid var(--glass-border);background:var(--glass-bg-strong);border-radius:16px;padding:12px;box-shadow:var(--shadow-widget-sm);
+  display:flex;flex-direction:column;gap:10px;cursor:pointer;min-width:0}
+.b-ucard-top{display:flex;align-items:center;gap:10px;min-width:0}
+.b-ucard-who{flex:1;min-width:0}
+.b-ucard-who b{display:block;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.b-ucard-who span{display:block;font-size:11.5px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.b-ucard-acts{display:flex;gap:2px;flex:none}
+.b-ucard-pills{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.b-ucard-meta{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11.5px;color:var(--text3)}
+.b-ucard-meta b{color:var(--text);font-family:var(--f-mono);font-weight:600;margin-left:3px}
+.b-ucard .btn.block{justify-content:center}
+.b-seg{display:inline-flex;gap:3px;padding:3px;border-radius:11px;background:var(--surface2);border:1px solid var(--border)}
+.b-seg button{padding:7px 22px;border-radius:8px;font-size:12.5px;font-weight:700;color:var(--text2);transition:background .15s,color .15s}
+.b-seg button.on{background:var(--accent-soft);color:var(--accent)}
+.b-presets{display:flex;flex-wrap:wrap;gap:6px}
+.b-presets button{padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);font-size:12px;font-weight:700;color:var(--text2);transition:border-color .12s,color .12s}
+.b-presets button:hover{border-color:var(--accent);color:var(--accent)}
+.b-hist-list{display:flex;flex-direction:column;margin-top:4px}
+.b-hist-row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:8px 2px;border-bottom:1px solid var(--border);font-size:12px}
+.b-hist-row:last-child{border-bottom:none}
+.b-hist-row b{display:block;font-weight:700}
+.b-hist-row span{display:block;color:var(--text3);font-size:11px;margin-top:1px}
+.b-hist-row em{font-style:normal;color:var(--text3);white-space:nowrap;font-size:11px}
+.b-sub-current{min-width:0}
+.b-sub-current > div{min-width:0}
+.b-menu-btn{display:none}
+.b-menu-panel{display:contents}
+#bMenuVeil{display:none}
+
+/* ============================================================
+   ADMIN CONSOLE — MOBILE LAYOUT (no sideways scrolling anywhere)
+   Phones get: a slim top bar (brand + current section + menu button),
+   a tile menu that drops down, user cards instead of a wide table,
+   bottom-sheet modals with a grab handle, and stacked panels.
    ============================================================ */
 @media(max-width:860px){
-  #backendApp{flex-direction:column;overflow-x:hidden}
+  #backendApp{flex-direction:column;overflow-x:clip}
   #bSidebar{
     position:sticky;top:0;z-index:30;width:100%;height:auto;flex-shrink:0;
-    flex-direction:row;align-items:center;gap:8px;
-    padding:calc(8px + env(safe-area-inset-top,0px)) 10px 8px;
+    flex-direction:row;align-items:center;gap:10px;
+    padding:calc(8px + env(safe-area-inset-top,0px)) 12px 8px;
     border-right:none;border-bottom:1px solid var(--border);
-    overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+    overflow:visible;
   }
-  #bSidebar::-webkit-scrollbar{display:none}
   .b-brand{flex-shrink:0}
-  .b-nav{flex:0 0 auto;flex-direction:row;gap:4px}
-  .b-nav-item{width:auto;flex-shrink:0;white-space:nowrap;padding:8px 12px}
-  .b-exit-btn{width:auto !important;flex-shrink:0;white-space:nowrap}
-  #bMain{margin-left:0;width:100%;max-width:100%;min-width:0;padding:14px 12px 28px}
+  .b-brand-text{display:none}
+  .b-menu-btn{display:flex;flex:1;min-width:0;align-items:center;gap:10px;padding:9px 12px;border-radius:12px;
+    background:var(--surface2);border:1px solid var(--border);font-size:13px;font-weight:700;color:var(--text)}
+  .b-menu-btn svg{width:16px;height:16px;flex-shrink:0}
+  .b-menu-btn span{flex:1;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .b-menu-btn .chev{transition:transform .2s}
+  #bSidebar.open .b-menu-btn .chev{transform:rotate(180deg)}
+  .b-menu-panel{
+    display:none;position:absolute;top:100%;left:0;right:0;padding:12px;background:var(--bg2);
+    border-bottom:1px solid var(--border);box-shadow:0 18px 40px rgba(0,0,0,.35);
+    max-height:calc(100vh - 72px);overflow-y:auto;overflow-x:hidden;
+  }
+  #bSidebar.open .b-menu-panel{display:block}
+  .b-nav{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;flex:none}
+  .b-nav-item{width:auto;padding:12px;border:1px solid var(--border);border-radius:12px;font-size:13px;white-space:normal}
+  .b-nav-item.active{border-color:var(--accent)}
+  .b-exit-btn{width:100% !important;margin-top:10px;justify-content:center;white-space:nowrap}
+  #bMenuVeil.on{display:block;position:fixed;inset:0;z-index:25;background:rgba(4,6,12,.5)}
+  #bMain{margin-left:0;width:100%;max-width:100%;min-width:0;padding:14px 12px 28px;overflow-x:clip}
   #bMain .page{min-width:0}
   #bMain .page-head{flex-wrap:wrap;gap:10px}
   .b-cols,.b-cols[style]{grid-template-columns:minmax(0,1fr) !important}
+  .b-panel,.b-panel-body,.b-set-txt{min-width:0}
   .b-set-ctl{width:100%}
   .b-set{flex-wrap:wrap}
 }
 @media(max-width:700px){
-  /* Users table: keep User / Plan / Status / actions, the rest lives in the detail sheet */
-  .b-table th:nth-child(n+4):nth-child(-n+7),
-  .b-table td:nth-child(n+4):nth-child(-n+7){display:none}
-  .b-table td:first-child{max-width:52vw}
-  .b-table .b-user-cell{min-width:0}
-  .b-table .b-user-cell > div:last-child{min-width:0;overflow:hidden}
-  .b-table .b-user-cell > div:last-child > div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .b-row-actions .btn{display:none}
-  .b-table th,.b-table td{padding:8px 10px}
-}
-@media(max-width:560px){
-  .b-brand-text{display:none}
-  .b-stats-row{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .b-utable{display:none}
+  .b-ucards{display:flex;flex-direction:column;gap:10px}
   .b-users-toolbar .b-search{flex:1 1 100%;min-width:0;max-width:none}
   .b-users-toolbar .sel{flex:1 1 0;min-width:0;max-width:none}
   .b-add-user-btn{margin-left:0}
+}
+@media(max-width:639px){
+  #userModal::before,#addUserModal::before,#removeUserModal::before{content:'';display:block;width:38px;height:4px;border-radius:2px;background:var(--border2);margin:-8px auto 14px}
+}
+@media(max-width:560px){
+  .b-stats-row{grid-template-columns:repeat(2,minmax(0,1fr))}
   .b-sbox{width:100%}
   .b-add-inline{flex-wrap:wrap;width:100%}
   .b-add-inline .inp{flex:1 1 140px;width:auto;min-width:0}
@@ -1966,10 +2073,14 @@ html.day .lock-overlay{background:rgba(244,245,249,.76)}
   .b-panel-body{padding:12px}
   .gt-bhead{grid-template-columns:44px minmax(0,1fr) auto}
   .gt-bsum{display:none}
+  #bMain .seg-tabs{display:flex;flex-wrap:wrap;width:100%}
+  #bMain .seg-tab{flex:1 1 auto;justify-content:center}
   .b-savebar{bottom:calc(8px + env(safe-area-inset-bottom,0px))}
   .b-savebar .b-sp{display:none}
   .b-savebar .btn{flex:1 1 auto;justify-content:center}
   .b-note-inline{flex:1 1 100%}
+  .b-seg{display:flex;width:100%}
+  .b-seg button{flex:1}
 }
 </style>
 </head>
@@ -2077,6 +2188,17 @@ html.day .lock-overlay{background:rgba(244,245,249,.76)}
         </div>
       </div>
     </div>
+    <div id="notifWrap">
+      <span id="trialChip" class="trial-chip" style="display:none"></span>
+      <button id="notifBtn" onclick="toggleNotifPanel(event)" aria-label="Notifications" title="Notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+        <span id="notifBadge" class="notif-badge" style="display:none">0</span>
+      </button>
+      <div id="notifDropdown">
+        <div class="nt-head"><b>Notifications</b></div>
+        <div id="notifBody"></div>
+      </div>
+    </div>
     <button id="profileBtn" onclick="toggleProfileMenu(event)" title="Account"></button>
     <div id="profileDropdown">
       <div class="profile-dd-head" id="profileDdHead"></div>
@@ -2152,16 +2274,24 @@ html.day .lock-overlay{background:rgba(244,245,249,.76)}
 
 <!-- ============ ADMIN / BACKEND CONSOLE (admin-only) ============ -->
 <div id="backendApp" style="display:none">
+  <div id="bMenuVeil" onclick="closeBMenu()"></div>
   <aside id="bSidebar">
     <div class="b-brand">
       <div class="b-brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.4 9 8 11 4.6-2 8-6 8-11V5l-8-3Z"/></svg></div>
       <div class="b-brand-text">HabitOS<span>Admin Console</span></div>
     </div>
+    <button class="b-menu-btn" id="bMenuBtn" onclick="toggleBMenu()" aria-label="Open menu" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      <span id="bCurLabel">Overview</span>
+      <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+    </button>
+    <div class="b-menu-panel" id="bMenuPanel">
     <nav class="b-nav" id="bSideNav"></nav>
     <button class="btn ghost block b-exit-btn" onclick="exitBackend()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 19l-7-7 7-7M3 12h18"/></svg>
       Go to Frontend
     </button>
+    </div>
   </aside>
   <main id="bMain">
     <section class="page active" id="page-b-overview"></section>
@@ -2448,7 +2578,8 @@ var DEFAULT_PLAN_LIMITS = {
   freeMaxGoals: 5,
   freeMaxActiveHabits: 15,
   freeTemplatesAccess: false,
-  freeAchievementsFull: false
+  freeAchievementsFull: false,
+  freeTrialDays: 3          // new accounts get this many days of Pro (0 = off)
 };
 var _planLimits = Object.assign({}, DEFAULT_PLAN_LIMITS); // live-tunable from the Admin console
 
@@ -2607,6 +2738,12 @@ function ensureMyDirectoryDoc(){
           base.status = pending.status==='suspended' ? 'suspended' : 'active';
           base.subscription = pending.subscription || null;
           base.subscriptionHistory = Array.isArray(pending.subscriptionHistory) ? pending.subscriptionHistory : [];
+          if(!base.subscription && base.plan==='pro' && pending.proDays>0){
+            // "Pro for N days" invites start counting on the day they first sign in.
+            var _t0 = todayISO(), _t1 = plainAddDays(_t0, pending.proDays);
+            base.subscription = {startDate:_t0, endDate:_t1};
+            base.subscriptionHistory = base.subscriptionHistory.concat([{plan:'pro', startDate:_t0, endDate:_t1, at:new Date().toISOString(), action:'set'}]);
+          }
         }
         ref.set(base);
         if(pRef) pRef.delete().catch(function(){});
@@ -2634,7 +2771,7 @@ function ensureMyDirectoryDoc(){
 function subscribeMyDirectory(){
   if(!_currentUser) return;
   _unsubMyDirectory = directoryDocRef(_currentUser.uid).onSnapshot(function(doc){
-    var data = doc.exists ? doc.data() : {};
+    var data = doc.exists ? doc.data({serverTimestamps:'estimate'}) : {};
     // Access control: an admin can suspend an account from the Backend console.
     // Enforce it here so it takes effect immediately, even mid-session.
     if(data.status==='suspended' && data.role!=='admin'){
@@ -2645,8 +2782,11 @@ function subscribeMyDirectory(){
     }
     var wasAdmin = _myRole==='admin';
     _myRole = data.role==='admin' ? 'admin' : 'member';
-    _myPlan = data.plan==='pro' ? 'pro' : 'free';
+    _myDir = data;
+    applyMyPlanState(_myStateKey!=='');
     updateProfileMenu();
+    renderNotifUI();
+    if(!_notifToasted){ _notifToasted = true; setTimeout(notifToastOnce, 1500); }
     if(_curPage==='settings') renderSettings();
     if(_curPage==='achievements') renderAchievements();
     if(wasAdmin && _myRole!=='admin' && _backendMode) exitBackend();
@@ -2656,6 +2796,7 @@ function subscribePlanLimits(){
   if(_unsubPlanLimits) return;
   _unsubPlanLimits = db.collection('config').doc('planLimits').onSnapshot(function(doc){
     _planLimits = Object.assign({}, DEFAULT_PLAN_LIMITS, doc.exists ? doc.data() : {});
+    if(_currentUser) applyMyPlanState(true);
     if(_curPage==='settings') renderSettings();
     if(_backendMode && _bCurSection==='limits') renderBackendLimits();
     if(_backendMode && _bCurSection==='overview') renderBackendOverview();
@@ -2733,6 +2874,7 @@ function stopDirectorySync(){
   if(_unsubAllUsers){ _unsubAllUsers(); _unsubAllUsers=null; }
   if(_unsubPendingUsers){ _unsubPendingUsers(); _unsubPendingUsers=null; }
   _myRole='member'; _myPlan='free'; _backendMode=false;
+  _myDir={}; _myState=planState({}); _myStateKey=''; _notifToasted=false;
 }
 
 /* ---- Effective config getters: admin-customized value if set, else the
@@ -2801,6 +2943,237 @@ function greetingLine(name){
   return (pre?pre+' ':'')+nm+(suf?' '+suf:'');
 }
 
+/* ==================================================================
+   PLAN STATE — paid Pro (with optional end date) + new-account free trial
+   One pure function decides what any account (mine, or any row in the Admin
+   console) is entitled to *today*:
+     • Admin                       → always Pro
+     • plan:'pro' and not expired  → Pro   (subscription.endDate is the last Pro day)
+     • inside the free trial       → Pro   (trial = first N calendar days of the account,
+                                            signup day counts as day 1; N is set in Plan limits)
+     • everything else             → Free
+   Expiry therefore takes effect the moment the date passes, even if nobody has
+   opened the Admin console yet; the console additionally writes plan:'free' back
+   to the database (see bSweepExpired) so the stored data matches.
+   ================================================================== */
+function trialDaysCfg(){
+  var n = parseInt(_planLimits && _planLimits.freeTrialDays, 10);
+  return isNaN(n) ? 3 : Math.max(0, n);
+}
+function dateToISO(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function plainAddDays(iso, n){ var d = new Date(iso+'T00:00:00'); d.setDate(d.getDate()+n); return dateToISO(d); }
+function plainDiffDays(a, b){ return Math.round((new Date(b+'T00:00:00') - new Date(a+'T00:00:00'))/86400000); }
+function tsToISO(ts){
+  try{
+    var d = ts && ts.toDate ? ts.toDate() : (ts ? new Date(ts) : new Date());
+    if(isNaN(d)) return todayISO();
+    return dateToISO(d);
+  }catch(e){ return todayISO(); }
+}
+function planState(rec, kind){
+  rec = rec || {};
+  var today = todayISO();
+  var st = { isAdmin: rec.role==='admin', paid:false, subEnd:null, subLeft:null, subExpired:false, trial:null, trialActive:false, pro:false };
+  if(st.isAdmin){ st.pro = true; return st; }
+  var sub = rec.subscription;
+  if(rec.plan==='pro'){
+    if(sub && sub.endDate){
+      st.subEnd = sub.endDate; st.subLeft = plainDiffDays(today, sub.endDate); st.subExpired = st.subLeft < 0;
+    }
+    st.paid = !st.subExpired;
+  } else if(sub && sub.endDate){
+    st.subEnd = sub.endDate; st.subLeft = plainDiffDays(today, sub.endDate); st.subExpired = st.subLeft < 0;
+  }
+  var days = trialDaysCfg();
+  if(kind!=='pending' && days>0 && rec.plan!=='pro'){
+    var start = tsToISO(rec.createdAt);
+    var end = rec.trialEndDate || plainAddDays(start, days-1);
+    var left = plainDiffDays(today, end) + 1;          // days left, counting today
+    st.trial = { start:start, end:end, total: Math.max(1, plainDiffDays(start,end)+1), left: Math.max(0,left), ended: left<=0, sinceEnd: Math.max(0, -left+1) };
+    st.trialActive = left > 0;
+  }
+  st.pro = st.paid || st.trialActive;
+  return st;
+}
+function planStateKey(st){
+  return [st.pro?1:0, st.paid?1:0, st.trialActive?1:0, st.trial?st.trial.left+'@'+st.trial.end:'-', st.subLeft===null?'-':st.subLeft, st.subEnd||''].join('|');
+}
+
+/* ---- my own entitlement (drives isPro() → every limit / lock in the app) ---- */
+var _myDir = {};
+var _notifToasted = false;
+var _myState = planState({});
+var _myStateKey = '';
+function applyMyPlanState(announce){
+  var prevPro = _myPlan==='pro', prevKey = _myStateKey;
+  _myState = planState(_myDir);
+  _myStateKey = planStateKey(_myState);
+  _myPlan = _myState.pro ? 'pro' : 'free';
+  var nowPro = _myPlan==='pro';
+  if(_myStateKey!==prevKey){
+    updateProfileMenu();
+    renderNotifUI();
+    if(announce && prevPro && !nowPro && _myRole!=='admin') toast('Your Pro access has ended — you\'re on the Free plan now.');
+    if(announce && prevPro!==nowPro){
+      if(_curPage==='settings') renderSettings();
+      if(_curPage==='achievements') renderAchievements();
+      reRenderCurrent();
+    }
+  }
+}
+var _lastDayChecked = '';
+function planTick(){
+  if(!_currentUser) return;
+  var t = todayISO();
+  _lastDayChecked = t; applyMyPlanState(true);
+}
+setInterval(planTick, 60000);
+document.addEventListener('visibilitychange', function(){ if(!document.hidden) planTick(); });
+
+/* ==================================================================
+   NOTIFICATIONS (bell, top-right) — derived live from the account's plan state,
+   so a message such as "2 days of Pro trial left" appears by itself as the days
+   pass. Read/unread is remembered per account in this browser.
+   ================================================================== */
+function notifStoreKey(){ return 'habitos_notif_read_'+(_currentUser?_currentUser.uid:'anon'); }
+function notifReadSet(){
+  try{ var a = JSON.parse(localStorage.getItem(notifStoreKey())||'[]'); return Array.isArray(a)?a:[]; }catch(e){ return []; }
+}
+function notifSaveRead(ids){ try{ localStorage.setItem(notifStoreKey(), JSON.stringify(ids.slice(-80))); }catch(e){} }
+function fmtNiceDate(iso){ return iso ? fmtPlainDate(iso) : '—'; }
+function buildNotifs(){
+  var out = [], st = _myState, rec = _myDir || {};
+  if(!_currentUser || st.isAdmin) return out;
+  var today = todayISO();
+  var lim = _planLimits;
+  var t = st.trial;
+  if(t && rec.plan!=='pro'){
+    var elapsed = plainDiffDays(t.start, today);
+    if(!t.ended || t.sinceEnd<=14){
+      for(var k=0;k<t.total;k++){
+        var dayISO = plainAddDays(t.start,k), leftThen = t.total-k;
+        if(dayISO>today) break;
+        if(k!==0 && leftThen>3) continue;
+        var title, text, tone = 'ok';
+        if(k===0){
+          title = 'Your free Pro trial has started';
+          text = 'You have full Pro access for '+t.total+' day'+(t.total===1?'':'s')+' — until '+fmtNiceDate(t.end)+'.';
+        } else if(leftThen===1){
+          title = 'Last day of your Pro trial'; tone = 'warn';
+          text = 'Your trial ends tonight. After that your account moves to the Free plan.';
+        } else {
+          title = leftThen+' days of Pro trial left'; tone = leftThen<=2 ? 'warn' : 'ok';
+          text = 'Enjoy full Pro access until '+fmtNiceDate(t.end)+'.';
+        }
+        out.push({ id:'trial-d'+k+'-'+t.start, tone:tone, icon:'sparkle', title:title, text:text, date:dayISO });
+      }
+      if(t.ended){
+        out.push({ id:'trial-end-'+t.end, tone:'bad', icon:'clock', title:'Your Pro trial has ended',
+          text:'You\'re on the Free plan now ('+lim.freeMaxGoals+' goals, '+lim.freeMaxActiveHabits+' active habits). Ask for Pro to unlock everything again.',
+          date: plainAddDays(t.end,1) });
+      }
+    }
+  }
+  var sub = rec.subscription;
+  if(sub && sub.endDate){
+    if(st.subExpired){
+      var since = -st.subLeft;
+      if(since<=14 && !st.trialActive){
+        out.push({ id:'sub-expired-'+sub.endDate, tone:'bad', icon:'clock', title:'Your Pro plan has ended',
+          text:'Your Pro period ended on '+fmtNiceDate(sub.endDate)+'. You\'re on the Free plan now.', date: plainAddDays(sub.endDate,1) });
+      }
+    } else if(rec.plan==='pro'){
+      if(sub.startDate && plainDiffDays(sub.startDate, today)<=7 && sub.startDate<=today){
+        out.push({ id:'sub-start-'+sub.startDate+'-'+sub.endDate, tone:'ok', icon:'sparkle', title:'Pro plan activated',
+          text:'You have Pro access until '+fmtNiceDate(sub.endDate)+'.', date: sub.startDate });
+      }
+      if(st.subLeft<=3){
+        out.push({ id:'sub-left-'+sub.endDate+'-'+st.subLeft, tone:'warn', icon:'bell',
+          title: st.subLeft===0 ? 'Your Pro plan ends today' : 'Pro ends in '+st.subLeft+' day'+(st.subLeft===1?'':'s'),
+          text:'Pro access runs until '+fmtNiceDate(sub.endDate)+'. After that your account moves to the Free plan.', date: today });
+      }
+    }
+  }
+  out.sort(function(a,b){ return a.date<b.date ? 1 : (a.date>b.date ? -1 : 0); });
+  return out;
+}
+function notifUnreadCount(list){
+  var read = notifReadSet();
+  return list.filter(function(n){ return read.indexOf(n.id)===-1; }).length;
+}
+function notifDayDots(t){
+  var h = '<div class="nt-dots">';
+  for(var i=0;i<t.total && i<10;i++){
+    var used = i < (t.total - t.left);
+    h += '<i class="'+(used?'used':(i===(t.total-t.left)?'now':''))+'"></i>';
+  }
+  return h+'</div>';
+}
+var _notifFresh = {};
+function renderNotifUI(){
+  var btn = document.getElementById('notifBtn'); if(!btn) return;
+  var list = buildNotifs();
+  var unread = notifUnreadCount(list);
+  var badge = document.getElementById('notifBadge');
+  if(badge){ badge.textContent = unread>9?'9+':String(unread); badge.style.display = unread ? 'flex' : 'none'; }
+  btn.classList.toggle('has-trial', !!(_myState && _myState.trialActive));
+  var chip = document.getElementById('trialChip');
+  if(chip){
+    if(_myState && _myState.trialActive && !_myState.isAdmin){
+      chip.style.display = 'inline-flex';
+      chip.textContent = 'Pro trial · '+_myState.trial.left+'d left';
+    } else chip.style.display = 'none';
+  }
+  var body = document.getElementById('notifBody'); if(!body) return;
+  var html = '';
+  if(_myState && _myState.trialActive && !_myState.isAdmin){
+    var t = _myState.trial;
+    html += '<div class="nt-hero"><div><b>Free Pro trial</b><span>'+t.left+' of '+t.total+' day'+(t.total===1?'':'s')+' left · ends '+fmtNiceDate(t.end)+'</span></div>'+notifDayDots(t)+'</div>';
+  } else if(_myState && _myState.paid && !_myState.isAdmin && _myState.subEnd){
+    html += '<div class="nt-hero"><div><b>Pro plan</b><span>Active until '+fmtNiceDate(_myState.subEnd)+' · '+(_myState.subLeft===0?'last day':_myState.subLeft+' days left')+'</span></div></div>';
+  }
+  if(!list.length){
+    html += '<div class="nt-empty">You\'re all caught up.<br><span>Plan and trial updates will show up here.</span></div>';
+  } else {
+    html += list.map(function(n){
+      return '<div class="nt-item '+n.tone+(_notifFresh[n.id]?' fresh':'')+'"><div class="nt-ic">'+(ICONS[n.icon]||ICONS.bell)+'</div>'+
+        '<div class="nt-tx"><b>'+esc(n.title)+'</b><span>'+esc(n.text)+'</span><em>'+esc(fmtNiceDate(n.date))+'</em></div></div>';
+    }).join('');
+  }
+  body.innerHTML = html;
+}
+function toggleNotifPanel(e){
+  if(e) e.stopPropagation();
+  var dd = document.getElementById('notifDropdown'); if(!dd) return;
+  var willOpen = !dd.classList.contains('open');
+  closeProfileMenu();
+  if(willOpen){
+    var list = buildNotifs(), read = notifReadSet();
+    _notifFresh = {};
+    list.forEach(function(n){ if(read.indexOf(n.id)===-1) _notifFresh[n.id] = true; });
+    renderNotifUI();
+    dd.classList.add('open');
+    var ids = read.slice();
+    list.forEach(function(n){ if(ids.indexOf(n.id)===-1) ids.push(n.id); });
+    notifSaveRead(ids);
+    var badge = document.getElementById('notifBadge'); if(badge) badge.style.display = 'none';
+  } else dd.classList.remove('open');
+}
+function closeNotifPanel(){ var dd = document.getElementById('notifDropdown'); if(dd) dd.classList.remove('open'); }
+document.addEventListener('click', function(e){
+  var wrap = document.getElementById('notifWrap');
+  if(wrap && !wrap.contains(e.target)) closeNotifPanel();
+});
+/* one-time toast for the big moments (trial start / trial end / plan end) */
+function notifToastOnce(){
+  try{
+    var list = buildNotifs(), key = 'habitos_notif_toast_'+(_currentUser?_currentUser.uid:'anon');
+    var shown = JSON.parse(localStorage.getItem(key)||'[]'), read = notifReadSet();
+    var fresh = list.filter(function(n){ return shown.indexOf(n.id)===-1 && read.indexOf(n.id)===-1 && /^(trial-d0|trial-end|sub-expired|sub-start)/.test(n.id); })[0];
+    if(fresh){ toast(fresh.title+' — '+fresh.text); shown.push(fresh.id); localStorage.setItem(key, JSON.stringify(shown.slice(-40))); }
+  }catch(e){}
+}
+
 /* ---- Free vs Pro gating helpers, used everywhere a limit applies ---- */
 function isPro(){ return _myRole==='admin' || _myPlan==='pro'; }
 function canCreateGoal(){ return isPro() || (S.goals||[]).length < _planLimits.freeMaxGoals; }
@@ -2833,6 +3206,7 @@ function enterBackend(){
   document.getElementById('backendApp').style.display = 'flex';
   closeProfileMenu();
   goBackend('overview');
+  bSweepExpired();
 }
 function exitBackend(){
   _backendMode = false;
@@ -2841,6 +3215,7 @@ function exitBackend(){
   go(_curPage || 'dashboard');
 }
 function goBackend(section){
+  closeBMenu();
   _bCurSection = section;
   document.querySelectorAll('#bMain .page').forEach(function(p){ p.classList.remove('active'); });
   var el = document.getElementById('page-b-'+section);
@@ -2857,9 +3232,23 @@ function goBackend(section){
   var main = document.getElementById('bMain'); if(main) main.scrollTop = 0;
   window.scrollTo(0,0);
 }
+function toggleBMenu(){
+  var sb = document.getElementById('bSidebar'); if(!sb) return;
+  var open = !sb.classList.contains('open');
+  sb.classList.toggle('open', open);
+  var v = document.getElementById('bMenuVeil'); if(v) v.classList.toggle('on', open);
+  var b = document.getElementById('bMenuBtn'); if(b) b.setAttribute('aria-expanded', open?'true':'false');
+}
+function closeBMenu(){
+  var sb = document.getElementById('bSidebar'); if(sb) sb.classList.remove('open');
+  var v = document.getElementById('bMenuVeil'); if(v) v.classList.remove('on');
+  var b = document.getElementById('bMenuBtn'); if(b) b.setAttribute('aria-expanded','false');
+}
 function renderBackendNav(){
   var wrap = document.getElementById('bSideNav');
   if(!wrap) return;
+  var _cl = document.getElementById('bCurLabel');
+  if(_cl){ var _cur = B_NAV.filter(function(n){ return n.id===_bCurSection; })[0]; if(_cur) _cl.textContent = _cur.label; }
   wrap.innerHTML = B_NAV.map(function(n){
     return '<button class="b-nav-item'+(n.id===_bCurSection?' active':'')+'" onclick="goBackend(\''+n.id+'\')">'+n.icon+'<span>'+n.label+'</span></button>';
   }).join('');
@@ -2868,6 +3257,7 @@ function ensureAllUsersSub(){
   if(!_unsubAllUsers){
     _unsubAllUsers = db.collection('userDirectory').onSnapshot(function(snap){
       _bUsersCache = snap.docs.map(function(d){ return d.data(); });
+      bSweepExpired();
       if(_backendMode && _bCurSection==='overview') renderBackendOverview();
       if(_backendMode && _bCurSection==='users') renderBackendUsers();
       if(_backendMode && _bDetailKind==='real' && _bDetailId) refreshOpenUserDetail();
@@ -2876,6 +3266,7 @@ function ensureAllUsersSub(){
   if(!_unsubPendingUsers){
     _unsubPendingUsers = db.collection('userDirectoryPending').onSnapshot(function(snap){
       _bPendingCache = snap.docs.map(function(d){ return Object.assign({email:d.id}, d.data()); });
+      bSweepExpired();
       if(_backendMode && _bCurSection==='users') renderBackendUsers();
       if(_backendMode && _bDetailKind==='pending' && _bDetailId) refreshOpenUserDetail();
     }, function(err){ console.error('pending users sync error', err); toast('Could not load pending invites: '+err.message, true); });
@@ -2940,16 +3331,53 @@ function unifiedUserList(){
   var pending = _bPendingCache.map(function(u){ return Object.assign({_kind:'pending', _id:u.email}, u); });
   return real.concat(pending);
 }
+/* ==================================================================
+   ADMIN — USERS (v2)
+   Real accounts live in userDirectory/{uid}; pending (manually added)
+   accounts in userDirectoryPending/{email}. Pro can carry an end date and
+   flips back to Free by itself when that date passes (see planState +
+   bSweepExpired). New accounts get an automatic free-Pro trial.
+   ================================================================== */
+var B_USER_FILTERS = [['all','All users'],['active','Active'],['trial','On trial'],['expiring','Expiring ≤ 7 days'],['suspended','Suspended'],['pending','Pending invites'],['admin','Admins'],['pro','Pro'],['free','Free']];
+function uArgs(u){
+  var id = String(u._id).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  return "'"+u._kind+"','"+esc(id)+"'";
+}
+function bUserAccess(u){
+  var kind = u._kind, st = planState(u, kind), f = {trial:false, expiring:false}, html;
+  if(u.role==='admin') return { html:'<span class="b-pill admin">Always Pro</span>', f:f, st:st };
+  if(u.plan==='pro'){
+    if(kind==='pending' && !u.subscription){
+      html = u.proDays>0 ? '<span class="b-pill pro">Pro · '+u.proDays+'d from sign-in</span>' : '<span class="b-pill pro">Pro · no expiry</span>';
+    } else if(st.subExpired){
+      html = '<span class="b-pill expired">Pro expired '+fmtPlainDate(st.subEnd)+'</span>';
+    } else if(st.subEnd){
+      var l = st.subLeft; f.expiring = l<=7;
+      html = '<span class="b-pill '+(l<=7?'expiring':'pro')+'">'+(l===0?'Pro · ends today':'Pro · '+l+'d left')+'</span>';
+    } else html = '<span class="b-pill pro">Pro · no expiry</span>';
+  } else if(st.trialActive){
+    f.trial = true;
+    html = '<span class="b-pill trial">Trial · '+st.trial.left+'d left</span>';
+  } else if(st.subEnd && st.subExpired){
+    html = '<span class="faint" style="font-size:11.5px">Pro ended '+fmtPlainDate(st.subEnd)+'</span>';
+  } else html = '<span class="faint" style="font-size:12px">—</span>';
+  return { html:html, f:f, st:st };
+}
+function bSetUsersFilter(f){ _bUsersFilter = (_bUsersFilter===f && f!=='all') ? 'all' : f; renderBackendUsers(); }
 function renderBackendUsers(){
   ensureAllUsersSub();
   var el = document.getElementById('page-b-users'); if(!el) return;
   var _ae = document.activeElement, _keepFocus = !!(_ae && _ae.classList && _ae.classList.contains('b-search') && el.contains(_ae));
   var _caret = _keepFocus ? _ae.selectionStart : 0;
   var q = _bUsersSearch.trim().toLowerCase();
-  var all = unifiedUserList().sort(function(a,b){
+  var all = unifiedUserList().map(function(u){ u._acc = bUserAccess(u); return u; }).sort(function(a,b){
     var ta = (a.createdAt && a.createdAt.seconds) || 0, tb = (b.createdAt && b.createdAt.seconds) || 0;
     return tb-ta;
   });
+  var nTrial = all.filter(function(u){ return u._acc.f.trial; }).length;
+  var nExp = all.filter(function(u){ return u._acc.f.expiring || (u.plan==='pro' && u._acc.st.subExpired); }).length;
+  var nPend = all.filter(function(u){ return u._kind==='pending'; }).length;
+  var nSusp = all.filter(function(u){ return u.status==='suspended'; }).length;
   var users = all;
   if(q) users = users.filter(function(u){
     return (u.displayName||'').toLowerCase().indexOf(q)!==-1 || (u.email||'').toLowerCase().indexOf(q)!==-1;
@@ -2959,57 +3387,81 @@ function renderBackendUsers(){
   else if(f==='suspended') users = users.filter(function(u){ return u.status==='suspended'; });
   else if(f==='pending') users = users.filter(function(u){ return u._kind==='pending'; });
   else if(f==='admin') users = users.filter(function(u){ return u.role==='admin'; });
-  else if(f==='pro') users = users.filter(function(u){ return u.plan==='pro'; });
+  else if(f==='pro') users = users.filter(function(u){ return u.plan==='pro' && !u._acc.st.subExpired; });
   else if(f==='free') users = users.filter(function(u){ return u.plan!=='pro' && u.role!=='admin'; });
+  else if(f==='trial') users = users.filter(function(u){ return u._acc.f.trial; });
+  else if(f==='expiring') users = users.filter(function(u){ return u._acc.f.expiring || (u.plan==='pro' && u._acc.st.subExpired); });
 
   var html = '<div class="page-head"><div><div class="page-title">Users</div><div class="page-sub">'+_bUsersCache.length+' registered account'+(_bUsersCache.length===1?'':'s')+(_bPendingCache.length?', '+_bPendingCache.length+' pending invite'+(_bPendingCache.length===1?'':'s'):'')+'</div></div></div>';
+  function chip(key, n, label, tone){
+    return '<button class="b-chipf '+tone+(f===key?' on':'')+'" onclick="bSetUsersFilter(\''+key+'\')"><b>'+n+'</b><span>'+label+'</span></button>';
+  }
+  html += '<div class="b-chipfs">'+chip('trial',nTrial,'On trial','trial')+chip('expiring',nExp,'Expiring soon','warn')+chip('pending',nPend,'Pending','mute')+chip('suspended',nSusp,'Suspended','bad')+'</div>';
   html += '<div class="b-users-toolbar">'+
     '<input class="inp b-search" placeholder="Search by name or email…" value="'+esc(_bUsersSearch)+'" oninput="_bUsersSearch=this.value;renderBackendUsers()"/>'+
     '<select class="sel" onchange="_bUsersFilter=this.value;renderBackendUsers()">'+
-      ['all:All users','active:Active','suspended:Suspended','pending:Pending invites','admin:Admins','pro:Pro','free:Free'].map(function(o){
-        var parts=o.split(':'); return '<option value="'+parts[0]+'"'+(f===parts[0]?' selected':'')+'>'+parts[1]+'</option>';
-      }).join('')+
+      B_USER_FILTERS.map(function(o){ return '<option value="'+o[0]+'"'+(f===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join('')+
     '</select>'+
     '<button class="btn primary sm b-add-user-btn" onclick="openAddUserModal()">'+ICONS.plus+' Add user</button>'+
   '</div>';
-  html += '<div class="b-table-wrap"><table class="b-table"><thead><tr><th>User</th><th>Plan</th><th>Status</th><th>Subscription</th><th>Habits</th><th>Goals</th><th>Joined</th><th></th></tr></thead><tbody>';
+
+  function avatar(u, name){
+    return u.photoURL ? '<img class="b-avatar" src="'+esc(u.photoURL)+'" referrerpolicy="no-referrer"/>' : '<div class="b-avatar-fallback">'+esc(userInitials(name)||'?')+'</div>';
+  }
+  function planPill(u){
+    return u.role==='admin' ? '<span class="b-pill admin">Admin</span>' : '<span class="b-pill '+(u.plan==='pro'?'pro':'free')+'">'+(u.plan==='pro'?'Pro':'Free')+'</span>';
+  }
+  function statusPill(u){
+    return u._kind==='pending' ? '<span class="b-pill pending">Pending</span>' : (u.status==='suspended' ? '<span class="b-pill suspended">Suspended</span>' : '<span class="b-pill active">Active</span>');
+  }
+  function planBtn(u, cls){
+    if(u.role==='admin') return '';
+    var isPro = u.plan==='pro';
+    return '<button class="btn sm '+cls+'" onclick="toggleUserPlan('+uArgs(u)+',\''+(isPro?'free':'pro')+'\')">'+(isPro?'Move to Free':'Upgrade to Pro')+'</button>';
+  }
+
+  /* desktop / tablet: table */
+  html += '<div class="b-table-wrap b-utable"><table class="b-table"><thead><tr><th>User</th><th>Plan</th><th>Status</th><th>Access</th><th>Habits</th><th>Goals</th><th>Joined</th><th></th></tr></thead><tbody>';
   if(!users.length){
     html += '<tr><td colspan="8" class="b-empty-cell">No users match yet.</td></tr>';
   } else {
     html += users.map(function(u){
       var name = u.displayName || u.email || 'Unknown';
-      var initials = userInitials(name);
-      var isAdminRow = u.role==='admin';
-      var isProRow = u.plan==='pro';
       var isPending = u._kind==='pending';
-      var isSuspended = u.status==='suspended';
-      var statusPill = isPending ? '<span class="b-pill pending">Pending</span>' : (isSuspended ? '<span class="b-pill suspended">Suspended</span>' : '<span class="b-pill active">Active</span>');
-      var sub = u.subscription;
-      var subCell = '<span class="faint" style="font-size:12px">—</span>';
-      if(sub && (sub.endDate || sub.startDate)){
-        var expired = subIsExpired(sub);
-        subCell = '<span style="font-size:12px" class="'+(expired?'':'faint')+'"'+(expired?' style="color:var(--bad)"':'')+'>'+
-          (sub.endDate ? 'ends '+fmtPlainDate(sub.endDate) : 'from '+fmtPlainDate(sub.startDate))+(expired?' · expired':'')+'</span>';
-      }
-      return '<tr style="cursor:pointer" onclick="openUserDetail(\''+u._kind+'\',\''+esc(u._id).replace(/'/g,"\\'")+'\')"><td><div class="b-user-cell">'+
-          (u.photoURL ? '<img class="b-avatar" src="'+esc(u.photoURL)+'" referrerpolicy="no-referrer"/>' : '<div class="b-avatar-fallback">'+esc(initials||'?')+'</div>')+
-          '<div><div style="font-weight:700;font-size:12.5px">'+esc(name)+'</div><div class="faint" style="font-size:11px">'+esc(u.email||'')+'</div></div>'+
-        '</div></td>'+
-        '<td>'+(isAdminRow?'<span class="b-pill admin">Admin</span>':'<span class="b-pill '+(isProRow?'pro':'free')+'">'+(isProRow?'Pro':'Free')+'</span>')+'</td>'+
-        '<td>'+statusPill+'</td>'+
-        '<td>'+subCell+'</td>'+
+      return '<tr style="cursor:pointer" onclick="openUserDetail('+uArgs(u)+')"><td><div class="b-user-cell">'+avatar(u,name)+
+          '<div><div style="font-weight:700;font-size:12.5px">'+esc(name)+'</div><div class="faint" style="font-size:11px">'+esc(u.email||'')+'</div></div></div></td>'+
+        '<td>'+planPill(u)+'</td><td>'+statusPill(u)+'</td><td>'+u._acc.html+'</td>'+
         '<td class="mono">'+(isPending?'—':(u.activeHabitsCount||0))+'</td>'+
         '<td class="mono">'+(isPending?'—':(u.activeGoalsCount||0))+'</td>'+
         '<td class="faint" style="font-size:12px">'+tsToDate(u.createdAt)+'</td>'+
-        '<td onclick="event.stopPropagation()"><div class="b-row-actions">'+
-          (isAdminRow ? '' : '<button class="btn sm" onclick="toggleUserPlan(\''+u._kind+'\',\''+esc(u._id).replace(/'/g,"\\'")+'\',\''+(isProRow?'free':'pro')+'\')">'+(isProRow?'Move to Free':'Upgrade to Pro')+'</button>')+
-          '<button class="icon-btn sm" title="Manage" onclick="openUserDetail(\''+u._kind+'\',\''+esc(u._id).replace(/'/g,"\\'")+'\')">'+ICONS.edit+'</button>'+
-          (isAdminRow ? '' : '<button class="icon-btn sm" title="Remove" onclick="openRemoveUserConfirm(\''+u._kind+'\',\''+esc(u._id).replace(/'/g,"\\'")+'\')">'+ICONS.trash+'</button>')+
-        '</div></td>'+
-      '</tr>';
+        '<td onclick="event.stopPropagation()"><div class="b-row-actions">'+planBtn(u,'')+
+          '<button class="icon-btn sm" title="Manage" onclick="openUserDetail('+uArgs(u)+')">'+ICONS.edit+'</button>'+
+          (u.role==='admin' ? '' : '<button class="icon-btn sm" title="Remove" onclick="openRemoveUserConfirm('+uArgs(u)+')">'+ICONS.trash+'</button>')+
+        '</div></td></tr>';
     }).join('');
   }
   html += '</tbody></table></div>';
+
+  /* phones: card list (no sideways scrolling) */
+  html += '<div class="b-ucards">';
+  if(!users.length) html += '<div class="b-empty-cell">No users match yet.</div>';
+  else html += users.map(function(u){
+    var name = u.displayName || u.email || 'Unknown';
+    var isPending = u._kind==='pending';
+    return '<div class="b-ucard" onclick="openUserDetail('+uArgs(u)+')">'+
+      '<div class="b-ucard-top">'+avatar(u,name)+
+        '<div class="b-ucard-who"><b>'+esc(name)+'</b><span>'+esc(u.email||'')+'</span></div>'+
+        '<div class="b-ucard-acts" onclick="event.stopPropagation()">'+
+          '<button class="icon-btn sm" title="Manage" onclick="openUserDetail('+uArgs(u)+')">'+ICONS.edit+'</button>'+
+          (u.role==='admin' ? '' : '<button class="icon-btn sm" title="Remove" onclick="openRemoveUserConfirm('+uArgs(u)+')">'+ICONS.trash+'</button>')+
+        '</div></div>'+
+      '<div class="b-ucard-pills">'+planPill(u)+statusPill(u)+u._acc.html+'</div>'+
+      '<div class="b-ucard-meta"><span>Habits <b>'+(isPending?'—':(u.activeHabitsCount||0))+'</b></span><span>Goals <b>'+(isPending?'—':(u.activeGoalsCount||0))+'</b></span><span>Joined <b>'+tsToDate(u.createdAt)+'</b></span></div>'+
+      (u.role==='admin' ? '' : '<div onclick="event.stopPropagation()">'+planBtn(u,'block')+'</div>')+
+    '</div>';
+  }).join('');
+  html += '</div>';
+
   el.innerHTML = html;
   if(_keepFocus){ var _ni = el.querySelector('.b-search'); if(_ni){ _ni.focus(); try{ _ni.setSelectionRange(_caret,_caret); }catch(e){} } }
 }
@@ -3020,17 +3472,49 @@ function findUserRecord(kind, id){
   for(var i=0;i<list.length;i++){ if(list[i][key]===id) return list[i]; }
   return null;
 }
+function histEntry(rec, action, extra){
+  return Object.assign({ plan: rec.plan==='pro'?'pro':'free', startDate:null, endDate:null, at:new Date().toISOString(), action:action }, extra||{});
+}
+/* row button: "Move to Free" is immediate, "Upgrade to Pro" opens the sheet so a duration is chosen */
 function toggleUserPlan(kind, id, newPlan){
-  userRef(kind, id).update({plan:newPlan}).then(function(){
-    toast('Plan updated to '+(newPlan==='pro'?'Pro':'Free'));
+  if(newPlan==='pro'){ openUserDetail(kind, id, 'upgrade'); return; }
+  var rec = findUserRecord(kind, id); if(!rec) return;
+  var patch = { plan:'free', subscription:null, subscriptionHistory: firebase.firestore.FieldValue.arrayUnion(histEntry(rec,'free',{plan:'free'})) };
+  if(kind==='pending') patch.proDays = firebase.firestore.FieldValue.delete();
+  userRef(kind, id).update(patch).then(function(){
+    toast('Moved to Free');
   }).catch(function(err){ toast('Could not update: '+err.message, true); });
 }
-/* ==================================================================
-   ADMIN — USER DETAIL / EDIT / SUBSCRIPTION / ADD / REMOVE
-   Handlers wired from the Users table (openUserDetail, openAddUserModal,
-   openRemoveUserConfirm …). Real accounts live in userDirectory/{uid};
-   pending (manually added) accounts live in userDirectoryPending/{email}.
-   ================================================================== */
+
+/* ---- Auto-expiry: any Pro account whose end date has passed is written back to Free.
+   Runs whenever an admin has the Users data loaded (console open) and once a minute. ---- */
+var _bSweeping = {};
+function bSweepExpired(){
+  if(!_backendMode || _myRole!=='admin') return;
+  var jobs = [];
+  function consider(kind, id, rec){
+    if(!rec || rec.plan!=='pro' || rec.role==='admin') return;
+    var sub = rec.subscription;
+    if(!(sub && sub.endDate && subIsExpired(sub))) return;
+    var key = kind+':'+id;
+    if(_bSweeping[key]) return;
+    _bSweeping[key] = true;
+    jobs.push(userRef(kind, id).update({
+      plan:'free',
+      subscriptionHistory: firebase.firestore.FieldValue.arrayUnion(histEntry(rec,'expired',{plan:'pro', startDate:sub.startDate||null, endDate:sub.endDate}))
+    }));
+  }
+  _bUsersCache.forEach(function(r){ consider('real', r.uid, r); });
+  _bPendingCache.forEach(function(r){ consider('pending', r.email, r); });
+  if(!jobs.length) return;
+  Promise.all(jobs.map(function(p){ return p.then(function(){ return 1; }, function(err){ console.error('auto-expire failed', err); return 0; }); })).then(function(res){
+    var n = res.reduce(function(a,b){ return a+b; }, 0);
+    if(n) toast(n+' expired Pro account'+(n===1?'':'s')+' moved to Free automatically');
+  });
+}
+setInterval(function(){ if(_backendMode){ bSweepExpired(); if(_bCurSection==='users') renderBackendUsers(); } }, 60000);
+
+/* ---- helpers ---- */
 function udVal(id){ var e = document.getElementById(id); return e ? e.value : ''; }
 function udOpts(list, cur){
   return list.map(function(o){ return '<option value="'+o[0]+'"'+(o[0]===cur?' selected':'')+'>'+o[1]+'</option>'; }).join('');
@@ -3051,13 +3535,14 @@ function udHeadHTML(kind, rec){
   var av = rec.photoURL
     ? '<img class="b-avatar-lg" src="'+esc(rec.photoURL)+'" referrerpolicy="no-referrer"/>'
     : '<div class="b-avatar-lg-fallback">'+esc(userInitials(name))+'</div>';
+  var u = Object.assign({_kind:kind}, rec);
   var pills = '';
   if(kind==='pending') pills += '<span class="b-pill pending">Pending</span>';
   else pills += rec.status==='suspended' ? '<span class="b-pill suspended">Suspended</span>' : '<span class="b-pill active">Active</span>';
-  if(rec.role==='admin') pills += '<span class="b-pill admin">Admin</span>';
-  else pills += '<span class="b-pill '+(rec.plan==='pro'?'pro':'free')+'">'+(rec.plan==='pro'?'Pro':'Free')+'</span>';
+  pills += rec.role==='admin' ? '<span class="b-pill admin">Admin</span>' : '<span class="b-pill '+(rec.plan==='pro'?'pro':'free')+'">'+(rec.plan==='pro'?'Pro':'Free')+'</span>';
+  pills += bUserAccess(u).html;
   var meta = kind==='pending'
-    ? 'Invited · will inherit these settings the first time this email signs in'
+    ? 'Invited · gets these settings the first time this email signs in'
     : (rec.activeHabitsCount||0)+' habits · '+(rec.activeGoalsCount||0)+' goals · joined '+tsToDate(rec.createdAt);
   return '<div class="b-user-head">'+av+'<div style="min-width:0;flex:1">'+
     '<div style="font-weight:800;font-size:15px;overflow-wrap:anywhere">'+esc(name)+'</div>'+
@@ -3065,35 +3550,40 @@ function udHeadHTML(kind, rec){
     '<div class="b-user-head-pills">'+pills+'</div>'+
     '<div class="b-note">'+esc(meta)+'</div></div></div>';
 }
-function udSubHTML(rec){
-  var sub = rec.subscription;
-  var expired = subIsExpired(sub);
+var B_HIST_LABELS = { set:'Pro period set', free:'Moved to Free', cleared:'Cleared', expired:'Pro expired → Free (auto)', 'trial-end':'Trial ended by admin', 'trial-extend':'Trial extended' };
+function udSubHTML(kind, rec){
+  var st = planState(rec, kind), sub = rec.subscription;
+  var access = rec.role==='admin' ? 'Always Pro' : (st.paid ? 'Pro' : (st.trialActive ? 'Pro (trial)' : 'Free'));
   var out = '<div class="b-sub-current">'+
-    '<div><span>Plan</span><b>'+(rec.plan==='pro'?'Pro':'Free')+'</b></div>'+
-    '<div><span>Start</span><b>'+fmtPlainDate(sub && sub.startDate)+'</b></div>'+
-    '<div><span>End</span><b'+(expired?' style="color:var(--bad)"':'')+'>'+fmtPlainDate(sub && sub.endDate)+(expired?' · expired':'')+'</b></div>'+
+    '<div><span>Stored plan</span><b>'+(rec.plan==='pro'?'Pro':'Free')+'</b></div>'+
+    '<div><span>Access today</span><b>'+access+'</b></div>'+
+    '<div><span>Pro start</span><b>'+fmtPlainDate(sub && sub.startDate)+'</b></div>'+
+    '<div><span>Pro end</span><b'+(st.subExpired?' style="color:var(--bad)"':'')+'>'+(sub && sub.endDate ? fmtPlainDate(sub.endDate)+(st.subExpired?' · expired':'') : (rec.plan==='pro' ? 'No expiry' : '—'))+'</b></div>'+
+    (st.trial ? '<div><span>Trial</span><b>'+(st.trialActive ? st.trial.left+' day'+(st.trial.left===1?'':'s')+' left' : 'Ended '+fmtPlainDate(st.trial.end))+'</b></div>' : '')+
   '</div>';
+  if(kind==='pending' && rec.proDays>0) out += '<div class="b-note" style="margin:-4px 0 10px">Pro for '+rec.proDays+' days — the clock starts when they first sign in.</div>';
   var hist = Array.isArray(rec.subscriptionHistory) ? rec.subscriptionHistory.slice().reverse().slice(0,12) : [];
   if(!hist.length){
-    out += '<div class="b-hist-empty">No subscription changes logged yet.</div>';
+    out += '<div class="b-hist-empty">No plan changes logged yet.</div>';
   } else {
-    out += '<div style="overflow-x:auto"><table class="b-hist-table"><thead><tr><th>Logged</th><th>Change</th><th>Period</th></tr></thead><tbody>'+
-      hist.map(function(h){
-        var period = (h.startDate||h.endDate) ? fmtPlainDate(h.startDate)+' → '+fmtPlainDate(h.endDate) : '—';
-        var label = h.action==='cleared' ? 'Cleared' : ((h.plan==='pro'?'Pro':'Free')+' period set');
-        return '<tr><td>'+udWhen(h.at)+'</td><td>'+label+'</td><td>'+period+'</td></tr>';
-      }).join('')+'</tbody></table></div>';
+    out += '<div class="b-hist-list">'+hist.map(function(h){
+      var period = h.endDate ? (h.startDate ? fmtPlainDate(h.startDate)+' → ' : 'until ')+fmtPlainDate(h.endDate) : '';
+      return '<div class="b-hist-row"><div><b>'+(B_HIST_LABELS[h.action]||'Plan change')+'</b>'+(period?'<span>'+period+'</span>':'')+'</div><em>'+udWhen(h.at)+'</em></div>';
+    }).join('')+'</div>';
   }
   return out;
 }
 
-function openUserDetail(kind, id){
+function openUserDetail(kind, id, focus){
   var rec = findUserRecord(kind, id);
   if(!rec){ toast('User not found', true); return; }
   _bDetailKind = kind; _bDetailId = id;
   var isProtected = bUserIsProtected(kind, rec), isSelf = bUserIsSelf(kind, id);
   var lockRole = isProtected || isSelf, lockStatus = isProtected || isSelf;
   var sub = rec.subscription || {};
+  var st = planState(rec, kind);
+  var isAdminRec = rec.role==='admin';
+  var curPlan = rec.plan==='pro' ? 'pro' : 'free';
   var html =
     '<div class="modal-head"><div class="modal-title">Manage user</div><button class="icon-btn" onclick="closeUserDetail()">'+ICONS.x+'</button></div>'+
     '<div id="ud-head">'+udHeadHTML(kind, rec)+'</div>'+
@@ -3103,18 +3593,33 @@ function openUserDetail(kind, id){
         (kind==='real'?'<div class="hint">Synced from their Google account.</div>':'')+'</div>'+
       '<div class="field"><span class="field-label">Email</span><input class="inp" id="ud-email" value="'+esc(rec.email||'')+'" disabled/></div>'+
       '<div class="field"><span class="field-label">Role</span><select class="sel" id="ud-role"'+(lockRole?' disabled':'')+'>'+udOpts([['member','Member'],['admin','Admin']], rec.role==='admin'?'admin':'member')+'</select></div>'+
-      '<div class="field"><span class="field-label">Plan</span><select class="sel" id="ud-plan">'+udOpts([['free','Free'],['pro','Pro']], rec.plan==='pro'?'pro':'free')+'</select></div>'+
       '<div class="field"><span class="field-label">Status</span><select class="sel" id="ud-status"'+(lockStatus?' disabled':'')+'>'+udOpts([['active','Active'],['suspended','Suspended']], rec.status==='suspended'?'suspended':'active')+'</select>'+
         (lockStatus?'<div class="hint">'+(isSelf?'You can\'t change your own role or status.':'The root admin can\'t be changed.')+'</div>':'')+'</div>'+
     '</div>'+
-    '<div class="modal-foot"><button class="btn" onclick="closeUserDetail()">Close</button><button class="btn primary" onclick="saveUserDetail()">'+ICONS.check+' Save changes</button></div>'+
-    '<div class="b-section-title">Subscription</div>'+
-    '<div id="ud-sub">'+udSubHTML(rec)+'</div>'+
-    '<div class="b-user-form">'+
-      '<div class="field"><span class="field-label">Start date</span><input class="inp" type="date" id="ud-sub-start" value="'+esc(sub.startDate||'')+'"/></div>'+
-      '<div class="field"><span class="field-label">End date</span><input class="inp" type="date" id="ud-sub-end" value="'+esc(sub.endDate||'')+'"/></div>'+
-    '</div>'+
-    '<div class="modal-foot"><button class="btn" onclick="clearUserSubscription()">Clear</button><button class="btn primary" onclick="saveUserSubscription()">Save subscription</button></div>'+
+    '<div class="modal-foot"><button class="btn primary" onclick="saveUserDetail()">'+ICONS.check+' Save account</button></div>'+
+    '<div class="b-section-title" id="ud-plan-sec">Plan &amp; access</div>'+
+    '<div id="ud-sub">'+udSubHTML(kind, rec)+'</div>'+
+    (isAdminRec
+      ? '<div class="b-note">Admins always have full Pro access, so there is no plan or end date to set.</div>'
+      : '<div class="field"><span class="field-label">Plan</span>'+
+          '<div class="b-seg" id="ud-plan-seg"><button type="button" data-v="free" onclick="udPickPlan(\'free\')">Free</button><button type="button" data-v="pro" onclick="udPickPlan(\'pro\')">Pro</button></div>'+
+          '<input type="hidden" id="ud-plan" value="'+curPlan+'"/></div>'+
+        '<div id="ud-pro-opts" style="display:none">'+
+          '<div class="field"><span class="field-label">Pro for</span><div class="b-presets">'+
+            [[7,'7 days'],[30,'30 days'],[90,'90 days'],[365,'1 year'],[0,'No expiry']].map(function(p){ return '<button type="button" onclick="udPreset('+p[0]+')">'+p[1]+'</button>'; }).join('')+
+          '</div></div>'+
+          '<div class="b-user-form">'+
+            '<div class="field"><span class="field-label">Starts</span><input class="inp" type="date" id="ud-sub-start" value="'+esc(sub.startDate||'')+'" oninput="udDatesChanged()"/></div>'+
+            '<div class="field"><span class="field-label">Ends (auto-switches to Free)</span><input class="inp" type="date" id="ud-sub-end" value="'+esc(sub.endDate||'')+'" oninput="udDatesChanged()"/></div>'+
+          '</div>'+
+          '<div class="b-note" id="ud-dur-note"></div>'+
+        '</div>'+
+        '<div class="modal-foot"><button class="btn primary" onclick="applyUserPlan()">'+ICONS.check+' Apply plan</button></div>'+
+        (kind==='real' && st.trial ?
+          '<div class="b-section-title">Free trial</div>'+
+          '<div class="b-note" style="margin:-6px 0 10px">New accounts get '+trialDaysCfg()+' day'+(trialDaysCfg()===1?'':'s')+' of Pro automatically (set in Plan limits).</div>'+
+          '<div class="modal-foot" style="margin-top:0"><button class="btn" onclick="udTrialEnd()">End trial now</button><button class="btn" onclick="udTrialExtend(3)">Extend +3 days</button></div>' : '')
+      )+
     (isProtected || isSelf ? '' :
       '<div class="b-section-title">Danger zone</div>'+
       '<div class="b-danger-zone"><p>Removing a user deletes them from the Users list. This can\'t be undone.</p>'+
@@ -3123,63 +3628,103 @@ function openUserDetail(kind, id){
   m.innerHTML = html;
   m.scrollTop = 0;
   document.getElementById('userVeil').classList.add('open');
+  if(!isAdminRec){
+    udPickPlan(curPlan, true);
+    if(focus==='upgrade'){
+      udPickPlan('pro'); udPreset(30);
+      setTimeout(function(){ var s = document.getElementById('ud-plan-sec'); if(s) s.scrollIntoView({block:'start', behavior:'smooth'}); }, 60);
+    }
+  }
 }
 function closeUserDetail(){
   var v = document.getElementById('userVeil'); if(v) v.classList.remove('open');
   _bDetailKind = null; _bDetailId = null;
 }
-/* live-refresh only the header + subscription summary, so anything the admin is
-   typing in the form is never overwritten by a background snapshot */
+/* live-refresh only the header + plan summary, so anything the admin is typing is never overwritten */
 function refreshOpenUserDetail(){
   var v = document.getElementById('userVeil');
   if(!v || !v.classList.contains('open')) return;
   var rec = findUserRecord(_bDetailKind, _bDetailId);
   if(!rec){ closeUserDetail(); return; }   // removed (or claimed on first sign-in)
   var h = document.getElementById('ud-head'); if(h) h.innerHTML = udHeadHTML(_bDetailKind, rec);
-  var s = document.getElementById('ud-sub'); if(s) s.innerHTML = udSubHTML(rec);
+  var s = document.getElementById('ud-sub'); if(s) s.innerHTML = udSubHTML(_bDetailKind, rec);
+}
+function udPickPlan(v, silent){
+  var inp = document.getElementById('ud-plan'); if(!inp) return;
+  inp.value = v;
+  var seg = document.getElementById('ud-plan-seg');
+  if(seg) Array.prototype.forEach.call(seg.children, function(b){ b.classList.toggle('on', b.getAttribute('data-v')===v); });
+  var box = document.getElementById('ud-pro-opts'); if(box) box.style.display = v==='pro' ? '' : 'none';
+  if(v==='pro' && !silent){
+    var s = document.getElementById('ud-sub-start'); if(s && !s.value) s.value = todayISO();
+  }
+  udDatesChanged();
+}
+function udPreset(n){
+  var s = document.getElementById('ud-sub-start'), e = document.getElementById('ud-sub-end');
+  if(!s || !e) return;
+  if(!s.value) s.value = todayISO();
+  e.value = n>0 ? plainAddDays(s.value, n) : '';
+  udDatesChanged();
+}
+function udDatesChanged(){
+  var n = document.getElementById('ud-dur-note'); if(!n) return;
+  var e = udVal('ud-sub-end');
+  if(!e){ n.textContent = 'No end date — stays Pro until you change it.'; return; }
+  var left = plainDiffDays(todayISO(), e);
+  n.textContent = left<0 ? 'That end date is in the past.' : 'Switches to Free automatically after '+fmtPlainDate(e)+' ('+(left===0?'last day is today':left+' day'+(left===1?'':'s')+' left')+').';
 }
 function saveUserDetail(){
   var kind = _bDetailKind, id = _bDetailId;
   var rec = findUserRecord(kind, id); if(!rec){ toast('User not found', true); return; }
   var patch = {
     role: udVal('ud-role')==='admin' ? 'admin' : 'member',
-    plan: udVal('ud-plan')==='pro' ? 'pro' : 'free',
     status: udVal('ud-status')==='suspended' ? 'suspended' : 'active'
   };
   if(kind==='pending') patch.displayName = udVal('ud-name').trim() || null;
   if(bUserIsProtected(kind, rec)){ patch.role = 'admin'; patch.status = 'active'; }
   if(bUserIsSelf(kind, id)){ patch.role = rec.role==='admin' ? 'admin' : 'member'; patch.status = 'active'; }
   userRef(kind, id).update(patch).then(function(){
-    toast('User updated');
+    toast('Account saved');
   }).catch(function(err){ toast('Could not update: '+err.message, true); });
 }
-function saveUserSubscription(){
+function applyUserPlan(){
   var kind = _bDetailKind, id = _bDetailId;
   var rec = findUserRecord(kind, id); if(!rec){ toast('User not found', true); return; }
-  var s = udVal('ud-sub-start'), e = udVal('ud-sub-end');
-  if(!s && !e){ toast('Pick a start or end date', true); return; }
-  if(s && e && e < s){ toast('End date must be after the start date', true); return; }
-  var entry = { plan: rec.plan==='pro'?'pro':'free', startDate: s||null, endDate: e||null, at: new Date().toISOString(), action:'set' };
-  userRef(kind, id).update({
-    subscription: { startDate: s||null, endDate: e||null },
-    subscriptionHistory: firebase.firestore.FieldValue.arrayUnion(entry)
-  }).then(function(){
-    toast('Subscription saved');
+  if(rec.role==='admin'){ toast('Admins always have Pro access'); return; }
+  var plan = udVal('ud-plan')==='pro' ? 'pro' : 'free', patch, entry;
+  if(plan==='pro'){
+    var s = udVal('ud-sub-start') || todayISO(), e = udVal('ud-sub-end');
+    if(e && e < s){ toast('End date must be after the start date', true); return; }
+    if(e && e < todayISO()){ toast('That end date is already in the past', true); return; }
+    patch = { plan:'pro', subscription:{ startDate:s, endDate:e||null } };
+    entry = { plan:'pro', startDate:s, endDate:e||null, at:new Date().toISOString(), action:'set' };
+  } else {
+    patch = { plan:'free', subscription:null };
+    entry = { plan:'free', startDate:null, endDate:null, at:new Date().toISOString(), action:'free' };
+  }
+  patch.subscriptionHistory = firebase.firestore.FieldValue.arrayUnion(entry);
+  if(kind==='pending') patch.proDays = firebase.firestore.FieldValue.delete();
+  userRef(kind, id).update(patch).then(function(){
+    toast(plan==='pro' ? 'Pro applied' + (patch.subscription.endDate ? ' — auto-switches to Free after '+fmtPlainDate(patch.subscription.endDate) : '') : 'Moved to Free');
   }).catch(function(err){ toast('Could not save: '+err.message, true); });
 }
-function clearUserSubscription(){
-  var kind = _bDetailKind, id = _bDetailId;
-  var rec = findUserRecord(kind, id); if(!rec){ toast('User not found', true); return; }
-  if(!rec.subscription){ toast('No subscription to clear'); return; }
-  var entry = { plan: rec.plan==='pro'?'pro':'free', startDate:null, endDate:null, at:new Date().toISOString(), action:'cleared' };
+function udTrialEnd(){
+  var kind = _bDetailKind, id = _bDetailId, rec = findUserRecord(kind, id); if(!rec) return;
   userRef(kind, id).update({
-    subscription: null,
-    subscriptionHistory: firebase.firestore.FieldValue.arrayUnion(entry)
-  }).then(function(){
-    var a = document.getElementById('ud-sub-start'), b = document.getElementById('ud-sub-end');
-    if(a) a.value = ''; if(b) b.value = '';
-    toast('Subscription cleared');
-  }).catch(function(err){ toast('Could not clear: '+err.message, true); });
+    trialEndDate: plainAddDays(todayISO(), -1),
+    subscriptionHistory: firebase.firestore.FieldValue.arrayUnion(histEntry(rec,'trial-end',{plan:'free'}))
+  }).then(function(){ toast('Trial ended'); }).catch(function(err){ toast('Could not update: '+err.message, true); });
+}
+function udTrialExtend(n){
+  var kind = _bDetailKind, id = _bDetailId, rec = findUserRecord(kind, id); if(!rec) return;
+  var st = planState(rec, kind), today = todayISO();
+  var base = (st.trial && st.trial.end > today) ? st.trial.end : today;
+  var ne = plainAddDays(base, n);
+  userRef(kind, id).update({
+    trialEndDate: ne,
+    subscriptionHistory: firebase.firestore.FieldValue.arrayUnion(histEntry(rec,'trial-extend',{plan:'free', endDate:ne}))
+  }).then(function(){ toast('Trial extended to '+fmtPlainDate(ne)); }).catch(function(err){ toast('Could not update: '+err.message, true); });
 }
 
 /* ---- Add user (creates a pending record, claimed on that email's first Google sign-in) ---- */
@@ -3192,8 +3737,11 @@ function openAddUserModal(){
       '<div class="hint">They get these settings the first time they sign in with this Google email.</div></div>'+
     '<div class="b-user-form">'+
       '<div class="field"><span class="field-label">Role</span><select class="sel" id="au-role">'+udOpts([['member','Member'],['admin','Admin']],'member')+'</select></div>'+
-      '<div class="field"><span class="field-label">Plan</span><select class="sel" id="au-plan">'+udOpts([['free','Free'],['pro','Pro']],'free')+'</select></div>'+
+      '<div class="field"><span class="field-label">Plan</span><select class="sel" id="au-plan" onchange="document.getElementById(\'au-dur-wrap\').style.display=this.value===\'pro\'?\'\':\'none\'">'+udOpts([['free','Free (3-day Pro trial applies)'],['pro','Pro']],'free')+'</select></div>'+
     '</div>'+
+    '<div class="field" id="au-dur-wrap" style="display:none"><span class="field-label">Pro for</span><select class="sel" id="au-dur">'+
+      udOpts([['30','30 days from first sign-in'],['7','7 days from first sign-in'],['90','90 days from first sign-in'],['365','1 year from first sign-in'],['0','No expiry']],'30')+'</select>'+
+      '<div class="hint">When the time is up the account moves back to Free automatically.</div></div>'+
     '<div class="modal-foot"><button class="btn" onclick="closeAddUserModal()">Cancel</button><button class="btn primary" onclick="submitAddUser()">'+ICONS.plus+' Add user</button></div>';
   m.scrollTop = 0;
   document.getElementById('addUserVeil').classList.add('open');
@@ -3209,13 +3757,17 @@ function submitAddUser(){
   var exists = _bUsersCache.some(function(u){ return (u.email||'').toLowerCase()===email; }) ||
                _bPendingCache.some(function(u){ return (u.email||'').toLowerCase()===email; });
   if(exists){ toast('A user with this email already exists', true); return; }
-  pendingDocRef(email).set({
+  var plan = udVal('au-plan')==='pro' ? 'pro' : 'free';
+  var doc = {
     email: email, displayName: name || null,
     role: udVal('au-role')==='admin' ? 'admin' : 'member',
-    plan: udVal('au-plan')==='pro' ? 'pro' : 'free',
+    plan: plan,
     status: 'active', subscription: null, subscriptionHistory: [],
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(function(){
+  };
+  var days = parseInt(udVal('au-dur'),10) || 0;
+  if(plan==='pro' && days>0) doc.proDays = days;
+  pendingDocRef(email).set(doc).then(function(){
     closeAddUserModal();
     toast('User added');
   }).catch(function(err){ toast('Could not add user: '+err.message, true); });
@@ -3233,7 +3785,7 @@ function openRemoveUserConfirm(kind, id){
   document.getElementById('removeUserModal').innerHTML =
     '<div class="modal-head"><div class="modal-title">Remove user?</div><button class="icon-btn" onclick="closeRemoveUserConfirm()">'+ICONS.x+'</button></div>'+
     '<p style="font-size:13px;line-height:1.55;color:var(--text2)"><b style="color:var(--text)">'+esc(name)+'</b> will be removed from the Users list.'+
-      (kind==='real' ? ' Their habit data is not deleted, and if they sign in again they\'ll come back as a new Free member.' : ' Their pending invite will be cancelled.')+'</p>'+
+      (kind==='real' ? ' Their habit data is not deleted, and if they sign in again they\'ll come back as a new account (with a fresh free trial).' : ' Their pending invite will be cancelled.')+'</p>'+
     '<div class="modal-foot"><button class="btn" onclick="closeRemoveUserConfirm()">Cancel</button><button class="btn danger" onclick="confirmRemoveUser()">'+ICONS.trash+' Remove</button></div>';
   document.getElementById('removeUserVeil').classList.add('open');
 }
@@ -3287,13 +3839,14 @@ function bLimVals(){
     freeMaxGoals: n('bl-goals'),
     freeMaxActiveHabits: n('bl-habits'),
     freeTemplatesAccess: (document.getElementById('bl-templates')||{}).value==='1',
-    freeAchievementsFull: (document.getElementById('bl-ach')||{}).value==='1'
+    freeAchievementsFull: (document.getElementById('bl-ach')||{}).value==='1',
+    freeTrialDays: n('bl-trial')
   };
 }
 function bLimDirty(){
   var v = bLimVals(), p = _planLimits;
   return v.freeMaxGoals!==p.freeMaxGoals || v.freeMaxActiveHabits!==p.freeMaxActiveHabits ||
-    v.freeTemplatesAccess!==!!p.freeTemplatesAccess || v.freeAchievementsFull!==!!p.freeAchievementsFull;
+    v.freeTemplatesAccess!==!!p.freeTemplatesAccess || v.freeAchievementsFull!==!!p.freeAchievementsFull || v.freeTrialDays!==(parseInt(p.freeTrialDays,10)||0);
 }
 function bLimPreviewHTML(v){
   return '<table class="b-cmp"><thead><tr><th></th><th>Free</th><th>Pro</th></tr></thead><tbody>'+
@@ -3301,6 +3854,7 @@ function bLimPreviewHTML(v){
     '<tr><td>Active habits</td><td><b>'+v.freeMaxActiveHabits+'</b></td><td class="pro"><b>Unlimited</b></td></tr>'+
     '<tr><td>Habit templates</td><td><b>'+(v.freeTemplatesAccess?'Included':'Locked')+'</b></td><td class="pro"><b>Included</b></td></tr>'+
     '<tr><td>Achievements</td><td><b>'+(v.freeAchievementsFull?'All unlocked':'Some locked')+'</b></td><td class="pro"><b>All unlocked</b></td></tr>'+
+    '<tr><td>New-account trial</td><td><b>'+(v.freeTrialDays?v.freeTrialDays+' day'+(v.freeTrialDays===1?'':'s')+' of Pro':'Off')+'</b></td><td class="pro"><b>—</b></td></tr>'+
   '</tbody></table>';
 }
 function bLimTouch(){
@@ -3318,6 +3872,7 @@ function bLimReset(){
   document.getElementById('bl-habits').value = d.freeMaxActiveHabits;
   document.getElementById('bl-templates').value = d.freeTemplatesAccess?'1':'0';
   document.getElementById('bl-ach').value = d.freeAchievementsFull?'1':'0';
+  document.getElementById('bl-trial').value = d.freeTrialDays;
   bLimTouch();
 }
 function renderBackendLimits(){
@@ -3339,6 +3894,7 @@ function renderBackendLimits(){
     '<div class="b-set"><div class="b-set-txt"><b>Achievements</b><span>Pro-only badges for Free accounts</span></div><div class="b-set-ctl"><select class="sel" id="bl-ach" onchange="bLimTouch()">'+
       '<option value="0"'+(!p.freeAchievementsFull?' selected':'')+'>Some Pro-only</option>'+
       '<option value="1"'+(p.freeAchievementsFull?' selected':'')+'>All unlocked for everyone</option></select></div></div>'+
+    '<div class="b-set"><div class="b-set-txt"><b>Free trial for new accounts</b><span>Days of full Pro from the day an account is created · 0 turns it off</span></div><div class="b-set-ctl">'+stepper('bl-trial',p.freeTrialDays)+'</div></div>'+
   '</div>'+
   '<div class="b-panel"><div class="b-panel-head"><h3>Plan comparison</h3><span class="sub">Live preview</span></div><div id="bLimPreview"></div></div></div>';
   html += bSaveBar({save:'saveBackendLimits()', reset:'bLimReset()', discard:'renderBackendLimits()', saveLabel:'Save limits'});
@@ -3350,7 +3906,8 @@ function saveBackendLimits(){
     freeMaxGoals: Math.max(0, parseInt(document.getElementById('bl-goals').value,10)||0),
     freeMaxActiveHabits: Math.max(0, parseInt(document.getElementById('bl-habits').value,10)||0),
     freeTemplatesAccess: document.getElementById('bl-templates').value==='1',
-    freeAchievementsFull: document.getElementById('bl-ach').value==='1'
+    freeAchievementsFull: document.getElementById('bl-ach').value==='1',
+    freeTrialDays: Math.max(0, parseInt(document.getElementById('bl-trial').value,10)||0)
   };
   db.collection('config').doc('planLimits').set(vals, {merge:true}).then(function(){
     toast('Plan limits saved');
@@ -4584,7 +5141,7 @@ function updateProfileMenu(){
   btn.innerHTML = photo ? '<img src="'+esc(photo)+'" referrerpolicy="no-referrer" alt=""/>' : profileInitials();
   var displayName = S.profile.name || (_currentUser && _currentUser.displayName) || 'Your account';
   var displayEmail = (_currentUser && _currentUser.email) || '';
-  var planPill = _myRole==='admin' ? '<span class="b-pill admin">Admin</span>' : (isPro() ? '<span class="b-pill pro">Pro</span>' : '<span class="b-pill free">Free</span>');
+  var planPill = _myRole==='admin' ? '<span class="b-pill admin">Admin</span>' : (isPro() ? '<span class="b-pill pro">'+(_myState.trialActive && !_myState.paid ? 'Pro trial' : 'Pro')+'</span>' : '<span class="b-pill free">Free</span>');
   head.innerHTML = '<div class="avatar-big" style="width:34px;height:34px;border-radius:11px;font-size:13px">'+
       (photo ? '<img src="'+esc(photo)+'" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover;border-radius:11px"/>' : profileInitials())+
     '</div><div style="min-width:0"><b style="display:flex;align-items:center;gap:7px">'+esc(displayName)+' '+planPill+'</b>'+(displayEmail?'<span>'+esc(displayEmail)+'</span>':'')+'</div>';
@@ -4597,6 +5154,7 @@ function updateProfileMenu(){
 }
 function toggleProfileMenu(e){
   if(e) e.stopPropagation();
+  closeNotifPanel();
   document.getElementById('profileDropdown').classList.toggle('open');
 }
 function closeProfileMenu(){
