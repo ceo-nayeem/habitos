@@ -2082,6 +2082,21 @@ html.day .lock-overlay{background:rgba(244,245,249,.76)}
   .b-seg{display:flex;width:100%}
   .b-seg button{flex:1}
 }
+
+/* ---- Install app button (top bar + profile menu) ---- */
+#pwaBtn{display:none;height:40px;padding:0 14px;border-radius:20px;flex-shrink:0;align-items:center;gap:7px;
+  border:1.5px solid var(--glass-border);background:var(--glass-bg-strong);color:var(--accent);font-size:12.5px;font-weight:800;white-space:nowrap;
+  -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(180%);backdrop-filter:blur(var(--glass-blur)) saturate(180%);
+  box-shadow:var(--shadow-widget-sm);transition:transform .15s,background .15s}
+#pwaBtn:hover{transform:translateY(-1px);background:var(--accent-soft)}
+#pwaBtn svg{width:16px;height:16px;flex-shrink:0}
+#profileInstallItem{display:none}
+.pwa-ok #pwaBtn{display:inline-flex}
+@media(max-width:900px){#pwaBtn{width:40px;padding:0;justify-content:center}#pwaBtn span{display:none}}
+@media(max-width:480px){.pwa-ok #pwaBtn{display:none}.pwa-ok #profileInstallItem{display:flex}}
+.pwa-help-steps{margin:0 0 4px;padding-left:20px;font-size:13px;line-height:1.7;color:var(--text2)}
+.pwa-help-steps b{color:var(--text)}
+.pwa-help-warn{margin-top:12px;padding:10px 12px;border-radius:12px;background:var(--warn-soft);color:var(--warn);font-size:12px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -2188,6 +2203,10 @@ html.day .lock-overlay{background:rgba(244,245,249,.76)}
         </div>
       </div>
     </div>
+    <button id="pwaBtn" onclick="pwaInstallClick()" aria-label="Install app" title="Install HabitOS as an app">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-4-4m4 4 4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+      <span>Install app</span>
+    </button>
     <div id="notifWrap">
       <span id="trialChip" class="trial-chip" style="display:none"></span>
       <button id="notifBtn" onclick="toggleNotifPanel(event)" aria-label="Notifications" title="Notifications">
@@ -2214,6 +2233,10 @@ html.day .lock-overlay{background:rgba(244,245,249,.76)}
       <button class="profile-item" onclick="goToSettingsSection('settingsAppearanceCard')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-4-4 3 3 0 0 1 1-2.2A9.96 9.96 0 0 0 12 2Z"/></svg>
         Customization
+      </button>
+      <button class="profile-item" id="profileInstallItem" onclick="closeProfileMenu();pwaInstallClick()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0-4-4m4 4 4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+        Install app
       </button>
       <div id="profileAdminSlot"></div>
       <div class="profile-dd-divider"></div>
@@ -8435,6 +8458,47 @@ if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
     if(document.visibilityState==='visible' && Date.now()-_pwaLastCheck > 5*60*1000) pwaCheckForUpdate();
   });
 }
+
+/* ---- Install button: always reachable from the top bar (phones: profile menu) ---- */
+function pwaUpdateBtn(){
+  document.documentElement.classList.toggle('pwa-ok', !pwaIsStandalone());
+}
+function pwaInstallClick(){
+  if(_pwaPrompt){ pwaInstall(); return; }
+  pwaOpenHelp();
+}
+function pwaCloseHelp(){ var v = document.getElementById('pwaHelpVeil'); if(v) v.remove(); }
+function pwaOpenHelp(){
+  pwaCloseHelp();
+  var steps;
+  if(!pwaCanRun()){
+    steps = '<p style="font-size:13px;line-height:1.6;color:var(--text2)">Installing only works when HabitOS is opened from its secure <b style="color:var(--text)">https://</b> web address. Open the live link (not a file or an http page) and this button will install it.</p>';
+  } else if(pwaIsIOS()){
+    steps = '<ol class="pwa-help-steps"><li>Open this page in <b>Safari</b>.</li><li>Tap the <b>Share</b> button.</li><li>Choose <b>Add to Home Screen</b>, then <b>Add</b>.</li></ol>';
+  } else {
+    steps = '<p style="font-size:13px;line-height:1.6;color:var(--text2);margin-bottom:8px">Your browser hasn\'t offered the one-tap install yet. You can still install it from the menu:</p>'+
+      '<ol class="pwa-help-steps"><li>Open the browser menu (<b>⋮</b> or the address-bar icon).</li><li>Choose <b>Install app</b> or <b>Add to Home screen</b>.</li><li>Confirm — HabitOS appears like a normal app.</li></ol>';
+  }
+  var v = document.createElement('div');
+  v.id = 'pwaHelpVeil'; v.className = 'modal-veil open';
+  v.onclick = function(e){ if(e.target===v) pwaCloseHelp(); };
+  v.innerHTML = '<div class="modal" style="max-width:420px"><div class="modal-head"><div class="modal-title">Install HabitOS</div>'+
+    '<button class="icon-btn" onclick="pwaCloseHelp()" aria-label="Close">✕</button></div>'+steps+'<div id="pwaHelpWarn"></div>'+
+    '<div class="modal-foot"><button class="btn primary" onclick="pwaCloseHelp()">Got it</button></div></div>';
+  document.body.appendChild(v);
+  if(pwaCanRun()){
+    fetch('manifest.webmanifest', {cache:'no-store'}).then(function(r){
+      if(!r.ok){
+        var w = document.getElementById('pwaHelpWarn');
+        if(w) w.innerHTML = '<div class="pwa-help-warn"><b>manifest.webmanifest</b> was not found next to this page, so browsers can\'t offer the install. Upload it (and sw.js + the icons folder) to the same place as index.html.</div>';
+      }
+    }).catch(function(){});
+  }
+}
+window.addEventListener('beforeinstallprompt', pwaUpdateBtn);
+window.addEventListener('appinstalled', pwaUpdateBtn);
+if(window.matchMedia){ try{ window.matchMedia('(display-mode: standalone)').addEventListener('change', pwaUpdateBtn); }catch(e){} }
+pwaUpdateBtn();
 </script>
 </body>
 </html>
