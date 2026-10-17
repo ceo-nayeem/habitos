@@ -1915,6 +1915,62 @@ html.day .lock-overlay{background:rgba(244,245,249,.76)}
 .b-link-tile:hover{border-color:var(--accent)}
 .b-link-tile b{display:block;font-family:var(--f-mono);font-size:17px}
 .b-link-tile span{font-size:11px;color:var(--text2)}
+
+/* ============================================================
+   ADMIN CONSOLE — MOBILE RESPONSIVE FIXES
+   (#backendApp is a flex row; below 860px the sidebar turns into a
+   top bar, so the app must stack vertically or <main> gets squeezed)
+   ============================================================ */
+@media(max-width:860px){
+  #backendApp{flex-direction:column;overflow-x:hidden}
+  #bSidebar{
+    position:sticky;top:0;z-index:30;width:100%;height:auto;flex-shrink:0;
+    flex-direction:row;align-items:center;gap:8px;
+    padding:calc(8px + env(safe-area-inset-top,0px)) 10px 8px;
+    border-right:none;border-bottom:1px solid var(--border);
+    overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+  }
+  #bSidebar::-webkit-scrollbar{display:none}
+  .b-brand{flex-shrink:0}
+  .b-nav{flex:0 0 auto;flex-direction:row;gap:4px}
+  .b-nav-item{width:auto;flex-shrink:0;white-space:nowrap;padding:8px 12px}
+  .b-exit-btn{width:auto !important;flex-shrink:0;white-space:nowrap}
+  #bMain{margin-left:0;width:100%;max-width:100%;min-width:0;padding:14px 12px 28px}
+  #bMain .page{min-width:0}
+  #bMain .page-head{flex-wrap:wrap;gap:10px}
+  .b-cols,.b-cols[style]{grid-template-columns:minmax(0,1fr) !important}
+  .b-set-ctl{width:100%}
+  .b-set{flex-wrap:wrap}
+}
+@media(max-width:700px){
+  /* Users table: keep User / Plan / Status / actions, the rest lives in the detail sheet */
+  .b-table th:nth-child(n+4):nth-child(-n+7),
+  .b-table td:nth-child(n+4):nth-child(-n+7){display:none}
+  .b-table td:first-child{max-width:52vw}
+  .b-table .b-user-cell{min-width:0}
+  .b-table .b-user-cell > div:last-child{min-width:0;overflow:hidden}
+  .b-table .b-user-cell > div:last-child > div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .b-row-actions .btn{display:none}
+  .b-table th,.b-table td{padding:8px 10px}
+}
+@media(max-width:560px){
+  .b-brand-text{display:none}
+  .b-stats-row{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .b-users-toolbar .b-search{flex:1 1 100%;min-width:0;max-width:none}
+  .b-users-toolbar .sel{flex:1 1 0;min-width:0;max-width:none}
+  .b-add-user-btn{margin-left:0}
+  .b-sbox{width:100%}
+  .b-add-inline{flex-wrap:wrap;width:100%}
+  .b-add-inline .inp{flex:1 1 140px;width:auto;min-width:0}
+  .b-panel-head{padding:10px 12px}
+  .b-panel-body{padding:12px}
+  .gt-bhead{grid-template-columns:44px minmax(0,1fr) auto}
+  .gt-bsum{display:none}
+  .b-savebar{bottom:calc(8px + env(safe-area-inset-bottom,0px))}
+  .b-savebar .b-sp{display:none}
+  .b-savebar .btn{flex:1 1 auto;justify-content:center}
+  .b-note-inline{flex:1 1 100%}
+}
 </style>
 </head>
 <body>
@@ -2887,6 +2943,8 @@ function unifiedUserList(){
 function renderBackendUsers(){
   ensureAllUsersSub();
   var el = document.getElementById('page-b-users'); if(!el) return;
+  var _ae = document.activeElement, _keepFocus = !!(_ae && _ae.classList && _ae.classList.contains('b-search') && el.contains(_ae));
+  var _caret = _keepFocus ? _ae.selectionStart : 0;
   var q = _bUsersSearch.trim().toLowerCase();
   var all = unifiedUserList().sort(function(a,b){
     var ta = (a.createdAt && a.createdAt.seconds) || 0, tb = (b.createdAt && b.createdAt.seconds) || 0;
@@ -2946,12 +3004,14 @@ function renderBackendUsers(){
         '<td onclick="event.stopPropagation()"><div class="b-row-actions">'+
           (isAdminRow ? '' : '<button class="btn sm" onclick="toggleUserPlan(\''+u._kind+'\',\''+esc(u._id).replace(/'/g,"\\'")+'\',\''+(isProRow?'free':'pro')+'\')">'+(isProRow?'Move to Free':'Upgrade to Pro')+'</button>')+
           '<button class="icon-btn sm" title="Manage" onclick="openUserDetail(\''+u._kind+'\',\''+esc(u._id).replace(/'/g,"\\'")+'\')">'+ICONS.edit+'</button>'+
+          (isAdminRow ? '' : '<button class="icon-btn sm" title="Remove" onclick="openRemoveUserConfirm(\''+u._kind+'\',\''+esc(u._id).replace(/'/g,"\\'")+'\')">'+ICONS.trash+'</button>')+
         '</div></td>'+
       '</tr>';
     }).join('');
   }
   html += '</tbody></table></div>';
   el.innerHTML = html;
+  if(_keepFocus){ var _ni = el.querySelector('.b-search'); if(_ni){ _ni.focus(); try{ _ni.setSelectionRange(_caret,_caret); }catch(e){} } }
 }
 function userRef(kind, id){ return kind==='pending' ? pendingDocRef(id) : directoryDocRef(id); }
 function findUserRecord(kind, id){
@@ -2965,6 +3025,231 @@ function toggleUserPlan(kind, id, newPlan){
     toast('Plan updated to '+(newPlan==='pro'?'Pro':'Free'));
   }).catch(function(err){ toast('Could not update: '+err.message, true); });
 }
+/* ==================================================================
+   ADMIN — USER DETAIL / EDIT / SUBSCRIPTION / ADD / REMOVE
+   Handlers wired from the Users table (openUserDetail, openAddUserModal,
+   openRemoveUserConfirm …). Real accounts live in userDirectory/{uid};
+   pending (manually added) accounts live in userDirectoryPending/{email}.
+   ================================================================== */
+function udVal(id){ var e = document.getElementById(id); return e ? e.value : ''; }
+function udOpts(list, cur){
+  return list.map(function(o){ return '<option value="'+o[0]+'"'+(o[0]===cur?' selected':'')+'>'+o[1]+'</option>'; }).join('');
+}
+function udWhen(at){
+  try{
+    var d = at && at.toDate ? at.toDate() : new Date(at);
+    if(isNaN(d)) return '—';
+    return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+  }catch(e){ return '—'; }
+}
+/* the root admin (ADMIN_EMAIL) can never be demoted, suspended or removed */
+function bUserIsProtected(kind, rec){ return kind==='real' && !!rec && isAdminEmail(rec.email); }
+function bUserIsSelf(kind, id){ return kind==='real' && !!_currentUser && id===_currentUser.uid; }
+
+function udHeadHTML(kind, rec){
+  var name = rec.displayName || rec.email || 'Unknown';
+  var av = rec.photoURL
+    ? '<img class="b-avatar-lg" src="'+esc(rec.photoURL)+'" referrerpolicy="no-referrer"/>'
+    : '<div class="b-avatar-lg-fallback">'+esc(userInitials(name))+'</div>';
+  var pills = '';
+  if(kind==='pending') pills += '<span class="b-pill pending">Pending</span>';
+  else pills += rec.status==='suspended' ? '<span class="b-pill suspended">Suspended</span>' : '<span class="b-pill active">Active</span>';
+  if(rec.role==='admin') pills += '<span class="b-pill admin">Admin</span>';
+  else pills += '<span class="b-pill '+(rec.plan==='pro'?'pro':'free')+'">'+(rec.plan==='pro'?'Pro':'Free')+'</span>';
+  var meta = kind==='pending'
+    ? 'Invited · will inherit these settings the first time this email signs in'
+    : (rec.activeHabitsCount||0)+' habits · '+(rec.activeGoalsCount||0)+' goals · joined '+tsToDate(rec.createdAt);
+  return '<div class="b-user-head">'+av+'<div style="min-width:0;flex:1">'+
+    '<div style="font-weight:800;font-size:15px;overflow-wrap:anywhere">'+esc(name)+'</div>'+
+    '<div class="faint" style="font-size:12px;overflow-wrap:anywhere">'+esc(rec.email||'')+'</div>'+
+    '<div class="b-user-head-pills">'+pills+'</div>'+
+    '<div class="b-note">'+esc(meta)+'</div></div></div>';
+}
+function udSubHTML(rec){
+  var sub = rec.subscription;
+  var expired = subIsExpired(sub);
+  var out = '<div class="b-sub-current">'+
+    '<div><span>Plan</span><b>'+(rec.plan==='pro'?'Pro':'Free')+'</b></div>'+
+    '<div><span>Start</span><b>'+fmtPlainDate(sub && sub.startDate)+'</b></div>'+
+    '<div><span>End</span><b'+(expired?' style="color:var(--bad)"':'')+'>'+fmtPlainDate(sub && sub.endDate)+(expired?' · expired':'')+'</b></div>'+
+  '</div>';
+  var hist = Array.isArray(rec.subscriptionHistory) ? rec.subscriptionHistory.slice().reverse().slice(0,12) : [];
+  if(!hist.length){
+    out += '<div class="b-hist-empty">No subscription changes logged yet.</div>';
+  } else {
+    out += '<div style="overflow-x:auto"><table class="b-hist-table"><thead><tr><th>Logged</th><th>Change</th><th>Period</th></tr></thead><tbody>'+
+      hist.map(function(h){
+        var period = (h.startDate||h.endDate) ? fmtPlainDate(h.startDate)+' → '+fmtPlainDate(h.endDate) : '—';
+        var label = h.action==='cleared' ? 'Cleared' : ((h.plan==='pro'?'Pro':'Free')+' period set');
+        return '<tr><td>'+udWhen(h.at)+'</td><td>'+label+'</td><td>'+period+'</td></tr>';
+      }).join('')+'</tbody></table></div>';
+  }
+  return out;
+}
+
+function openUserDetail(kind, id){
+  var rec = findUserRecord(kind, id);
+  if(!rec){ toast('User not found', true); return; }
+  _bDetailKind = kind; _bDetailId = id;
+  var isProtected = bUserIsProtected(kind, rec), isSelf = bUserIsSelf(kind, id);
+  var lockRole = isProtected || isSelf, lockStatus = isProtected || isSelf;
+  var sub = rec.subscription || {};
+  var html =
+    '<div class="modal-head"><div class="modal-title">Manage user</div><button class="icon-btn" onclick="closeUserDetail()">'+ICONS.x+'</button></div>'+
+    '<div id="ud-head">'+udHeadHTML(kind, rec)+'</div>'+
+    '<div class="b-section-title">Account</div>'+
+    '<div class="b-user-form">'+
+      '<div class="field"><span class="field-label">Name</span><input class="inp" id="ud-name" value="'+esc(rec.displayName||'')+'" placeholder="Full name"'+(kind==='real'?' disabled':'')+'/>'+
+        (kind==='real'?'<div class="hint">Synced from their Google account.</div>':'')+'</div>'+
+      '<div class="field"><span class="field-label">Email</span><input class="inp" id="ud-email" value="'+esc(rec.email||'')+'" disabled/></div>'+
+      '<div class="field"><span class="field-label">Role</span><select class="sel" id="ud-role"'+(lockRole?' disabled':'')+'>'+udOpts([['member','Member'],['admin','Admin']], rec.role==='admin'?'admin':'member')+'</select></div>'+
+      '<div class="field"><span class="field-label">Plan</span><select class="sel" id="ud-plan">'+udOpts([['free','Free'],['pro','Pro']], rec.plan==='pro'?'pro':'free')+'</select></div>'+
+      '<div class="field"><span class="field-label">Status</span><select class="sel" id="ud-status"'+(lockStatus?' disabled':'')+'>'+udOpts([['active','Active'],['suspended','Suspended']], rec.status==='suspended'?'suspended':'active')+'</select>'+
+        (lockStatus?'<div class="hint">'+(isSelf?'You can\'t change your own role or status.':'The root admin can\'t be changed.')+'</div>':'')+'</div>'+
+    '</div>'+
+    '<div class="modal-foot"><button class="btn" onclick="closeUserDetail()">Close</button><button class="btn primary" onclick="saveUserDetail()">'+ICONS.check+' Save changes</button></div>'+
+    '<div class="b-section-title">Subscription</div>'+
+    '<div id="ud-sub">'+udSubHTML(rec)+'</div>'+
+    '<div class="b-user-form">'+
+      '<div class="field"><span class="field-label">Start date</span><input class="inp" type="date" id="ud-sub-start" value="'+esc(sub.startDate||'')+'"/></div>'+
+      '<div class="field"><span class="field-label">End date</span><input class="inp" type="date" id="ud-sub-end" value="'+esc(sub.endDate||'')+'"/></div>'+
+    '</div>'+
+    '<div class="modal-foot"><button class="btn" onclick="clearUserSubscription()">Clear</button><button class="btn primary" onclick="saveUserSubscription()">Save subscription</button></div>'+
+    (isProtected || isSelf ? '' :
+      '<div class="b-section-title">Danger zone</div>'+
+      '<div class="b-danger-zone"><p>Removing a user deletes them from the Users list. This can\'t be undone.</p>'+
+      '<button class="btn danger" onclick="openRemoveUserConfirm(_bDetailKind,_bDetailId)">'+ICONS.trash+' Remove user</button></div>');
+  var m = document.getElementById('userModal');
+  m.innerHTML = html;
+  m.scrollTop = 0;
+  document.getElementById('userVeil').classList.add('open');
+}
+function closeUserDetail(){
+  var v = document.getElementById('userVeil'); if(v) v.classList.remove('open');
+  _bDetailKind = null; _bDetailId = null;
+}
+/* live-refresh only the header + subscription summary, so anything the admin is
+   typing in the form is never overwritten by a background snapshot */
+function refreshOpenUserDetail(){
+  var v = document.getElementById('userVeil');
+  if(!v || !v.classList.contains('open')) return;
+  var rec = findUserRecord(_bDetailKind, _bDetailId);
+  if(!rec){ closeUserDetail(); return; }   // removed (or claimed on first sign-in)
+  var h = document.getElementById('ud-head'); if(h) h.innerHTML = udHeadHTML(_bDetailKind, rec);
+  var s = document.getElementById('ud-sub'); if(s) s.innerHTML = udSubHTML(rec);
+}
+function saveUserDetail(){
+  var kind = _bDetailKind, id = _bDetailId;
+  var rec = findUserRecord(kind, id); if(!rec){ toast('User not found', true); return; }
+  var patch = {
+    role: udVal('ud-role')==='admin' ? 'admin' : 'member',
+    plan: udVal('ud-plan')==='pro' ? 'pro' : 'free',
+    status: udVal('ud-status')==='suspended' ? 'suspended' : 'active'
+  };
+  if(kind==='pending') patch.displayName = udVal('ud-name').trim() || null;
+  if(bUserIsProtected(kind, rec)){ patch.role = 'admin'; patch.status = 'active'; }
+  if(bUserIsSelf(kind, id)){ patch.role = rec.role==='admin' ? 'admin' : 'member'; patch.status = 'active'; }
+  userRef(kind, id).update(patch).then(function(){
+    toast('User updated');
+  }).catch(function(err){ toast('Could not update: '+err.message, true); });
+}
+function saveUserSubscription(){
+  var kind = _bDetailKind, id = _bDetailId;
+  var rec = findUserRecord(kind, id); if(!rec){ toast('User not found', true); return; }
+  var s = udVal('ud-sub-start'), e = udVal('ud-sub-end');
+  if(!s && !e){ toast('Pick a start or end date', true); return; }
+  if(s && e && e < s){ toast('End date must be after the start date', true); return; }
+  var entry = { plan: rec.plan==='pro'?'pro':'free', startDate: s||null, endDate: e||null, at: new Date().toISOString(), action:'set' };
+  userRef(kind, id).update({
+    subscription: { startDate: s||null, endDate: e||null },
+    subscriptionHistory: firebase.firestore.FieldValue.arrayUnion(entry)
+  }).then(function(){
+    toast('Subscription saved');
+  }).catch(function(err){ toast('Could not save: '+err.message, true); });
+}
+function clearUserSubscription(){
+  var kind = _bDetailKind, id = _bDetailId;
+  var rec = findUserRecord(kind, id); if(!rec){ toast('User not found', true); return; }
+  if(!rec.subscription){ toast('No subscription to clear'); return; }
+  var entry = { plan: rec.plan==='pro'?'pro':'free', startDate:null, endDate:null, at:new Date().toISOString(), action:'cleared' };
+  userRef(kind, id).update({
+    subscription: null,
+    subscriptionHistory: firebase.firestore.FieldValue.arrayUnion(entry)
+  }).then(function(){
+    var a = document.getElementById('ud-sub-start'), b = document.getElementById('ud-sub-end');
+    if(a) a.value = ''; if(b) b.value = '';
+    toast('Subscription cleared');
+  }).catch(function(err){ toast('Could not clear: '+err.message, true); });
+}
+
+/* ---- Add user (creates a pending record, claimed on that email's first Google sign-in) ---- */
+function openAddUserModal(){
+  var m = document.getElementById('addUserModal');
+  m.innerHTML =
+    '<div class="modal-head"><div class="modal-title">Add user</div><button class="icon-btn" onclick="closeAddUserModal()">'+ICONS.x+'</button></div>'+
+    '<div class="field"><span class="field-label">Name</span><input class="inp" id="au-name" placeholder="Full name (optional)"/></div>'+
+    '<div class="field"><span class="field-label">Email</span><input class="inp" id="au-email" type="email" inputmode="email" autocapitalize="off" placeholder="name@gmail.com"/>'+
+      '<div class="hint">They get these settings the first time they sign in with this Google email.</div></div>'+
+    '<div class="b-user-form">'+
+      '<div class="field"><span class="field-label">Role</span><select class="sel" id="au-role">'+udOpts([['member','Member'],['admin','Admin']],'member')+'</select></div>'+
+      '<div class="field"><span class="field-label">Plan</span><select class="sel" id="au-plan">'+udOpts([['free','Free'],['pro','Pro']],'free')+'</select></div>'+
+    '</div>'+
+    '<div class="modal-foot"><button class="btn" onclick="closeAddUserModal()">Cancel</button><button class="btn primary" onclick="submitAddUser()">'+ICONS.plus+' Add user</button></div>';
+  m.scrollTop = 0;
+  document.getElementById('addUserVeil').classList.add('open');
+  setTimeout(function(){ var i = document.getElementById('au-name'); if(i) i.focus(); }, 80);
+}
+function closeAddUserModal(){
+  var v = document.getElementById('addUserVeil'); if(v) v.classList.remove('open');
+}
+function submitAddUser(){
+  var email = udVal('au-email').trim().toLowerCase();
+  var name = udVal('au-name').trim();
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ toast('Enter a valid email address', true); return; }
+  var exists = _bUsersCache.some(function(u){ return (u.email||'').toLowerCase()===email; }) ||
+               _bPendingCache.some(function(u){ return (u.email||'').toLowerCase()===email; });
+  if(exists){ toast('A user with this email already exists', true); return; }
+  pendingDocRef(email).set({
+    email: email, displayName: name || null,
+    role: udVal('au-role')==='admin' ? 'admin' : 'member',
+    plan: udVal('au-plan')==='pro' ? 'pro' : 'free',
+    status: 'active', subscription: null, subscriptionHistory: [],
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function(){
+    closeAddUserModal();
+    toast('User added');
+  }).catch(function(err){ toast('Could not add user: '+err.message, true); });
+}
+
+/* ---- Remove user (confirm first) ---- */
+function openRemoveUserConfirm(kind, id){
+  var rec = findUserRecord(kind, id);
+  if(!rec){ toast('User not found', true); return; }
+  if(bUserIsProtected(kind, rec) || bUserIsSelf(kind, id)){
+    toast('This account can\'t be removed', true); return;
+  }
+  var name = rec.displayName || rec.email || 'this user';
+  _removeUserTarget = { kind: kind, id: id, name: name };
+  document.getElementById('removeUserModal').innerHTML =
+    '<div class="modal-head"><div class="modal-title">Remove user?</div><button class="icon-btn" onclick="closeRemoveUserConfirm()">'+ICONS.x+'</button></div>'+
+    '<p style="font-size:13px;line-height:1.55;color:var(--text2)"><b style="color:var(--text)">'+esc(name)+'</b> will be removed from the Users list.'+
+      (kind==='real' ? ' Their habit data is not deleted, and if they sign in again they\'ll come back as a new Free member.' : ' Their pending invite will be cancelled.')+'</p>'+
+    '<div class="modal-foot"><button class="btn" onclick="closeRemoveUserConfirm()">Cancel</button><button class="btn danger" onclick="confirmRemoveUser()">'+ICONS.trash+' Remove</button></div>';
+  document.getElementById('removeUserVeil').classList.add('open');
+}
+function closeRemoveUserConfirm(){
+  var v = document.getElementById('removeUserVeil'); if(v) v.classList.remove('open');
+  _removeUserTarget = null;
+}
+function confirmRemoveUser(){
+  var t = _removeUserTarget; if(!t) return;
+  userRef(t.kind, t.id).delete().then(function(){
+    closeRemoveUserConfirm();
+    if(_bDetailKind===t.kind && _bDetailId===t.id) closeUserDetail();
+    toast('User removed');
+  }).catch(function(err){ toast('Could not remove: '+err.message, true); });
+}
+
 /* ==================================================================
    ADMIN UI HELPERS — shared by every Backend section
    (pure presentation: dirty-state tracking, save bar, small icons)
