@@ -697,7 +697,7 @@ button.chip:hover{transform:translateY(-1px)}
 .hab-item:active{transform:scale(.98)}
 .hab-icon{
   width:46px;height:46px;border-radius:15px;display:flex;align-items:center;justify-content:center;
-  font-size:20px;background:var(--hc-soft,var(--accent-soft));flex-shrink:0;
+  font-size:20px;background:var(--accent-soft);flex-shrink:0;
   box-shadow:0 1px 0 rgba(255,255,255,.08) inset;
 }
 .hab-info{flex:1;min-width:0}
@@ -769,31 +769,31 @@ button.chip:hover{transform:translateY(-1px)}
 /* ============================================================
    CALENDAR HEATMAP
    ============================================================ */
-.cal-nav{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.cal-nav{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 .cal-nav b{font-size:15px;font-weight:700;min-width:140px;text-align:center;font-family:var(--f-display)}
 .cal-scroll{overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface)}
 .cal-table{border-collapse:separate;border-spacing:0;width:100%}
 .cal-table th{
-  font-size:9px;color:var(--text3);font-weight:700;padding:8px 3px;text-align:center;
+  font-size:8.5px;line-height:1.25;color:var(--text3);font-weight:700;padding:5px 2px;text-align:center;
   position:sticky;top:0;background:var(--surface);z-index:2;
 }
 .cal-habit-col{
-  text-align:left;padding:9px 12px;min-width:150px;position:sticky;left:0;z-index:3;background:var(--surface);
-  border-right:1px solid var(--border);white-space:nowrap;
+  text-align:left;padding:5px 8px;min-width:150px;position:sticky;left:0;z-index:3;background:var(--surface);
+  border-right:1px solid var(--border);
 }
-.cal-hname{font-size:12px;font-weight:700;display:flex;align-items:center;gap:7px;min-width:0}
-.cal-hn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.cal-hname{font-size:11.5px;line-height:1.25;font-weight:700;display:flex;align-items:flex-start;gap:5px;min-width:0}
+.cal-hn{white-space:normal;overflow-wrap:anywhere;min-width:0}
 .cal-hname .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.cal-hmeta{font-size:9.5px;color:var(--text3);margin-top:2px;padding-left:15px}
-.cal-cell{width:34px;min-width:34px;height:40px;text-align:center;padding:3px;border-bottom:1px solid var(--border)}
+.cal-hmeta{font-size:9px;color:var(--text3);margin-top:1px}
+.cal-cell{width:28px;min-width:28px;height:30px;text-align:center;padding:2px;border-bottom:1px solid var(--border)}
+.cal-cell.tap{cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .cal-table td.cal-cell.today{background:var(--accent-soft)}
 .cal-table th.cal-th.today{color:var(--accent)}
 .cal-dot{
-  width:28px;height:28px;border-radius:8px;margin:0 auto;display:flex;align-items:center;justify-content:center;
-  background:var(--surface2);cursor:pointer;transition:transform .1s;font-size:12px;color:#fff;
-  touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+  width:19px;height:19px;border-radius:6px;margin:0 auto;display:flex;align-items:center;justify-content:center;
+  background:var(--surface2);transition:transform .1s;font-size:10px;color:#fff;
 }
-.cal-dot svg{width:14px;height:14px}
+.cal-dot svg{width:11px;height:11px}
 .cal-dot:active{transform:scale(.9)}
 @media(hover:hover){.cal-dot:hover{transform:scale(1.12)}}
 .cal-dot.future{cursor:default;opacity:.35}
@@ -802,17 +802,17 @@ button.chip:hover{transform:translateY(-1px)}
 .cal-row:hover .cal-habit-col{background:var(--surface2)}
 tr.cal-row:nth-child(odd) .cal-cell{background:rgba(128,128,128,.02)}
 /* ---- Calendar progress card (compact + responsive) ---- */
-.calp{margin-bottom:14px;padding:14px 16px}
-.calp-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.calp{margin-bottom:10px;padding:10px 14px}
+.calp-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
 .calp-head h3{font-size:14.5px;font-weight:700}
 .calp-head .faint{font-size:11px}
 .calp-body{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center}
 .calp .ring-wrap{width:var(--rs);height:var(--rs);margin:0;order:0}
 .calp .ring-wrap svg{width:100%;height:100%}
-.calp-month{--rs:112px}
-.calp-month .ring-pct{font-size:26px}
+.calp-month{--rs:96px}
+.calp-month .ring-pct{font-size:22px}
 .calp-weeks{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.calp-week{--rs:56px;display:flex;align-items:center;gap:10px;min-width:0}
+.calp-week{--rs:48px;display:flex;align-items:center;gap:8px;min-width:0}
 .calp-week .ring-pct{font-size:12px}
 .calp-wtext{min-width:0;font-size:10.5px;line-height:1.35;color:var(--text2)}
 .calp-wtext b{display:block;font-family:var(--f-mono);font-size:12px;color:var(--text);white-space:nowrap}
@@ -820,21 +820,22 @@ tr.cal-row:nth-child(odd) .cal-cell{background:rgba(128,128,128,.02)}
 .calp-week.now .calp-wtext b{color:var(--accent)}
 @media(max-width:900px){.calp-weeks{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:560px){
-  .calp{padding:12px}
-  .calp-body{gap:12px}
-  .calp-month{--rs:92px}
-  .calp-month .ring-pct{font-size:21px}
+  .calp{padding:8px 10px}
+  .calp-body{gap:10px}
+  .calp-month{--rs:80px}
+  .calp-month .ring-pct{font-size:18px}
   .calp-month .ring-lbl{font-size:8.5px}
-  .calp-weeks{gap:10px 8px}
-  .calp-week{--rs:46px;gap:8px}
+  .calp-weeks{gap:6px 6px}
+  .calp-week{--rs:40px;gap:6px}
   .calp-week .ring-pct{font-size:10px}
   .calp-wtext b{font-size:11px}
   .calp-wtext{font-size:10px}
-  .cal-nav{margin-bottom:12px;gap:8px}
+  .cal-nav{margin-bottom:8px;gap:8px}
   .cal-nav b{min-width:0;flex:1}
-  .cal-cell{width:34px;min-width:34px}
-  .cal-habit-col{min-width:112px;max-width:112px;padding:8px 8px}
-  .cal-hmeta{padding-left:15px;overflow:hidden;text-overflow:ellipsis}
+  .cal-cell{width:26px;min-width:26px;height:28px;padding:1px}
+  .cal-dot{width:18px;height:18px}
+  .cal-habit-col{min-width:118px;max-width:118px;padding:4px 6px}
+  .cal-hname{font-size:11px}
   .cal-freq{display:none}
 }
 
@@ -2283,7 +2284,6 @@ html.day .lock-overlay{background:rgba(244,245,249,.76)}
    ================================================================== */
 var EMOJIS = ['💧','🏃','📖','🧘','🥗','😴','✍️','💊','🚭','🎯','🧹','🎨','🎸','🙏','💰','📵','🌱','🚴','🏋️','🦷','☀️','🌙','🧴','📞','🍎','☕','🧠','🎧','🚶','🛏️','📚','🧺','🧴','🐕','🌊','⏰','🍳','🚰','🧊','✅'];
 var CATEGORIES = ['Health','Mind','Productivity','Learning','Social','Finance','Other'];
-var HABIT_COLORS = ['#FF6B35','#3B82F6','#8B5CF6','#14B8A6','#F43F5E','#F5B700','#84CC16','#6366F1','#EC4899','#06B6D4'];
 var CATEGORY_COLORS = {
   Health:'#22C55E', Mind:'#8B5CF6', Productivity:'#3B82F6', Learning:'#F5B700',
   Social:'#EC4899', Finance:'#14B8A6', Other:'#94A3B8'
@@ -2415,7 +2415,7 @@ var _badgesConfig = null; // null = use built-in BADGES; array = admin-customize
 var _accentsConfig = null; // null = use built-in ACCENTS; array = admin-customized list
 
 /* ---- New Habit: admin-managed emoji / color / category catalogs. ---- */
-var _habitItemsConfig = null; // null = use built-in EMOJIS/HABIT_COLORS/CATEGORIES; else {emojis,colors,categories}
+var _habitItemsConfig = null; // null = use built-in EMOJIS/CATEGORIES; else {emojis,categories}
 
 /* ---- Habit Templates: admin-managed template catalog, replaces TEMPLATES at runtime. ---- */
 var _templatesConfig = null; // null = use built-in TEMPLATES; array = admin-customized list
@@ -2639,9 +2639,8 @@ function subscribeHabitItemsConfig(){
   if(_unsubHabitItemsConfig) return;
   _unsubHabitItemsConfig = db.collection('config').doc('habitItems').onSnapshot(function(doc){
     var data = doc.exists ? doc.data() : {};
-    _habitItemsConfig = (data.emojis||data.colors||data.categories) ? {
+    _habitItemsConfig = (data.emojis||data.categories) ? {
       emojis: Array.isArray(data.emojis) ? data.emojis : [],
-      colors: Array.isArray(data.colors) ? data.colors : [],
       categories: Array.isArray(data.categories) ? data.categories : []
     } : null;
     if(_bHabitItemsDraft && bIsClean('items', _bHabitItemsDraft)) _bHabitItemsDraft = null;
@@ -2682,12 +2681,11 @@ function stopDirectorySync(){
 
 /* ---- Effective config getters: admin-customized value if set, else the
    built-in default. Every place that used to read BADGES/ACCENTS/EMOJIS/
-   HABIT_COLORS/CATEGORIES/TEMPLATES directly should read these instead, so
+   CATEGORIES/TEMPLATES directly should read these instead, so
    Admin console edits reflect live across every signed-in user. ---- */
 function effBadges(){ return (_badgesConfig && _badgesConfig.length) ? _badgesConfig : BADGES; }
 function effAccents(){ return (_accentsConfig && _accentsConfig.length) ? _accentsConfig : ACCENTS; }
 function effEmojis(){ return (_habitItemsConfig && _habitItemsConfig.emojis && _habitItemsConfig.emojis.length) ? _habitItemsConfig.emojis : EMOJIS; }
-function effHabitColors(){ return (_habitItemsConfig && _habitItemsConfig.colors && _habitItemsConfig.colors.length) ? _habitItemsConfig.colors : HABIT_COLORS; }
 function effCategories(){ return (_habitItemsConfig && _habitItemsConfig.categories && _habitItemsConfig.categories.length) ? _habitItemsConfig.categories : CATEGORIES; }
 function effTemplates(){ return (_templatesConfig && _templatesConfig.length) ? _templatesConfig : TEMPLATES; }
 /* ---- Goal Templates: built-in starter library (admin can replace it from Backend → Goal Templates).
@@ -2872,7 +2870,7 @@ function renderBackendOverview(){
   '</div>';
   html += '<div class="b-panel"><div class="b-panel-head"><h3>Configuration</h3><span class="sub">What every user currently sees</span></div><div class="b-panel-body"><div class="b-link-tiles">'+
     [['templates','Templates',effTemplates().length],['goalTemplates','Goal templates',effGoalTemplates().length],['settings','Categories',effCategories().length],['settings','Habit icons',effEmojis().length],
-     ['settings','Habit colors',effHabitColors().length],['achievements','Achievements',effBadges().length],['settings','Accent colors',effAccents().length]].map(function(x){
+     ['achievements','Achievements',effBadges().length],['settings','Accent colors',effAccents().length]].map(function(x){
       return '<button class="b-link-tile" onclick="goBackend(\''+x[0]+'\')"><b>'+x[2]+'</b><span>'+x[1]+'</span></button>';
     }).join('')+'</div></div></div>';
   el.innerHTML = html;
@@ -3302,14 +3300,14 @@ function saveBackendAchievements(){
    Two independent editors on one page:
    1) Appearance accent colors (config/appearance → replaces ACCENTS)
    2) New Habit catalogs: emojis / colors / categories
-      (config/habitItems → replaces EMOJIS / HABIT_COLORS / CATEGORIES)
+      (config/habitItems → replaces EMOJIS / CATEGORIES)
    ================================================================== */
 function bAccClean(list){
   return (list||[]).filter(function(a){ return a.id && a.a; }).map(function(a){ return {id:a.id.trim(), a:a.a, a2:a.a2||a.a}; });
 }
 function ensureHabitItemsDraft(){
   if(!_bHabitItemsDraft){
-    _bHabitItemsDraft = {emojis:effEmojis().slice(), colors:effHabitColors().slice(), categories:effCategories().slice()};
+    _bHabitItemsDraft = {emojis:effEmojis().slice(), categories:effCategories().slice()};
     bSeed('items', _bHabitItemsDraft);
   }
 }
@@ -3319,7 +3317,7 @@ function ensureAccentsDraft(){
 }
 function bAccDirty(){ return bJSON(bAccClean(_bAccentsDraft)) !== bJSON(bAccClean(effAccents())); }
 function bItemsDirty(){
-  return bJSON(_bHabitItemsDraft) !== bJSON({emojis:effEmojis(), colors:effHabitColors(), categories:effCategories()});
+  return bJSON(_bHabitItemsDraft) !== bJSON({emojis:effEmojis(), categories:effCategories()});
 }
 function bSettingsTouch(){ bSetDirty(_bSetTab==='appearance' ? bAccDirty() : bItemsDirty()); }
 function bSetTab(t){ _bSetTab = t; renderBackendSettings(); }
@@ -3339,10 +3337,10 @@ function renderBackendSettings(){
   var tabs = [
     ['appearance','Appearance',_bAccentsDraft.length,accDirty],
     ['icons','Habit icons',d.emojis.length,itemsDirty],
-    ['colors','Habit colors',d.colors.length,itemsDirty],
     ['categories','Categories',d.categories.length,itemsDirty]
   ];
-  var html = bPageHead('Settings','Colors and New Habit catalogs every user sees');
+  if(_bSetTab==='colors') _bSetTab = 'icons';
+  var html = bPageHead('Settings','Accent colors and New Habit catalogs every user sees');
   html += '<div class="seg-tabs">'+tabs.map(function(t){
     return '<button class="seg-tab'+(_bSetTab===t[0]?' active':'')+'" onclick="bSetTab(\''+t[0]+'\')">'+t[1]+' <span class="b-count">'+t[2]+'</span>'+(t[3]?'<span class="b-tdot" title="Unsaved changes"></span>':'')+'</button>';
   }).join('')+'</div>';
@@ -3362,13 +3360,6 @@ function renderBackendSettings(){
         '<div class="b-panel-body"><div class="b-tiles" id="bEmojiGrid">'+
         d.emojis.map(function(e,i){ return '<div class="b-tile" title="Remove" onclick="removeBackendEmoji('+i+')">'+esc(e)+'</div>'; }).join('')+
         '</div></div></div>';
-    } else if(_bSetTab==='colors'){
-      html += '<div class="b-panel"><div class="b-panel-head"><h3>Habit colors</h3><span class="sub">Swatches offered when creating or editing a habit · click to remove</span><span class="b-sp"></span>'+
-        '<div class="b-add-inline"><input class="inp b-color" type="color" id="bhi-color-input" value="#FF6B35"/>'+
-        '<button class="btn" onclick="addBackendHabitColor()">'+ICONS.plus+' Add</button></div></div>'+
-        '<div class="b-panel-body"><div class="b-tiles" id="bColorRow">'+
-        d.colors.map(function(c,i){ return '<div class="b-tile col" style="background:'+esc(c)+'" title="Remove '+esc(c)+'" onclick="removeBackendHabitColor('+i+')"></div>'; }).join('')+
-        '</div></div></div>';
     } else {
       html += '<div class="b-panel"><div class="b-panel-head"><h3>Categories</h3><span class="sub">Options offered when creating or editing a habit · number = templates using it</span><span class="b-sp"></span>'+
         '<div class="b-add-inline"><input class="inp" id="bhi-cat-input" placeholder="Add category, e.g. Travel" onkeydown="if(event.key===\'Enter\')addBackendCategory()"/>'+
@@ -3377,7 +3368,7 @@ function renderBackendSettings(){
         d.categories.map(function(c,i){ return '<span class="b-chip">'+esc(c)+' <em>'+bCatUsage(c)+'</em><button title="Remove" onclick="removeBackendCategory('+i+')">'+ICONS.x+'</button></span>'; }).join('')+
         '</div></div></div>';
     }
-    html += bSaveBar({save:'saveBackendHabitItems()', reset:'resetBackendHabitItems()', discard:'bSetDiscard()', saveLabel:'Save catalogs', note:'Icons, colors &amp; categories save together'});
+    html += bSaveBar({save:'saveBackendHabitItems()', reset:'resetBackendHabitItems()', discard:'bSetDiscard()', saveLabel:'Save catalogs', note:'Icons &amp; categories save together'});
   }
   el.innerHTML = html;
   bSettingsTouch();
@@ -3422,13 +3413,6 @@ function addBackendEmoji(){
   renderBackendSettings(); bRefocus('bhi-emoji-input');
 }
 function removeBackendEmoji(i){ _bHabitItemsDraft.emojis.splice(i,1); renderBackendSettings(); }
-function addBackendHabitColor(){
-  var v = document.getElementById('bhi-color-input').value;
-  if(_bHabitItemsDraft.colors.map(function(c){ return String(c).toLowerCase(); }).indexOf(v.toLowerCase())!==-1){ toast('That color is already in the list', true); return; }
-  _bHabitItemsDraft.colors.push(v);
-  renderBackendSettings();
-}
-function removeBackendHabitColor(i){ _bHabitItemsDraft.colors.splice(i,1); renderBackendSettings(); }
 function addBackendCategory(){
   var inp = document.getElementById('bhi-cat-input');
   var v = (inp.value||'').trim();
@@ -3439,17 +3423,17 @@ function addBackendCategory(){
 }
 function removeBackendCategory(i){ _bHabitItemsDraft.categories.splice(i,1); renderBackendSettings(); }
 function resetBackendHabitItems(){
-  _bHabitItemsDraft = {emojis:EMOJIS.slice(), colors:HABIT_COLORS.slice(), categories:CATEGORIES.slice()};
+  _bHabitItemsDraft = {emojis:EMOJIS.slice(), categories:CATEGORIES.slice()};
   renderBackendSettings();
 }
 function saveBackendHabitItems(){
-  if(!_bHabitItemsDraft.emojis.length || !_bHabitItemsDraft.colors.length || !_bHabitItemsDraft.categories.length){
+  if(!_bHabitItemsDraft.emojis.length || !_bHabitItemsDraft.categories.length){
     toast('Each list needs at least one item', true); return;
   }
   db.collection('config').doc('habitItems').set({
     emojis: _bHabitItemsDraft.emojis,
-    colors: _bHabitItemsDraft.colors,
-    categories: _bHabitItemsDraft.categories
+    categories: _bHabitItemsDraft.categories,
+    colors: firebase.firestore.FieldValue.delete()   // habit colors no longer exist — clear the old field
   }, {merge:true}).then(function(){
     bSeed('items', _bHabitItemsDraft);
     toast('New Habit catalogs saved');
@@ -4604,8 +4588,8 @@ function dailyHabitListHTML(viewDate){
   var archived = S.habits.filter(function(h){ return h.archived; });
   if(archived.length){
     html += '<div class="sec-title"><h3>Archived</h3></div><div class="hab-list">'+archived.map(function(h){
-      return '<div class="hab-item hab-item-static" style="--hc:'+h.color+';--hc-soft:'+h.color+'26;opacity:.55">'+
-        '<div class="hab-icon" style="background:'+h.color+'26">'+h.icon+'</div>'+
+      return '<div class="hab-item hab-item-static" style="opacity:.55">'+
+        '<div class="hab-icon">'+h.icon+'</div>'+
         '<div class="hab-info"><div class="hab-name">'+esc(h.name)+'</div><div class="hab-meta">Archived</div></div>'+
       '</div>';
     }).join('')+'</div>';
@@ -4751,8 +4735,8 @@ function habitItemHTML(h, dStr){
   var cls = st==='done' ? 'done' : (st==='missed' ? 'missed' : '');
   var checkIcon = st==='done' ? ICONS.check : (st==='missed' ? ICONS.x : '');
   var checkTitle = isFuture(dStr) ? 'Future day' : 'Click to mark done · double-click to mark missed';
-  return '<div class="hab-item hab-item-static '+cls+'" style="--hc:'+h.color+';--hc-soft:'+h.color+'26">'+
-    '<div class="hab-icon" style="background:'+h.color+'26">'+h.icon+'</div>'+
+  return '<div class="hab-item hab-item-static '+cls+'">'+
+    '<div class="hab-icon">'+h.icon+'</div>'+
     '<div class="hab-info"><div class="hab-name">'+esc(h.name)+'</div>'+
       '<div class="hab-meta">'+(streak>0?'<span class="flame">🔥 '+streak+'</span> · ':'')+esc(freqLabel(h))+(h.reminder?' · ⏰ '+fmtTime(h.reminder):'')+'</div></div>'+
     '<button class="hab-check'+(isFuture(dStr)?' disabled':'')+'" onclick="event.stopPropagation();habitCheckClick(this,\''+h.id+'\',\''+dStr+'\')" ondblclick="event.stopPropagation();event.preventDefault();habitCheckDblClick(this,\''+h.id+'\',\''+dStr+'\')" title="'+checkTitle+'">'+checkIcon+'</button>'+
@@ -4788,7 +4772,7 @@ function habitActionHTML(h){
   var streak = currentStreak(h);
   var out = '<div class="modal-head">'+
       '<div style="display:flex;align-items:center;gap:12px;min-width:0">'+
-        '<div class="hab-icon" style="background:'+h.color+'26;width:48px;height:48px;font-size:21px;flex-shrink:0">'+h.icon+'</div>'+
+        '<div class="hab-icon" style="width:48px;height:48px;font-size:21px;flex-shrink:0">'+h.icon+'</div>'+
         '<div style="min-width:0">'+
           '<div class="modal-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(h.name)+'</div>'+
           '<div class="hab-meta" style="margin-top:2px">'+(streak>0?'<span class="flame">🔥 '+streak+'</span> · ':'')+esc(freqLabel(h))+(h.archived?' · Archived':'')+'</div>'+
@@ -4908,7 +4892,7 @@ function habitStatsHTML(h){
 
   var out = '<div class="modal-head">'+
       '<div style="display:flex;align-items:center;gap:12px;min-width:0">'+
-        '<div class="hab-icon" style="background:'+h.color+'26;width:44px;height:44px;font-size:20px;flex-shrink:0">'+h.icon+'</div>'+
+        '<div class="hab-icon" style="width:44px;height:44px;font-size:20px;flex-shrink:0">'+h.icon+'</div>'+
         '<div style="min-width:0">'+
           '<div class="modal-title" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(h.name)+'</div>'+
           '<div class="hab-meta" style="margin-top:2px">'+esc(freqLabel(h))+'</div>'+
@@ -4989,7 +4973,7 @@ function addSelectedTemplates(){
   idxs.forEach(function(i){
     var t = TEMPLATES[i]; if(!t) return;
     S.habits.push({
-      id:uid(), name:t.name, icon:t.icon, color:HABIT_COLORS[S.habits.length % HABIT_COLORS.length],
+      id:uid(), name:t.name, icon:t.icon,
       cat:t.cat, freqType:t.freqType, freqDays:t.freqDays||[1,2,3,4,5], freqCount:t.freqCount||3,
       reminder:null, createdAt:_todayStr, logs:{}, archived:false
     });
@@ -5111,7 +5095,7 @@ function renderCalendar(){
   html += '</tr></thead><tbody>';
 
   list.forEach(function(h){
-    html += '<tr class="cal-row"><td class="cal-habit-col"><div class="cal-hname"><span class="dot" style="background:'+h.color+'"></span><span class="cal-hn">'+h.icon+' '+esc(h.name)+'</span></div>'+
+    html += '<tr class="cal-row"><td class="cal-habit-col"><div class="cal-hname"><span class="cal-hn">'+h.icon+' '+esc(h.name)+'</span></div>'+
       '<div class="cal-hmeta" id="calMeta-'+h.id+'">'+calMetaHTML(h)+'</div></td>';
     for(var i=1;i<=daysInMonth;i++){
       var ds = yr+'-'+pad2(mo)+'-'+pad2(i);
@@ -5119,17 +5103,17 @@ function renderCalendar(){
       var sched = isScheduledIgnoringStart(h,ds);
       var st = getStatus(h,ds);
       var cls = 'cal-dot'+(future?' future':'')+((!sched)?' unsched':'');
-      var tap = (sched && !future) ? ' onclick="calCellTap(this,\''+h.id+'\',\''+ds+'\')"' : '';
+      var tapOk = (sched && !future);
       var dot;
-      if(sched && st==='done') dot = '<div class="'+cls+'" style="background:var(--ok)"'+tap+'>'+ICONS.check+'</div>';
-      else if(sched && st==='missed') dot = '<div class="'+cls+'" style="background:var(--bad)"'+tap+'>'+ICONS.x+'</div>';
-      else dot = '<div class="'+cls+'"'+tap+'></div>';
-      html += '<td class="cal-cell'+(ds===_todayStr?' today':'')+'">'+dot+'</td>';
+      if(sched && st==='done') dot = '<div class="'+cls+'" style="background:var(--ok)">'+ICONS.check+'</div>';
+      else if(sched && st==='missed') dot = '<div class="'+cls+'" style="background:var(--bad)">'+ICONS.x+'</div>';
+      else dot = '<div class="'+cls+'"></div>';
+      html += '<td class="cal-cell'+(ds===_todayStr?' today':'')+(tapOk?' tap':'')+'"'+(tapOk?' onclick="calCellTap(this,\''+h.id+'\',\''+ds+'\')"':'')+'>'+dot+'</td>';
     }
     html += '</tr>';
   });
   html += '</tbody></table></div>';
-  html += '<div class="hint" style="margin-top:10px">Tap a cell to mark done, tap again for missed, tap again to clear. Works for past dates too — use the arrows to go back to earlier months.</div>';
+  html += '<div class="hint" style="margin-top:6px;font-size:11px">Tap a cell to mark done, tap again for missed, tap again to clear. Works for past dates too — use the arrows to go back to earlier months.</div>';
 
   el.innerHTML = html;
   calAfterRender(_prevScroll);
@@ -5166,8 +5150,9 @@ function calRefreshBadge(){
 }
 /* Tapping a cell updates just that cell, the habit's streak and the progress card — the table is NOT rebuilt,
    so the page and the table keep their exact scroll position. */
-function calCellTap(el,hId,ds){
+function calCellTap(cell,hId,ds){
   var h = habitById(hId); if(!h || isFuture(ds)) return;
+  var el = cell.querySelector('.cal-dot') || cell;
   cycleStatus(hId,ds);
   var st = getStatus(h,ds);
   if(st==='done'){ el.style.background = 'var(--ok)'; el.innerHTML = ICONS.check; }
@@ -6468,8 +6453,8 @@ function renderSettings(){
   el.innerHTML = html;
 }
 function manageHabitRowHTML(h){
-  return '<div class="hab-item hab-item-manage" style="--hc:'+h.color+';--hc-soft:'+h.color+'26'+(h.archived?';opacity:.5':'')+'" onclick="openHabitAction(\''+h.id+'\')">'+
-    '<div class="hab-icon" style="background:'+h.color+'26">'+h.icon+'</div>'+
+  return '<div class="hab-item hab-item-manage"'+(h.archived?' style="opacity:.5"':'')+' onclick="openHabitAction(\''+h.id+'\')">'+
+    '<div class="hab-icon">'+h.icon+'</div>'+
     '<div class="hab-info"><div class="hab-name">'+esc(h.name)+'</div><div class="hab-meta">'+esc(h.cat)+' · '+esc(freqLabel(h))+(h.reminder?' · ⏰ '+fmtTime(h.reminder):'')+(h.archived?' · Archived':'')+'</div></div>'+
     '<div class="hab-row-actions">'+
       '<button class="hab-edit-btn" onclick="event.stopPropagation();openHabitModal(\''+h.id+'\')" title="Edit">'+ICONS.edit+'</button>'+
@@ -6480,8 +6465,8 @@ function manageHabitRowHTML(h){
 function trashRowHTML(t){
   var h = t.habit;
   var daysLeft = Math.max(0, 7 - Math.floor((Date.now()-t.deletedAt)/86400000));
-  return '<div class="hab-item" style="--hc:'+h.color+';--hc-soft:'+h.color+'26;opacity:.7">'+
-    '<div class="hab-icon" style="background:'+h.color+'26">'+h.icon+'</div>'+
+  return '<div class="hab-item" style="opacity:.7">'+
+    '<div class="hab-icon">'+h.icon+'</div>'+
     '<div class="hab-info"><div class="hab-name">'+esc(h.name)+'</div><div class="hab-meta">Deletes in '+daysLeft+' day'+(daysLeft===1?'':'s')+'</div></div>'+
     '<div class="hab-row-actions">'+
       '<button class="btn sm ghost" onclick="restoreFromTrash(\''+h.id+'\')">Restore</button>'+
@@ -6698,14 +6683,13 @@ function resetData(){
    ADD / EDIT HABIT MODAL
    ================================================================== */
 var _editingId = null;
-var _formIcon='🎯', _formColor=HABIT_COLORS[0], _formFreqType='daily', _formFreqDays=[1,2,3,4,5], _formFreqCount=3, _formReminder=null;
+var _formIcon='🎯', _formFreqType='daily', _formFreqDays=[1,2,3,4,5], _formFreqCount=3, _formReminder=null;
 
 function openHabitModal(id){
   if(!id && !canCreateHabit()){ openUpgradeModal('habits'); return; }
   _editingId = id || null;
   var h = id ? habitById(id) : null;
   _formIcon = h ? h.icon : EMOJIS[Math.floor(Math.random()*EMOJIS.length)];
-  _formColor = h ? h.color : HABIT_COLORS[S.habits.length % HABIT_COLORS.length];
   _formFreqType = h ? h.freqType : 'daily';
   _formFreqDays = h ? (h.freqDays||[1,2,3,4,5]).slice() : [1,2,3,4,5];
   _formFreqCount = h ? (h.freqCount||3) : 3;
@@ -6726,10 +6710,6 @@ function habitFormHTML(h){
 
   out += '<div class="field"><span class="field-label">Icon</span><div class="emoji-grid" id="hf-emoji-grid">'+
     EMOJIS.map(function(e){ return '<div class="emoji-opt'+(e===_formIcon?' sel':'')+'" onclick="pickIcon(this,\''+e+'\')">'+e+'</div>'; }).join('')+
-  '</div></div>';
-
-  out += '<div class="field"><span class="field-label">Color</span><div class="swatch-row" id="hf-color-row">'+
-    HABIT_COLORS.map(function(c){ return '<div class="swatch'+(c===_formColor?' sel':'')+'" style="background:'+c+'" onclick="pickColor(this,\''+c+'\')">'+ICONS.check+'</div>'; }).join('')+
   '</div></div>';
 
   out += '<div class="field-row"><div class="field"><span class="field-label">Category</span><select class="sel" id="hf-cat">'+
@@ -6772,7 +6752,6 @@ function freqDetailHTML(){
   return '<div class="hint">Scheduled every single day.</div>';
 }
 function pickIcon(el,e){ _formIcon=e; document.querySelectorAll('#hf-emoji-grid .emoji-opt').forEach(function(x){x.classList.remove('sel');}); el.classList.add('sel'); }
-function pickColor(el,c){ _formColor=c; document.querySelectorAll('#hf-color-row .swatch').forEach(function(x){x.classList.remove('sel');}); el.classList.add('sel'); }
 function pickFreqType(t,el){
   _formFreqType=t;
   document.querySelectorAll('#hf-freq-seg .seg-opt').forEach(function(x){x.classList.remove('on');});
@@ -6892,12 +6871,12 @@ function saveHabitForm(){
 
   if(_editingId){
     var h = habitById(_editingId);
-    h.name=name; h.icon=_formIcon; h.color=_formColor; h.cat=cat; h.reminder=reminder;
+    h.name=name; h.icon=_formIcon; h.cat=cat; h.reminder=reminder;
     h.freqType=_formFreqType; h.freqDays=_formFreqDays.slice(); h.freqCount=_formFreqCount;
     toast('Habit updated');
   } else {
     S.habits.push({
-      id:uid(), name:name, icon:_formIcon, color:_formColor, cat:cat, reminder:reminder,
+      id:uid(), name:name, icon:_formIcon, cat:cat, reminder:reminder,
       freqType:_formFreqType, freqDays:_formFreqDays.slice(), freqCount:_formFreqCount,
       createdAt:_todayStr, logs:{}, archived:false
     });
@@ -7162,10 +7141,9 @@ function aiExecuteTool(name,input){
       if(!input.name) return {error:'name is required'};
       if(!canCreateHabit()) return {error:'The free-plan limit of active habits is reached. Tell the user to archive a habit or upgrade.'};
       var ft = ['daily','days','weekly'].indexOf(input.frequency_type)!==-1 ? input.frequency_type : 'daily';
-      var cats = effCategories(), emos = effEmojis(), cols = effHabitColors();
+      var cats = effCategories(), emos = effEmojis();
       var nh = {
         id:uid(), name:String(input.name).trim(), icon:input.icon||emos[Math.floor(Math.random()*emos.length)],
-        color:cols[S.habits.length % cols.length],
         cat: cats.indexOf(input.category)!==-1 ? input.category : (cats.indexOf('Other')!==-1?'Other':cats[0]),
         freqType:ft, freqDays:Array.isArray(input.frequency_days)&&input.frequency_days.length?input.frequency_days:[1,2,3,4,5],
         freqCount:clamp(parseInt(input.frequency_count,10)||3,1,7), reminder:null, createdAt:_todayStr, logs:{}, archived:false
@@ -7488,7 +7466,7 @@ async function aiSend(){
 function addFromTemplate(i){
   var t = TEMPLATES[i];
   var h = {
-    id:uid(), name:t.name, icon:t.icon, color:HABIT_COLORS[S.habits.length % HABIT_COLORS.length],
+    id:uid(), name:t.name, icon:t.icon,
     cat:t.cat, freqType:t.freqType, freqDays:t.freqDays||[1,2,3,4,5], freqCount:t.freqCount||3,
     reminder:null, createdAt:_todayStr, logs:{}, archived:false
   };
