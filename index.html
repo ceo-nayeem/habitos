@@ -2806,6 +2806,12 @@ function subscribeMyDirectory(){
     var wasAdmin = _myRole==='admin';
     _myRole = data.role==='admin' ? 'admin' : 'member';
     _myDir = data;
+    (function(){
+      var notes = Array.isArray(data.notifications) ? data.notifications : [];
+      if(_notifSeenInit) notes.forEach(function(n){ if(n && n.id && !_notifSeen[n.id] && n.title) toast(n.title); });
+      notes.forEach(function(n){ if(n && n.id) _notifSeen[n.id] = 1; });
+      _notifSeenInit = true;
+    })();
     applyMyPlanState(_myStateKey!=='');
     updateProfileMenu();
     renderNotifUI();
@@ -2897,7 +2903,7 @@ function stopDirectorySync(){
   if(_unsubAllUsers){ _unsubAllUsers(); _unsubAllUsers=null; }
   if(_unsubPendingUsers){ _unsubPendingUsers(); _unsubPendingUsers=null; }
   _myRole='member'; _myPlan='free'; _backendMode=false;
-  _myDir={}; _myState=planState({}); _myStateKey=''; _notifToasted=false;
+  _myDir={}; _myState=planState({}); _myStateKey=''; _notifToasted=false; _notifSeen={}; _notifSeenInit=false;
 }
 
 /* ---- Effective config getters: admin-customized value if set, else the
@@ -3008,7 +3014,7 @@ function planState(rec, kind){
     st.subEnd = sub.endDate; st.subLeft = plainDiffDays(today, sub.endDate); st.subExpired = st.subLeft < 0;
   }
   var days = trialDaysCfg();
-  if(kind!=='pending' && days>0 && rec.plan!=='pro'){
+  if(kind!=='pending' && (days>0 || rec.trialEndDate) && rec.plan!=='pro'){
     var start = tsToISO(rec.createdAt);
     var end = rec.trialEndDate || plainAddDays(start, days-1);
     var left = plainDiffDays(today, end) + 1;          // days left, counting today
@@ -3025,6 +3031,7 @@ function planStateKey(st){
 /* ---- my own entitlement (drives isPro() → every limit / lock in the app) ---- */
 var _myDir = {};
 var _notifToasted = false;
+var _notifSeen = {}, _notifSeenInit = false;
 var _myState = planState({});
 var _myStateKey = '';
 function applyMyPlanState(announce){
@@ -3066,8 +3073,19 @@ function notifSaveRead(ids){ try{ localStorage.setItem(notifStoreKey(), JSON.str
 function fmtNiceDate(iso){ return iso ? fmtPlainDate(iso) : '—'; }
 function buildNotifs(){
   var out = [], st = _myState, rec = _myDir || {};
-  if(!_currentUser || st.isAdmin) return out;
+  if(!_currentUser) return out;
   var today = todayISO();
+  /* messages the admin sent from the Backend (plan, trial, role, status changes) */
+  (Array.isArray(rec.notifications) ? rec.notifications : []).forEach(function(n){
+    if(!n || !n.id || !n.title) return;
+    var d = String(n.at||'').slice(0,10) || today;
+    if(plainDiffDays(d, today) > 60) return;
+    out.push({ id:n.id, tone:n.tone||'ok', icon:n.icon||'bell', title:n.title, text:n.text||'', date:d, sort:n.at||d });
+  });
+  if(st.isAdmin){
+    out.sort(function(a,b){ var x=a.sort||a.date, y=b.sort||b.date; return x<y?1:(x>y?-1:0); });
+    return out;
+  }
   var lim = _planLimits;
   var t = st.trial;
   if(t && rec.plan!=='pro'){
@@ -3117,7 +3135,7 @@ function buildNotifs(){
       }
     }
   }
-  out.sort(function(a,b){ return a.date<b.date ? 1 : (a.date>b.date ? -1 : 0); });
+  out.sort(function(a,b){ var x=a.sort||a.date, y=b.sort||b.date; return x<y?1:(x>y?-1:0); });
   return out;
 }
 function notifUnreadCount(list){
@@ -3192,7 +3210,7 @@ function notifToastOnce(){
   try{
     var list = buildNotifs(), key = 'habitos_notif_toast_'+(_currentUser?_currentUser.uid:'anon');
     var shown = JSON.parse(localStorage.getItem(key)||'[]'), read = notifReadSet();
-    var fresh = list.filter(function(n){ return shown.indexOf(n.id)===-1 && read.indexOf(n.id)===-1 && /^(trial-d0|trial-end|sub-expired|sub-start)/.test(n.id); })[0];
+    var fresh = list.filter(function(n){ return shown.indexOf(n.id)===-1 && read.indexOf(n.id)===-1 && /^(trial-d0|trial-end|sub-expired|sub-start|adm-)/.test(n.id); })[0];
     if(fresh){ toast(fresh.title+' — '+fresh.text); shown.push(fresh.id); localStorage.setItem(key, JSON.stringify(shown.slice(-40))); }
   }catch(e){}
 }
@@ -3495,6 +3513,13 @@ function findUserRecord(kind, id){
   for(var i=0;i<list.length;i++){ if(list[i][key]===id) return list[i]; }
   return null;
 }
+/* a message that lands in that user's bell (stored on their directory doc; pending invites have no bell yet) */
+function bNote(title, text, tone, icon){
+  return { id:'adm-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6), title:title, text:text, tone:tone||'ok', icon:icon||'bell', at:new Date().toISOString() };
+}
+function bNoteField(kind, entry){
+  return (kind==='real' && entry) ? { notifications: firebase.firestore.FieldValue.arrayUnion(entry) } : {};
+}
 function histEntry(rec, action, extra){
   return Object.assign({ plan: rec.plan==='pro'?'pro':'free', startDate:null, endDate:null, at:new Date().toISOString(), action:action }, extra||{});
 }
@@ -3504,6 +3529,7 @@ function toggleUserPlan(kind, id, newPlan){
   var rec = findUserRecord(kind, id); if(!rec) return;
   var patch = { plan:'free', subscription:null, subscriptionHistory: firebase.firestore.FieldValue.arrayUnion(histEntry(rec,'free',{plan:'free'})) };
   if(kind==='pending') patch.proDays = firebase.firestore.FieldValue.delete();
+  Object.assign(patch, bNoteField(kind, rec.plan==='pro' ? bNote('Your plan was changed to Free','Your Pro access was turned off. You\'re on the Free plan now.','warn','clock') : null));
   userRef(kind, id).update(patch).then(function(){
     toast('Moved to Free');
   }).catch(function(err){ toast('Could not update: '+err.message, true); });
@@ -3638,10 +3664,16 @@ function openUserDetail(kind, id, focus){
           '<div class="b-note" id="ud-dur-note"></div>'+
         '</div>'+
         '<div class="modal-foot"><button class="btn primary" onclick="applyUserPlan()">'+ICONS.check+' Apply plan</button></div>'+
-        (kind==='real' && st.trial ?
+        (kind==='real' && rec.plan!=='pro' ?
           '<div class="b-section-title">Free trial</div>'+
-          '<div class="b-note" style="margin:-6px 0 10px">New accounts get '+trialDaysCfg()+' day'+(trialDaysCfg()===1?'':'s')+' of Pro automatically (set in Plan limits).</div>'+
-          '<div class="modal-foot" style="margin-top:0"><button class="btn" onclick="udTrialEnd()">End trial now</button><button class="btn" onclick="udTrialExtend(3)">Extend +3 days</button></div>' : '')
+          '<div class="b-note" style="margin:-6px 0 10px">New accounts get '+trialDaysCfg()+' day'+(trialDaysCfg()===1?'':'s')+' of Pro automatically (set in Plan limits). Every change here is sent to the user as a notification.</div>'+
+          '<div class="b-presets">'+
+            '<button type="button" onclick="udTrialShift(-1)">− 1 day</button>'+
+            '<button type="button" onclick="udTrialShift(1)">+ 1 day</button>'+
+            '<button type="button" onclick="udTrialShift(3)">+ 3 days</button>'+
+            '<button type="button" onclick="udTrialShift(7)">+ 7 days</button>'+
+            '<button type="button" onclick="udTrialEnd()">End trial now</button>'+
+          '</div>' : '')
       )+
     (isProtected || isSelf ? '' :
       '<div class="b-section-title">Danger zone</div>'+
@@ -3707,48 +3739,84 @@ function saveUserDetail(){
   if(kind==='pending') patch.displayName = udVal('ud-name').trim() || null;
   if(bUserIsProtected(kind, rec)){ patch.role = 'admin'; patch.status = 'active'; }
   if(bUserIsSelf(kind, id)){ patch.role = rec.role==='admin' ? 'admin' : 'member'; patch.status = 'active'; }
+  var notes = [];
+  var wasAdmin = rec.role==='admin', wasSusp = rec.status==='suspended';
+  if(patch.role==='admin' && !wasAdmin) notes.push(bNote('You\'re now an admin','You have been given admin access.','ok','shield'));
+  if(patch.role!=='admin' && wasAdmin) notes.push(bNote('Your admin access was removed','Your account is now a regular member account.','warn','shield'));
+  if(patch.status==='suspended' && !wasSusp) notes.push(bNote('Your account was suspended','Access to your account was suspended by the admin.','bad','clock'));
+  if(patch.status!=='suspended' && wasSusp) notes.push(bNote('Your account was reinstated','Your access has been restored. Welcome back!','ok','sparkle'));
+  if(kind==='real' && notes.length) patch.notifications = firebase.firestore.FieldValue.arrayUnion.apply(null, notes);
   userRef(kind, id).update(patch).then(function(){
-    toast('Account saved');
+    toast(notes.length && kind==='real' ? 'Account saved · user notified' : 'Account saved');
   }).catch(function(err){ toast('Could not update: '+err.message, true); });
 }
 function applyUserPlan(){
   var kind = _bDetailKind, id = _bDetailId;
   var rec = findUserRecord(kind, id); if(!rec){ toast('User not found', true); return; }
   if(rec.role==='admin'){ toast('Admins always have Pro access'); return; }
-  var plan = udVal('ud-plan')==='pro' ? 'pro' : 'free', patch, entry;
+  var plan = udVal('ud-plan')==='pro' ? 'pro' : 'free', patch, entry, note = null;
   if(plan==='pro'){
     var s = udVal('ud-sub-start') || todayISO(), e = udVal('ud-sub-end');
     if(e && e < s){ toast('End date must be after the start date', true); return; }
     if(e && e < todayISO()){ toast('That end date is already in the past', true); return; }
     patch = { plan:'pro', subscription:{ startDate:s, endDate:e||null } };
     entry = { plan:'pro', startDate:s, endDate:e||null, at:new Date().toISOString(), action:'set' };
+    var oldEnd = rec.subscription && rec.subscription.endDate || null;
+    if(rec.plan!=='pro'){
+      note = bNote('You\'ve been upgraded to Pro', e ? 'You have full Pro access until '+fmtPlainDate(e)+'.' : 'You have full Pro access with no end date.', 'ok', 'sparkle');
+    } else if(!oldEnd && e){
+      note = bNote('Your Pro plan now has an end date', 'Your Pro access now runs until '+fmtPlainDate(e)+'.', 'warn', 'clock');
+    } else if(oldEnd && !e){
+      note = bNote('Your Pro plan no longer expires', 'The end date was removed — you keep Pro access.', 'ok', 'sparkle');
+    } else if(oldEnd && e && e > oldEnd){
+      note = bNote('Your Pro plan was extended', 'Pro now runs until '+fmtPlainDate(e)+' (was '+fmtPlainDate(oldEnd)+').', 'ok', 'sparkle');
+    } else if(oldEnd && e && e < oldEnd){
+      note = bNote('Your Pro end date was changed', 'Pro now ends on '+fmtPlainDate(e)+' (was '+fmtPlainDate(oldEnd)+').', 'warn', 'clock');
+    }
   } else {
     patch = { plan:'free', subscription:null };
     entry = { plan:'free', startDate:null, endDate:null, at:new Date().toISOString(), action:'free' };
+    if(rec.plan==='pro') note = bNote('Your plan was changed to Free', 'Your Pro access was turned off. You\'re on the Free plan now.', 'warn', 'clock');
   }
   patch.subscriptionHistory = firebase.firestore.FieldValue.arrayUnion(entry);
   if(kind==='pending') patch.proDays = firebase.firestore.FieldValue.delete();
+  Object.assign(patch, bNoteField(kind, note));
   userRef(kind, id).update(patch).then(function(){
-    toast(plan==='pro' ? 'Pro applied' + (patch.subscription.endDate ? ' — auto-switches to Free after '+fmtPlainDate(patch.subscription.endDate) : '') : 'Moved to Free');
+    var base = plan==='pro' ? 'Pro applied' + (patch.subscription.endDate ? ' — auto-switches to Free after '+fmtPlainDate(patch.subscription.endDate) : '') : 'Moved to Free';
+    toast(base + (note && kind==='real' ? ' · user notified' : ''));
   }).catch(function(err){ toast('Could not save: '+err.message, true); });
 }
 function udTrialEnd(){
   var kind = _bDetailKind, id = _bDetailId, rec = findUserRecord(kind, id); if(!rec) return;
-  userRef(kind, id).update({
+  var st = planState(rec, kind);
+  var patch = {
     trialEndDate: plainAddDays(todayISO(), -1),
     subscriptionHistory: firebase.firestore.FieldValue.arrayUnion(histEntry(rec,'trial-end',{plan:'free'}))
-  }).then(function(){ toast('Trial ended'); }).catch(function(err){ toast('Could not update: '+err.message, true); });
+  };
+  Object.assign(patch, bNoteField(kind, st.trialActive ? bNote('Your free trial was ended','The admin ended your free Pro trial. You\'re on the Free plan now.','warn','clock') : null));
+  userRef(kind, id).update(patch).then(function(){ toast('Trial ended'+(st.trialActive && kind==='real'?' · user notified':'')); }).catch(function(err){ toast('Could not update: '+err.message, true); });
 }
-function udTrialExtend(n){
+/* + / − days on the trial end date (an ended trial restarts counting from today) */
+function udTrialShift(n){
   var kind = _bDetailKind, id = _bDetailId, rec = findUserRecord(kind, id); if(!rec) return;
   var st = planState(rec, kind), today = todayISO();
-  var base = (st.trial && st.trial.end > today) ? st.trial.end : today;
-  var ne = plainAddDays(base, n);
-  userRef(kind, id).update({
+  var active = st.trialActive, base = active ? st.trial.end : plainAddDays(today, -1);
+  if(n<0 && !active){ toast('This trial has already ended'); return; }
+  var ne = plainAddDays(base, n), note, entry;
+  if(ne < today){ udTrialEnd(); return; }
+  var left = plainDiffDays(today, ne) + 1;
+  if(n>0) note = bNote('Your free trial was extended', 'Your free Pro trial now ends on '+fmtPlainDate(ne)+' ('+left+' day'+(left===1?'':'s')+' left).', 'ok', 'sparkle');
+  else note = bNote('Your free trial was shortened', 'Your free Pro trial now ends on '+fmtPlainDate(ne)+' ('+left+' day'+(left===1?'':'s')+' left).', 'warn', 'clock');
+  var patch = {
     trialEndDate: ne,
-    subscriptionHistory: firebase.firestore.FieldValue.arrayUnion(histEntry(rec,'trial-extend',{plan:'free', endDate:ne}))
-  }).then(function(){ toast('Trial extended to '+fmtPlainDate(ne)); }).catch(function(err){ toast('Could not update: '+err.message, true); });
+    subscriptionHistory: firebase.firestore.FieldValue.arrayUnion(histEntry(rec, n>0?'trial-extend':'trial-end', {plan:'free', endDate:ne}))
+  };
+  Object.assign(patch, bNoteField(kind, note));
+  userRef(kind, id).update(patch).then(function(){
+    toast((n>0?'Trial extended to ':'Trial now ends ')+fmtPlainDate(ne)+(kind==='real'?' · user notified':''));
+  }).catch(function(err){ toast('Could not update: '+err.message, true); });
 }
+function udTrialExtend(n){ udTrialShift(n); }
 
 /* ---- Add user (creates a pending record, claimed on that email's first Google sign-in) ---- */
 function openAddUserModal(){
