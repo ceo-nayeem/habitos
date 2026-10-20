@@ -2198,6 +2198,17 @@ body.ob-lock{overflow:hidden}
 .ob-sub{border-left:2px solid var(--border2);padding:2px 0 2px 10px;margin-top:10px}
 .ob-ms{margin-top:8px;display:flex;flex-direction:column;gap:6px}
 .ob-ms textarea{width:100%;min-height:76px;resize:vertical;line-height:1.5;font-size:12.5px}
+
+/* onboarding profile editor — compact template references */
+.ob-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.ob-ref{border:1px solid var(--border);border-radius:12px;padding:10px;background:var(--surface2);display:flex;flex-direction:column;gap:8px}
+.ob-ref-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ob-ref-head b{font-size:12.5px}
+.ob-n{font-family:var(--f-mono);font-size:10.5px;color:var(--text3)}
+.ob-pick{width:auto;max-width:100%;flex:0 1 230px;min-height:30px;padding:4px 8px;font-size:12px}
+.ob-chipwrap{display:flex;flex-wrap:wrap;gap:6px}
+.b-chip.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+@media(max-width:560px){.ob-pick{flex:1 1 100%}}
 </style>
 </head>
 <body>
@@ -3330,15 +3341,6 @@ function notifToastOnce(){
    (flow text, which paths are offered, the questions, every profile) is
    editable from Backend → Onboarding and stored in config/onboarding.
    ================================================================== */
-function _oh(name, icon, cat, ft, x){
-  var h = { name:name, icon:icon, cat:cat, freqType:ft||'daily' };
-  if(ft==='weekly') h.freqCount = x||3;
-  if(ft==='days') h.freqDays = x||[1,2,3,4,5];
-  return h;
-}
-function _og(title, icon, note, ms){
-  return { title:title, icon:icon, note:note, milestones: ms.map(function(m){ return { title:m[0], tasks:m[1] }; }) };
-}
 var DEFAULT_ONBOARDING = {
   enabled: true,
   welcomeTitle: 'Welcome to HabitOS, {name}',
@@ -3368,55 +3370,21 @@ var DEFAULT_ONBOARDING = {
   ],
   profiles: [
     { icon:'💪', name:'Fit & Healthy', cat:'Health & Fitness', desc:'Simple daily basics for energy, sleep and movement.', tags:['health','light','medium','general','student','professional'],
-      habits:[ _oh('Drink Water','💧','Health'), _oh('Move Your Body','🏃','Health'), _oh('Sleep by 11pm','😴','Health'), _oh('Stretch','🤸','Health'), _oh('Eat a Healthy Meal','🥗','Health','weekly',5) ],
-      goals:[ _og('Build a Lasting Fitness Routine','🏋️','Go from irregular workouts to a routine you keep for good.',[
-        ['Set up',['Pick 3 fixed workout days','Choose workouts you enjoy','Get comfortable shoes and clothes']],
-        ['Weeks 1–2: start easy',['Do 20 minutes on each workout day','Walk 15 minutes on rest days','Stretch after every session']],
-        ['Weeks 3–6: build up',['Add 10 minutes to each session','Try one new workout type','Track your weekly total in the app']],
-        ['Make it stick',['Complete 4 full weeks without skipping','Plan your next 4 weeks','Reward yourself for the streak']] ]) ] },
+      habits:['Drink Water','Move Your Body','Sleep by 11pm','Stretch','No Sugar'], goals:['Run Your First 5K'] },
     { icon:'🎯', name:'Deep Focus Pro', cat:'Productivity', desc:'Protect your best hours and finish what matters at work.', tags:['productivity','professional','creator','medium','deep'],
-      habits:[ _oh('Deep Work Session','🎯','Productivity','days'), _oh('Plan Tomorrow','📝','Productivity'), _oh('Phone-Free Hour','📵','Productivity'), _oh('Inbox Check Once','📥','Productivity','days'), _oh('Weekly Review','🗓️','Productivity','weekly',1) ],
-      goals:[ _og('Ship a Key Project','🚀','Take your most important project from started to delivered.',[
-        ['Define it',['Write the outcome in one sentence','List the 5 biggest tasks','Set a clear deadline']],
-        ['Build momentum',['Block 2 deep-work sessions per week','Finish the hardest task first','Remove one recurring distraction']],
-        ['Finish strong',['Review progress every Friday','Get feedback from one person','Deliver and write down what you learned']] ]) ] },
+      habits:['Deep Work Session','Tidy Space','Journal','Read 20 Minutes','Sleep by 11pm'], goals:['Launch a Side Project'] },
     { icon:'🎓', name:'Focused Student', cat:'Study & Learning', desc:'A steady study rhythm that keeps exams stress-free.', tags:['learning','student','productivity','medium','deep'],
-      habits:[ _oh('Study Session','📚','Learning','days'), _oh('Revise Notes','📝','Learning'), _oh('Read 20 Minutes','📖','Learning'), _oh('Practice Problems','✏️','Learning','weekly',4), _oh('Sleep by 11pm','😴','Health') ],
-      goals:[ _og('Ace the Next Exam','🏆','Prepare early, revise often and walk into the exam calm.',[
-        ['Plan',['List every topic you must cover','Split topics across the weeks left','Gather notes and past papers']],
-        ['Learn',['Finish the first pass of each topic','Make short summary notes','Ask about anything unclear']],
-        ['Revise',['Do one past paper every week','Review mistakes the same day','Revise summary notes twice']],
-        ['Exam week',['Sleep well the night before','Pack everything the evening before','Review summaries, not new material']] ]) ] },
+      habits:['Read 20 Minutes','Deep Work Session','Journal','Stretch','Sleep by 11pm'], goals:['Read 12 Books This Year'] },
     { icon:'🧘', name:'Calm Mind', cat:'Mind & Calm', desc:'Short daily practices to feel lighter and more present.', tags:['mind','light','general','professional','student'],
-      habits:[ _oh('Meditate','🧘','Mind'), _oh('Journal','📓','Mind'), _oh('Gratitude Note','🙏','Mind'), _oh('Walk Outside','🌿','Health'), _oh('Screen-Free Evening','🌙','Mind','weekly',3) ],
-      goals:[ _og('30 Days of Calm','🌅','Build a gentle daily practice that lowers stress.',[
-        ['Week 1',['Meditate 3 minutes a day','Write 3 lines in your journal','Notice one calm moment daily']],
-        ['Week 2',['Meditate 5 minutes a day','Add a short evening walk','Name one thing you are grateful for']],
-        ['Weeks 3–4',['Meditate 10 minutes a day','Keep 3 screen-free evenings','Write a short reflection on what changed']] ]) ] },
+      habits:['Meditate','Journal','Gratitude Note','Stretch','Sleep by 11pm'], goals:[] },
     { icon:'💰', name:'Money Builder', cat:'Money', desc:'Know where your money goes and grow your savings.', tags:['finance','professional','general','light'],
-      habits:[ _oh('Track Spending','🧾','Finance'), _oh('Save Money','💰','Finance','weekly',3), _oh('No Impulse Buys','🛑','Finance'), _oh('Review Budget','📊','Finance','weekly',1), _oh('Learn About Money','📖','Finance','weekly',2) ],
-      goals:[ _og('Build an Emergency Fund','🏦','Save enough to cover three months of essentials.',[
-        ['Know your numbers',['List monthly income','List essential monthly expenses','Work out the 3-month target']],
-        ['Set up the system',['Open a separate savings account','Set a fixed monthly transfer','Automate it for payday']],
-        ['Grow it',['Save the first month of expenses','Cut one non-essential expense','Reach the full 3-month target']] ]) ] },
+      habits:['Save Money','Read 20 Minutes','Journal','Tidy Space'], goals:['Build an Emergency Fund'] },
     { icon:'📚', name:'Lifelong Learner', cat:'Study & Learning', desc:'Learn a little every day and turn it into real skill.', tags:['learning','general','creator','professional','light','medium'],
-      habits:[ _oh('Read 20 Minutes','📖','Learning'), _oh('Practice a Skill','🛠️','Learning'), _oh('Language Practice','🗣️','Learning'), _oh('Watch a Lesson','🎬','Learning','weekly',3), _oh('Teach What You Learned','💬','Learning','weekly',1) ],
-      goals:[ _og('Learn a New Skill in 90 Days','🌟','Go from beginner to confident with focused daily practice.',[
-        ['Choose and plan',['Pick one skill and write why it matters','Find one main course or book','Schedule a daily practice slot']],
-        ['Learn the basics',['Finish the first third of your course','Complete 10 practice exercises','Note what is hardest']],
-        ['Apply it',['Build or do one small real project','Share it with someone for feedback','Plan your next level']] ]) ] },
+      habits:['Read 20 Minutes','Practice Instrument','Journal','Deep Work Session'], goals:['Learn a New Language','Read 12 Books This Year'] },
     { icon:'🤝', name:'Social Connector', cat:'Relationships', desc:'Stay close to the people who matter most.', tags:['social','general','light','professional','student'],
-      habits:[ _oh('Call Family','📞','Social','weekly',2), _oh('Message a Friend','💬','Social','weekly',4), _oh('Plan a Meetup','☕','Social','weekly',1), _oh('Small Act of Kindness','💛','Social','weekly',3), _oh('Phone-Free Meals','🍽️','Social') ],
-      goals:[ _og('Strengthen Key Relationships','💞','Be more present with the people you care about.',[
-        ['Make a list',['Write down 5 people who matter most','Note when you last spoke to each','Pick one way to reach out to each']],
-        ['Reach out',['Call or message each person once','Plan one meetup this month','Send one thoughtful note']],
-        ['Keep it going',['Set a weekly check-in rhythm','Remember one important date per person','Review how connected you feel']] ]) ] },
+      habits:['Call Family','Gratitude Note','Move Your Body','Drink Water'], goals:[] },
     { icon:'🎨', name:'Creator Routine', cat:'Creative', desc:'Make something every day and share it with the world.', tags:['creative','creator','deep','medium'],
-      habits:[ _oh('Create Something','✍️','Productivity'), _oh('Practice Your Craft','🎨','Learning'), _oh('Share Your Work','📣','Social','weekly',2), _oh('Get Inspired','💡','Mind'), _oh('Weekly Reflection','🪞','Mind','weekly',1) ],
-      goals:[ _og('Publish 30 Pieces','📅','Build a body of work by finishing and sharing steadily.',[
-        ['Set up',['Choose your format and platform','Decide how often you will publish','List 10 ideas']],
-        ['Pieces 1–10',['Finish and publish 10 pieces','Do not aim for perfect','Note which ones people liked']],
-        ['Pieces 11–30',['Keep your publishing rhythm','Improve one thing in each piece','Review your best 5 pieces']] ]) ] }
+      habits:['Practice Instrument','Journal','Deep Work Session','Gratitude Note','Read 20 Minutes'], goals:['Launch a Side Project'] }
   ]
 };
 var _onboardingConfig = null;   // null = built-in defaults
@@ -3457,16 +3425,27 @@ function obFill(t){
   var n = obFirstName();
   return String(t||'').replace(/,?\s*\{name\}/g, function(m){ return n ? m.replace('{name}', n) : ''; });
 }
+/* A profile lists template NAMES; at run time they are resolved against the live
+   Habit Templates / Goal Templates (older saved entries that embed a full habit/goal still work). */
+function obResolveProfile(p){
+  var habits = [], goals = [];
+  (p.habits||[]).forEach(function(x){ var t = typeof x==='string' ? obFindHabit(x) : x; if(t) habits.push(t); });
+  (p.goals||[]).forEach(function(x){ var t = typeof x==='string' ? obFindGoal(x) : x; if(t) goals.push(t); });
+  return Object.assign({}, p, { habits:habits, goals:goals });
+}
 function obNormalize(cfg){
   var d = DEFAULT_ONBOARDING;
   cfg = cfg || {};
+  var rawProfiles = (Array.isArray(cfg.profiles) && cfg.profiles.length) ? cfg.profiles : d.profiles;
+  var resolved = rawProfiles.map(obResolveProfile);
+  var usable = resolved.filter(function(p){ return p.habits.length || p.goals.length; });
   return {
     enabled: cfg.enabled!==false,
     welcomeTitle: cfg.welcomeTitle || d.welcomeTitle,
     welcomeSub: cfg.welcomeSub || d.welcomeSub,
     paths: Object.assign({}, d.paths, cfg.paths||{}),
     questions: Array.isArray(cfg.questions) ? cfg.questions : d.questions,
-    profiles: (Array.isArray(cfg.profiles) && cfg.profiles.length) ? cfg.profiles : d.profiles
+    profiles: usable.length ? usable : resolved
   };
 }
 function maybeStartOnboarding(){
@@ -3789,7 +3768,8 @@ function bObClean(d){
       return {
         icon:(p.icon||'✨').trim()||'✨', name:p.name.trim(), cat:(p.cat||'General').trim()||'General',
         desc:(p.desc||'').trim(), tags:bObTags(p.tags),
-        habits:bTplClean(p.habits), goals:bGtClean(p.goals)
+        habits:(p.habits||[]).map(function(x){ return typeof x==='string' ? x.trim() : (bTplClean([x])[0]||null); }).filter(Boolean),
+        goals:(p.goals||[]).map(function(x){ return typeof x==='string' ? x.trim() : (bGtClean([x])[0]||null); }).filter(Boolean)
       };
     })
   };
@@ -3906,7 +3886,8 @@ function renderBackendOnboardingCounts(){ /* tab counts refresh on next full ren
 function bObProfilesHTML(){
   var _cats = []; _bObDraft.profiles.forEach(function(p){ var c=(p.cat||'').trim(); if(c && _cats.indexOf(c)===-1) _cats.push(c); });
   return '<datalist id="bObCatList">'+_cats.map(function(c){ return '<option value="'+esc(c)+'">'; }).join('')+'</datalist>'+
-    '<div class="b-panel"><div class="b-panel-head"><h3>Starter profiles</h3><span class="sub">A ready-made set of habits and goals · grouped by category</span><span class="b-sp"></span>'+
+    '<div class="b-panel"><div class="b-panel-head"><h3>Starter profiles</h3><span class="sub">Habits and goals come from your templates — edit them there and every profile updates</span><span class="b-sp"></span>'+
+    '<button class="btn sm ghost" onclick="goBackend(\'templates\')">Habit Templates</button><button class="btn sm ghost" onclick="goBackend(\'goalTemplates\')">Goal Templates</button>'+
     '<button class="btn sm" onclick="bObPAdd()">'+ICONS.plus+' New profile</button></div><div id="bObPList">'+bObPListHTML()+'</div></div>';
 }
 function bObPListHTML(){
@@ -3914,27 +3895,47 @@ function bObPListHTML(){
   return ps.length ? ps.map(bObPCard).join('') : '<div class="b-empty-cell">No profiles yet — click “New profile”.</div>';
 }
 function bObPRender(){ var b = document.getElementById('bObPList'); if(b) b.innerHTML = bObPListHTML(); }
-function bObPCounts(p){ return (p.habits||[]).length+' habits · '+(p.goals||[]).length+' goals'; }
-function bObHabitRow(h, i, j){
-  var cats = effCategories().slice();
-  if(h.cat && cats.indexOf(h.cat)===-1) cats.push(h.cat);
-  var extra = '';
-  if(h.freqType==='weekly'){
-    extra = '<div class="b-wk"><input class="inp" type="number" min="1" max="7" value="'+(h.freqCount||3)+'" oninput="bObPHabit('+i+','+j+',\'freqCount\',parseInt(this.value,10)||1)"/>/ week</div>';
-  } else if(h.freqType==='days'){
-    var on = h.freqDays || [1,2,3,4,5];
-    extra = '<div class="b-days">'+B_DAYS.map(function(l,d){
-      return '<button type="button" class="b-day'+(on.indexOf(d)!==-1?' on':'')+'" title="'+DAY_LABELS_FULL[d]+'" onclick="bObPDay('+i+','+j+','+d+')">'+l+'</button>';
-    }).join('')+'</div>';
-  }
-  return '<div class="ob-hrow">'+
-    '<input class="inp b-emo" maxlength="4" value="'+esc(h.icon||'')+'" oninput="bObPHabit('+i+','+j+',\'icon\',this.value)"/>'+
-    '<input class="inp b-f-name" placeholder="Habit name" value="'+esc(h.name||'')+'" oninput="bObPHabit('+i+','+j+',\'name\',this.value)"/>'+
-    '<select class="sel" onchange="bObPHabit('+i+','+j+',\'cat\',this.value)">'+cats.map(function(c){ return '<option'+(h.cat===c?' selected':'')+'>'+esc(c)+'</option>'; }).join('')+'</select>'+
-    '<select class="sel" onchange="bObPHabit('+i+','+j+',\'freqType\',this.value)">'+
-      ['daily','weekly','days'].map(function(f){ return '<option value="'+f+'"'+(h.freqType===f?' selected':'')+'>'+(f==='daily'?'Every day':f==='weekly'?'X per week':'Specific days')+'</option>'; }).join('')+'</select>'+
-    extra+
-    '<button class="b-ib del" title="Remove habit" onclick="bObPDelHabit('+i+','+j+')">'+ICONS.trash+'</button></div>';
+/* Habits and goals are never edited here — a profile only POINTS at entries of the
+   Habit Templates / Goal Templates sections (by name), so editing a template there
+   updates every profile that uses it. Here you just add or remove them. */
+function obFindHabit(name){
+  var key = String(name||'').trim().toLowerCase(), l = effTemplates();
+  for(var i=0;i<l.length;i++){ if(String(l[i].name||'').trim().toLowerCase()===key) return l[i]; }
+  return null;
+}
+function obFindGoal(title){
+  var key = String(title||'').trim().toLowerCase(), l = effGoalTemplates();
+  for(var i=0;i<l.length;i++){ if(String(l[i].title||'').trim().toLowerCase()===key) return l[i]; }
+  return null;
+}
+function bObRefName(kind, x){ return typeof x==='string' ? x : (kind==='h' ? x.name : x.title) || ''; }
+function bObRefChip(kind, i, j, x){
+  var isStr = typeof x==='string';
+  var t = isStr ? (kind==='h' ? obFindHabit(x) : obFindGoal(x)) : x;
+  var label = bObRefName(kind, x);
+  var title = !t ? 'This template no longer exists (renamed or deleted). Remove it, or add the template again.'
+            : (isStr ? '' : 'Custom entry saved by an older version. Remove it and pick the template instead.');
+  return '<span class="b-chip'+(t?'':' warn')+'" title="'+esc(title)+'">'+(t && t.icon ? esc(t.icon)+' ' : '')+esc(label)+
+    (!t ? ' ⚠' : (isStr ? '' : ' <em>custom</em>'))+
+    '<button type="button" title="Remove" onclick="bObPDelRef(\''+kind+'\','+i+','+j+')">'+ICONS.x+'</button></span>';
+}
+function bObRefPicker(kind, i, p){
+  var list = kind==='h' ? effTemplates() : effGoalTemplates();
+  var have = ((kind==='h' ? p.habits : p.goals) || []).map(function(x){ return bObRefName(kind,x).trim().toLowerCase(); });
+  var opts = '';
+  list.forEach(function(t,k){
+    var nm = kind==='h' ? t.name : t.title;
+    if(have.indexOf(String(nm||'').trim().toLowerCase())!==-1) return;
+    opts += '<option value="'+k+'">'+esc((t.icon||'')+' '+nm)+'</option>';
+  });
+  return '<select class="sel ob-pick" onchange="bObPAddRef(\''+kind+'\','+i+',this.value);this.value=\'\'"'+(opts?'':' disabled')+'>'+
+    '<option value="">'+(opts ? '+ Add '+(kind==='h'?'habit':'goal')+' from templates…' : 'All templates added')+'</option>'+opts+'</select>';
+}
+function bObRefBlock(kind, i, p){
+  var items = (kind==='h' ? p.habits : p.goals) || [];
+  return '<div class="ob-ref"><div class="ob-ref-head"><b>'+(kind==='h'?'Habits':'Goals')+'</b><span class="ob-n">'+items.length+'</span><span class="b-sp"></span>'+bObRefPicker(kind,i,p)+'</div>'+
+    '<div class="ob-chipwrap">'+(items.length ? items.map(function(x,j){ return bObRefChip(kind,i,j,x); }).join('') :
+      '<span class="hint" style="margin:0">None yet — pick from your '+(kind==='h'?'Habit':'Goal')+' Templates.</span>')+'</div></div>';
 }
 function bObPCard(p, i){
   var open = !!_bObOpenP[i];
@@ -3947,86 +3948,43 @@ function bObPCard(p, i){
       '<button class="b-ib" title="Move down" onclick="bObPMove('+i+',1)">↓</button>'+
       '<button class="b-ib" title="Duplicate" onclick="bObPDup('+i+')">'+B_ICO.copy+'</button>'+
       '<button class="b-ib del" title="Delete" onclick="bObPDel('+i+')">'+ICONS.trash+'</button>'+
-      '<button class="b-ib" title="'+(open?'Collapse':'Edit habits & goals')+'" onclick="bObPToggle('+i+')">'+(open?'▴':'▾')+'</button>'+
+      '<button class="b-ib" title="'+(open?'Collapse':'Edit profile')+'" onclick="bObPToggle('+i+')">'+(open?'▴':'▾')+'</button>'+
     '</div></div>';
   if(open){
-    var tplOpts = '<option value="">Add from habit templates…</option>'+effTemplates().map(function(t,k){ return '<option value="'+k+'">'+esc((t.icon||'')+' '+t.name)+'</option>'; }).join('');
-    var gOpts = '<option value="">Add from goal templates…</option>'+effGoalTemplates().map(function(t,k){ return '<option value="'+k+'">'+esc((t.icon||'')+' '+t.title)+'</option>'; }).join('');
     out += '<div class="gt-bbody">'+
-      '<div class="field-row" style="margin:0"><div class="field" style="margin:0"><span class="field-label">Category</span>'+
-        '<input class="inp" list="bObCatList" placeholder="e.g. Health &amp; Fitness" value="'+esc(p.cat||'')+'" oninput="bObPField('+i+',\'cat\',this.value)"/></div>'+
-      '<div class="field" style="margin:0;flex:2"><span class="field-label">Description</span><input class="inp" placeholder="One line shown on the card" value="'+esc(p.desc||'')+'" oninput="bObPField('+i+',\'desc\',this.value)"/></div></div>'+
-      '<div><span class="field-label">Matching tags</span><input class="inp" placeholder="health, light, student" value="'+esc(Array.isArray(p.tags)?p.tags.join(', '):(p.tags||''))+'" oninput="bObPField('+i+',\'tags\',this.value)"/>'+
-        '<div class="hint">Comma-separated. A profile ranks higher the more of the user\'s answer tags it carries.</div></div>'+
-      '<div class="gt-ms"><div class="ob-subhead"><b>Habits</b><span class="b-sp"></span>'+
-        '<select class="sel" style="width:auto;max-width:200px" onchange="bObPAddTplHabit('+i+',this.value);this.value=\'\'">'+tplOpts+'</select>'+
-        '<button class="btn sm" onclick="bObPAddHabit('+i+')">'+ICONS.plus+' Habit</button></div>'+
-        ((p.habits||[]).length ? p.habits.map(function(h,j){ return bObHabitRow(h,i,j); }).join('') : '<div class="hint">No habits yet.</div>')+'</div>'+
-      '<div class="gt-ms"><div class="ob-subhead"><b>Goals</b><span class="b-sp"></span>'+
-        '<select class="sel" style="width:auto;max-width:200px" onchange="bObPAddTplGoal('+i+',this.value);this.value=\'\'">'+gOpts+'</select>'+
-        '<button class="btn sm" onclick="bObPAddGoal('+i+')">'+ICONS.plus+' Goal</button></div>'+
-        ((p.goals||[]).length ? p.goals.map(function(g,k){ return bObGoalHTML(g,i,k); }).join('') : '<div class="hint">No goals yet.</div>')+'</div>'+
+      '<div class="ob-fields">'+
+        '<div><span class="field-label">Category</span><input class="inp" list="bObCatList" placeholder="e.g. Health &amp; Fitness" value="'+esc(p.cat||'')+'" oninput="bObPField('+i+',\'cat\',this.value)"/></div>'+
+        '<div><span class="field-label">Description</span><input class="inp" placeholder="One line shown on the card" value="'+esc(p.desc||'')+'" oninput="bObPField('+i+',\'desc\',this.value)"/></div>'+
+        '<div><span class="field-label">Matching tags</span><input class="inp" placeholder="health, light, student" value="'+esc(Array.isArray(p.tags)?p.tags.join(', '):(p.tags||''))+'" oninput="bObPField('+i+',\'tags\',this.value)"/></div>'+
+      '</div>'+
+      bObRefBlock('h', i, p)+
+      bObRefBlock('g', i, p)+
     '</div>';
   }
   return out+'</div>';
 }
-function bObGoalHTML(g, i, k){
-  return '<div class="ob-sub"><div class="gt-ms-head">'+
-    '<input class="inp b-emo" style="width:46px;flex:none;text-align:center" maxlength="4" value="'+esc(g.icon||'')+'" oninput="bObPGoal('+i+','+k+',\'icon\',this.value)"/>'+
-    '<input class="inp b-f-name" placeholder="Goal title" value="'+esc(g.title||'')+'" oninput="bObPGoal('+i+','+k+',\'title\',this.value)"/>'+
-    '<button class="b-ib del" title="Remove goal" onclick="bObPDelGoal('+i+','+k+')">'+ICONS.trash+'</button></div>'+
-    '<input class="inp" style="margin-top:6px" placeholder="Short description" value="'+esc(g.note||'')+'" oninput="bObPGoal('+i+','+k+',\'note\',this.value)"/>'+
-    (g.milestones||[]).map(function(m,n){
-      return '<div class="ob-ms"><div class="gt-ms-head"><span class="gt-ms-n mono">#'+(n+1)+'</span>'+
-        '<input class="inp b-f-name" placeholder="Milestone title" value="'+esc(m.title||'')+'" oninput="bObPMs('+i+','+k+','+n+',\'title\',this.value)"/>'+
-        '<button class="b-ib del" title="Remove milestone" onclick="bObPDelMs('+i+','+k+','+n+')">'+ICONS.trash+'</button></div>'+
-        '<textarea class="inp" placeholder="One task per line" oninput="bObPMs('+i+','+k+','+n+',\'tasks\',this.value)">'+esc((m.tasks||[]).join('\n'))+'</textarea></div>';
-    }).join('')+
-    '<div style="margin-top:6px"><button class="btn sm" onclick="bObPAddMs('+i+','+k+')">'+ICONS.plus+' Milestone</button></div></div>';
-}
+function bObPCounts(p){ return (p.habits||[]).length+' habits · '+(p.goals||[]).length+' goals'; }
 function bObPTouch(i){
   var p = _bObDraft.profiles[i], s = document.getElementById('bObPSum'+i);
   if(s && p) s.textContent = bObPCounts(p);
   bObTouch();
 }
 function bObPField(i,f,v){ var p=_bObDraft.profiles[i]; if(!p) return; p[f]=v; bObTouch(); }
-function bObPHabit(i,j,f,v){
-  var h=((_bObDraft.profiles[i]||{}).habits||[])[j]; if(!h) return;
-  h[f]=v;
-  if(f==='freqType'){
-    if(v!=='days') delete h.freqDays;
-    if(v==='days' && !h.freqDays) h.freqDays=[1,2,3,4,5];
-    bObPRender();
-  }
-  bObTouch();
+function bObPAddRef(kind, i, val){
+  if(val==='') return;
+  var p = _bObDraft.profiles[i]; if(!p) return;
+  var t = (kind==='h' ? effTemplates() : effGoalTemplates())[parseInt(val,10)]; if(!t) return;
+  var key = kind==='h' ? 'habits' : 'goals', nm = kind==='h' ? t.name : t.title;
+  p[key] = p[key] || [];
+  if(p[key].some(function(x){ return bObRefName(kind,x).trim().toLowerCase()===String(nm||'').trim().toLowerCase(); })) return;   // already in this profile
+  p[key].push(nm);
+  bObPRender(); bObPTouch(i);
 }
-function bObPDay(i,j,d){
-  var h=((_bObDraft.profiles[i]||{}).habits||[])[j]; if(!h) return;
-  var on=(h.freqDays||[1,2,3,4,5]).slice(), k=on.indexOf(d);
-  if(k===-1) on.push(d); else if(on.length>1) on.splice(k,1);
-  on.sort(function(a,b){ return a-b; }); h.freqDays=on;
-  bObPRender(); bObTouch();
+function bObPDelRef(kind, i, j){
+  var p = _bObDraft.profiles[i]; if(!p) return;
+  (kind==='h' ? p.habits : p.goals).splice(j,1);
+  bObPRender(); bObPTouch(i);
 }
-function bObPAddHabit(i){ var p=_bObDraft.profiles[i]; if(!p) return; p.habits=p.habits||[]; p.habits.push({name:'New habit',icon:'✨',cat:effCategories()[0]||'Other',freqType:'daily'}); bObPRender(); bObPTouch(i); }
-function bObPAddTplHabit(i,k){
-  if(k==='') return; var t=effTemplates()[parseInt(k,10)], p=_bObDraft.profiles[i]; if(!t||!p) return;
-  p.habits=p.habits||[]; p.habits.push(JSON.parse(JSON.stringify(t))); bObPRender(); bObPTouch(i);
-}
-function bObPDelHabit(i,j){ var p=_bObDraft.profiles[i]; if(!p) return; p.habits.splice(j,1); bObPRender(); bObPTouch(i); }
-function bObPGoal(i,k,f,v){ var g=((_bObDraft.profiles[i]||{}).goals||[])[k]; if(!g) return; g[f]=v; bObTouch(); }
-function bObPAddGoal(i){ var p=_bObDraft.profiles[i]; if(!p) return; p.goals=p.goals||[]; p.goals.push({title:'New goal',icon:'🎯',note:'',milestones:[{title:'Milestone 1',tasks:['']}]}); bObPRender(); bObPTouch(i); }
-function bObPAddTplGoal(i,k){
-  if(k==='') return; var t=effGoalTemplates()[parseInt(k,10)], p=_bObDraft.profiles[i]; if(!t||!p) return;
-  p.goals=p.goals||[]; p.goals.push(JSON.parse(JSON.stringify(t))); bObPRender(); bObPTouch(i);
-}
-function bObPDelGoal(i,k){ var p=_bObDraft.profiles[i]; if(!p) return; p.goals.splice(k,1); bObPRender(); bObPTouch(i); }
-function bObPMs(i,k,n,f,v){
-  var m=((((_bObDraft.profiles[i]||{}).goals||[])[k]||{}).milestones||[])[n]; if(!m) return;
-  if(f==='tasks') m.tasks=v.split('\n'); else m[f]=v;
-  bObTouch();
-}
-function bObPAddMs(i,k){ var g=((_bObDraft.profiles[i]||{}).goals||[])[k]; if(!g) return; g.milestones=g.milestones||[]; g.milestones.push({title:'New milestone',tasks:['']}); bObPRender(); bObTouch(); }
-function bObPDelMs(i,k,n){ var g=((_bObDraft.profiles[i]||{}).goals||[])[k]; if(!g) return; g.milestones.splice(n,1); bObPRender(); bObTouch(); }
 function bObPToggle(i){ _bObOpenP[i] = !_bObOpenP[i]; bObPRender(); }
 function bObPAdd(){
   _bObDraft.profiles.push({icon:'✨',name:'New profile',cat:'General',desc:'',tags:[],habits:[],goals:[]});
