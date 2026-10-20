@@ -2097,6 +2097,107 @@ html.day .lock-overlay{background:rgba(244,245,249,.76)}
 .pwa-help-steps{margin:0 0 4px;padding-left:20px;font-size:13px;line-height:1.7;color:var(--text2)}
 .pwa-help-steps b{color:var(--text)}
 .pwa-help-warn{margin-top:12px;padding:10px 12px;border-radius:12px;background:var(--warn-soft);color:var(--warn);font-size:12px;line-height:1.5}
+
+/* ============================================================
+   ONBOARDING (first-run setup) + its Backend editor
+   ============================================================ */
+#toast-wrap{z-index:1000}
+body.ob-lock{overflow:hidden}
+#obVeil{position:fixed;inset:0;z-index:900;display:none;align-items:center;justify-content:center;padding:20px;
+  background:color-mix(in srgb, var(--bg) 86%, transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+#obVeil.open{display:flex}
+.ob-shell{width:100%;max-width:760px;max-height:min(780px,calc(100dvh - 40px));display:flex;flex-direction:column;overflow:hidden;
+  border-radius:var(--radius-lg);border:1.5px solid var(--glass-border);background:var(--glass-bg-strong);
+  -webkit-backdrop-filter:blur(28px) saturate(180%);backdrop-filter:blur(28px) saturate(180%);box-shadow:var(--shadow-widget);
+  animation:obIn .35s cubic-bezier(.2,.8,.2,1)}
+@keyframes obIn{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+.ob-top{display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:1px solid var(--border);flex:none}
+.ob-brand{width:32px;height:32px;border-radius:10px;flex:none;background:linear-gradient(150deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px var(--accent-soft)}
+.ob-brand svg{width:17px;height:17px}
+.ob-bar{flex:1;height:5px;border-radius:3px;background:var(--surface3);overflow:hidden}
+.ob-bar i{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .4s cubic-bezier(.2,.8,.2,1)}
+.ob-skip{flex:none;font-size:12.5px;font-weight:700;color:var(--text2);padding:7px 11px;border-radius:10px;transition:background .15s,color .15s}
+.ob-skip:hover{background:var(--surface2);color:var(--text)}
+.ob-body{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:24px 22px 12px}
+.ob-foot{display:flex;gap:10px;padding:14px 20px calc(14px + env(safe-area-inset-bottom));border-top:1px solid var(--border);flex:none}
+.ob-foot .btn{flex:0 1 auto;justify-content:center}
+.ob-foot .btn.primary{flex:1}
+.ob-hero{text-align:center;margin-bottom:22px}
+.ob-emoji{font-size:42px;line-height:1.1}
+.ob-hero h2{font-family:var(--f-display);font-size:24px;font-weight:700;letter-spacing:-.02em;margin:10px 0 6px;overflow-wrap:anywhere}
+.ob-hero p{color:var(--text2);font-size:13.5px;line-height:1.55;max-width:470px;margin:0 auto}
+.ob-paths{display:flex;flex-direction:column;gap:10px;padding-bottom:14px}
+.ob-path{position:relative;display:flex;align-items:center;gap:14px;text-align:left;width:100%;padding:16px;border-radius:16px;
+  border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer;
+  transition:transform .22s cubic-bezier(.2,.8,.2,1),border-color .2s,box-shadow .2s}
+.ob-path:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:var(--shadow-widget-sm)}
+.ob-path.rec{border-color:var(--accent);background:var(--accent-soft)}
+.ob-path-ico{width:48px;height:48px;border-radius:14px;flex:none;display:flex;align-items:center;justify-content:center;font-size:26px;background:var(--surface3)}
+.ob-path.rec .ob-path-ico{background:linear-gradient(150deg,var(--accent),var(--accent2))}
+.ob-path-tx{flex:1;min-width:0}
+.ob-path-tx b{display:block;font-size:14.5px}
+.ob-path-tx em{display:block;font-style:normal;font-size:12.5px;color:var(--text2);line-height:1.45;margin-top:3px}
+.ob-badge{flex:none;font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:3px 9px;border-radius:20px;background:var(--accent);color:var(--accent-contrast);white-space:nowrap}
+.ob-badge.soft{background:var(--surface3);color:var(--text2)}
+.ob-arrow{flex:none;font-size:22px;color:var(--text3)}
+.ob-q-title{font-family:var(--f-display);font-size:21px;font-weight:700;letter-spacing:-.01em;margin-bottom:5px;overflow-wrap:anywhere}
+.ob-q-sub{color:var(--text2);font-size:13px;line-height:1.5;margin-bottom:18px}
+.ob-opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.ob-opt{position:relative;display:flex;align-items:center;gap:10px;padding:14px 34px 14px 14px;border-radius:14px;border:1px solid var(--border);
+  background:var(--surface2);color:var(--text);text-align:left;font-size:13.5px;font-weight:600;cursor:pointer;transition:border-color .15s,background .15s,transform .15s}
+.ob-opt:hover{border-color:var(--accent);transform:translateY(-1px)}
+.ob-opt .ico{font-size:22px;flex:none}
+.ob-opt.sel,.ob-chk.sel,.ob-prof.best{border-color:var(--accent);background:var(--accent-soft)}
+.ob-opt.sel,.ob-chk.sel{box-shadow:0 0 0 2px var(--accent) inset}
+.ob-tick{position:absolute;top:50%;right:10px;transform:translateY(-50%);width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;display:none;align-items:center;justify-content:center}
+.ob-tick svg{width:12px;height:12px}
+.ob-opt.sel .ob-tick,.ob-chk.sel .ob-tick{display:flex}
+.ob-chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px}
+.ob-profs{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.ob-prof{display:flex;flex-direction:column;align-items:flex-start;gap:8px;text-align:left;padding:14px;border-radius:16px;border:1px solid var(--border);background:var(--surface2);
+  color:var(--text);cursor:pointer;transition:transform .22s cubic-bezier(.2,.8,.2,1),border-color .2s,box-shadow .2s;min-width:0}
+.ob-prof:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:var(--shadow-widget-sm)}
+.ob-prof-head{display:flex;align-items:center;gap:10px;width:100%;min-width:0}
+.ob-prof-head > div{flex:1}
+.ob-prof-ico{font-size:28px;flex:none}
+.ob-prof b{font-size:14px;display:block;overflow-wrap:anywhere}
+.ob-prof-meta{font-size:11px;color:var(--text3);font-weight:600;margin-top:1px}
+.ob-prof p{font-size:12.5px;color:var(--text2);line-height:1.5;margin:0}
+.ob-cat{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px;background:var(--surface3);color:var(--text2)}
+.ob-sec{display:flex;align-items:center;justify-content:space-between;margin:20px 0 8px;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--text2)}
+.ob-list{display:flex;flex-direction:column;gap:8px}
+.ob-chk{position:relative;display:flex;align-items:flex-start;gap:12px;width:100%;text-align:left;padding:11px 40px 11px 12px;border-radius:14px;border:1px solid var(--border);
+  background:var(--surface2);color:var(--text);cursor:pointer;transition:border-color .15s,background .15s}
+.ob-chk:hover{border-color:var(--accent)}
+.ob-chk-ico{font-size:22px;flex:none;line-height:1.2}
+.ob-chk-tx{min-width:0}
+.ob-chk-tx b{display:block;font-size:13.5px;overflow-wrap:anywhere}
+.ob-chk-tx em{display:block;font-style:normal;font-size:11.5px;color:var(--text2);font-weight:600;margin-top:2px}
+.ob-chk-note{display:block;font-size:12px;color:var(--text2);line-height:1.45;margin-top:4px}
+.ob-chk .ob-tick{top:14px;transform:none}
+.ob-msg{margin-top:14px;padding:10px 12px;border-radius:12px;background:var(--warn-soft);color:var(--warn);font-size:12px;line-height:1.5}
+@media(max-width:560px){
+  #obVeil{padding:0;align-items:stretch}
+  .ob-shell{max-width:none;max-height:none;height:100dvh;border-radius:0;border-left:0;border-right:0}
+  .ob-top{padding:calc(12px + env(safe-area-inset-top,0px)) 14px 12px}
+  .ob-body{padding:20px 16px 10px}
+  .ob-opts{grid-template-columns:1fr}
+  .ob-profs{grid-template-columns:1fr}
+  .ob-hero h2{font-size:21px}
+  .ob-path{padding:14px;gap:12px}
+  .ob-foot{padding:12px 14px calc(12px + env(safe-area-inset-bottom))}
+}
+/* backend editor */
+.ob-hrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid var(--border)}
+.ob-hrow:last-child{border-bottom:none}
+.ob-hrow .b-emo{width:46px;flex:none;text-align:center}
+.ob-hrow .b-f-name{flex:1 1 140px;min-width:0}
+.ob-hrow .sel{width:auto;flex:0 1 128px;min-width:0}
+.ob-subhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ob-subhead b{font-size:12.5px}
+.ob-sub{border-left:2px solid var(--border2);padding:2px 0 2px 10px;margin-top:10px}
+.ob-ms{margin-top:8px;display:flex;flex-direction:column;gap:6px}
+.ob-ms textarea{width:100%;min-height:76px;resize:vertical;line-height:1.5;font-size:12.5px}
 </style>
 </head>
 <body>
@@ -2128,6 +2229,8 @@ html.day .lock-overlay{background:rgba(244,245,249,.76)}
 </svg>
 
 <!-- ============ AUTH GATE ============ -->
+<div id="obVeil"><div class="ob-shell" id="obShell"></div></div>
+
 <div id="authGate">
   <div class="auth-card">
     <div class="auth-brand"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg></div>
@@ -2324,6 +2427,7 @@ html.day .lock-overlay{background:rgba(244,245,249,.76)}
     <section class="page" id="page-b-settings"></section>
     <section class="page" id="page-b-templates"></section>
     <section class="page" id="page-b-goalTemplates"></section>
+    <section class="page" id="page-b-onboarding"></section>
     <section class="page" id="page-b-limits"></section>
   </main>
 </div>
@@ -2900,6 +3004,8 @@ function stopDirectorySync(){
   if(_unsubHabitItemsConfig){ _unsubHabitItemsConfig(); _unsubHabitItemsConfig=null; }
   if(_unsubTemplatesConfig){ _unsubTemplatesConfig(); _unsubTemplatesConfig=null; }
   if(_unsubGoalTemplatesConfig){ _unsubGoalTemplatesConfig(); _unsubGoalTemplatesConfig=null; }
+  if(_unsubOnboardingConfig){ _unsubOnboardingConfig(); _unsubOnboardingConfig=null; }
+  _obCfgLoaded=false; _obTries=0; _onboardingConfig=null; if(typeof obClose==='function') obClose();
   if(_unsubAllUsers){ _unsubAllUsers(); _unsubAllUsers=null; }
   if(_unsubPendingUsers){ _unsubPendingUsers(); _unsubPendingUsers=null; }
   _myRole='member'; _myPlan='free'; _backendMode=false;
@@ -3215,6 +3321,754 @@ function notifToastOnce(){
   }catch(e){}
 }
 
+/* ==================================================================
+   ONBOARDING — first-run setup, three ways to start
+     1) "Suggest a profile for me"  → a few quick questions → best-matching starter profiles
+     2) "Pick a starter profile"    → browse ready-made profiles by category
+     3) "Start my own way"          → skip presets, build everything yourself
+   A starter profile = a ready-made set of habits + goals. Everything here
+   (flow text, which paths are offered, the questions, every profile) is
+   editable from Backend → Onboarding and stored in config/onboarding.
+   ================================================================== */
+function _oh(name, icon, cat, ft, x){
+  var h = { name:name, icon:icon, cat:cat, freqType:ft||'daily' };
+  if(ft==='weekly') h.freqCount = x||3;
+  if(ft==='days') h.freqDays = x||[1,2,3,4,5];
+  return h;
+}
+function _og(title, icon, note, ms){
+  return { title:title, icon:icon, note:note, milestones: ms.map(function(m){ return { title:m[0], tasks:m[1] }; }) };
+}
+var DEFAULT_ONBOARDING = {
+  enabled: true,
+  welcomeTitle: 'Welcome to HabitOS, {name}',
+  welcomeSub: 'Let\'s set up your first routine in about a minute. How would you like to start?',
+  paths: { suggest:true, browse:true, custom:true },
+  questions: [
+    { title:'What do you want to improve first?', sub:'Pick everything that matters to you right now.', multi:true, weight:3, options:[
+      { icon:'💪', label:'Health & fitness', tags:['health'] },
+      { icon:'🎯', label:'Focus & productivity', tags:['productivity'] },
+      { icon:'📚', label:'Learning & skills', tags:['learning'] },
+      { icon:'🧘', label:'Calm & mindset', tags:['mind'] },
+      { icon:'💰', label:'Money habits', tags:['finance'] },
+      { icon:'🤝', label:'Relationships', tags:['social'] },
+      { icon:'🎨', label:'Creative work', tags:['creative'] }
+    ]},
+    { title:'How much time can you give each day?', sub:'Be realistic — small and steady beats big and short-lived.', multi:false, weight:2, options:[
+      { icon:'⚡', label:'5–10 minutes', tags:['light'] },
+      { icon:'⏱️', label:'20–30 minutes', tags:['medium'] },
+      { icon:'🔥', label:'An hour or more', tags:['deep'] }
+    ]},
+    { title:'What best describes you?', sub:'This helps us pick the right kind of routine.', multi:false, weight:2, options:[
+      { icon:'🎓', label:'Student', tags:['student'] },
+      { icon:'💼', label:'Working professional', tags:['professional'] },
+      { icon:'🧑‍💻', label:'Freelancer or creator', tags:['creator'] },
+      { icon:'🌱', label:'Just building better routines', tags:['general'] }
+    ]}
+  ],
+  profiles: [
+    { icon:'💪', name:'Fit & Healthy', cat:'Health & Fitness', desc:'Simple daily basics for energy, sleep and movement.', tags:['health','light','medium','general','student','professional'],
+      habits:[ _oh('Drink Water','💧','Health'), _oh('Move Your Body','🏃','Health'), _oh('Sleep by 11pm','😴','Health'), _oh('Stretch','🤸','Health'), _oh('Eat a Healthy Meal','🥗','Health','weekly',5) ],
+      goals:[ _og('Build a Lasting Fitness Routine','🏋️','Go from irregular workouts to a routine you keep for good.',[
+        ['Set up',['Pick 3 fixed workout days','Choose workouts you enjoy','Get comfortable shoes and clothes']],
+        ['Weeks 1–2: start easy',['Do 20 minutes on each workout day','Walk 15 minutes on rest days','Stretch after every session']],
+        ['Weeks 3–6: build up',['Add 10 minutes to each session','Try one new workout type','Track your weekly total in the app']],
+        ['Make it stick',['Complete 4 full weeks without skipping','Plan your next 4 weeks','Reward yourself for the streak']] ]) ] },
+    { icon:'🎯', name:'Deep Focus Pro', cat:'Productivity', desc:'Protect your best hours and finish what matters at work.', tags:['productivity','professional','creator','medium','deep'],
+      habits:[ _oh('Deep Work Session','🎯','Productivity','days'), _oh('Plan Tomorrow','📝','Productivity'), _oh('Phone-Free Hour','📵','Productivity'), _oh('Inbox Check Once','📥','Productivity','days'), _oh('Weekly Review','🗓️','Productivity','weekly',1) ],
+      goals:[ _og('Ship a Key Project','🚀','Take your most important project from started to delivered.',[
+        ['Define it',['Write the outcome in one sentence','List the 5 biggest tasks','Set a clear deadline']],
+        ['Build momentum',['Block 2 deep-work sessions per week','Finish the hardest task first','Remove one recurring distraction']],
+        ['Finish strong',['Review progress every Friday','Get feedback from one person','Deliver and write down what you learned']] ]) ] },
+    { icon:'🎓', name:'Focused Student', cat:'Study & Learning', desc:'A steady study rhythm that keeps exams stress-free.', tags:['learning','student','productivity','medium','deep'],
+      habits:[ _oh('Study Session','📚','Learning','days'), _oh('Revise Notes','📝','Learning'), _oh('Read 20 Minutes','📖','Learning'), _oh('Practice Problems','✏️','Learning','weekly',4), _oh('Sleep by 11pm','😴','Health') ],
+      goals:[ _og('Ace the Next Exam','🏆','Prepare early, revise often and walk into the exam calm.',[
+        ['Plan',['List every topic you must cover','Split topics across the weeks left','Gather notes and past papers']],
+        ['Learn',['Finish the first pass of each topic','Make short summary notes','Ask about anything unclear']],
+        ['Revise',['Do one past paper every week','Review mistakes the same day','Revise summary notes twice']],
+        ['Exam week',['Sleep well the night before','Pack everything the evening before','Review summaries, not new material']] ]) ] },
+    { icon:'🧘', name:'Calm Mind', cat:'Mind & Calm', desc:'Short daily practices to feel lighter and more present.', tags:['mind','light','general','professional','student'],
+      habits:[ _oh('Meditate','🧘','Mind'), _oh('Journal','📓','Mind'), _oh('Gratitude Note','🙏','Mind'), _oh('Walk Outside','🌿','Health'), _oh('Screen-Free Evening','🌙','Mind','weekly',3) ],
+      goals:[ _og('30 Days of Calm','🌅','Build a gentle daily practice that lowers stress.',[
+        ['Week 1',['Meditate 3 minutes a day','Write 3 lines in your journal','Notice one calm moment daily']],
+        ['Week 2',['Meditate 5 minutes a day','Add a short evening walk','Name one thing you are grateful for']],
+        ['Weeks 3–4',['Meditate 10 minutes a day','Keep 3 screen-free evenings','Write a short reflection on what changed']] ]) ] },
+    { icon:'💰', name:'Money Builder', cat:'Money', desc:'Know where your money goes and grow your savings.', tags:['finance','professional','general','light'],
+      habits:[ _oh('Track Spending','🧾','Finance'), _oh('Save Money','💰','Finance','weekly',3), _oh('No Impulse Buys','🛑','Finance'), _oh('Review Budget','📊','Finance','weekly',1), _oh('Learn About Money','📖','Finance','weekly',2) ],
+      goals:[ _og('Build an Emergency Fund','🏦','Save enough to cover three months of essentials.',[
+        ['Know your numbers',['List monthly income','List essential monthly expenses','Work out the 3-month target']],
+        ['Set up the system',['Open a separate savings account','Set a fixed monthly transfer','Automate it for payday']],
+        ['Grow it',['Save the first month of expenses','Cut one non-essential expense','Reach the full 3-month target']] ]) ] },
+    { icon:'📚', name:'Lifelong Learner', cat:'Study & Learning', desc:'Learn a little every day and turn it into real skill.', tags:['learning','general','creator','professional','light','medium'],
+      habits:[ _oh('Read 20 Minutes','📖','Learning'), _oh('Practice a Skill','🛠️','Learning'), _oh('Language Practice','🗣️','Learning'), _oh('Watch a Lesson','🎬','Learning','weekly',3), _oh('Teach What You Learned','💬','Learning','weekly',1) ],
+      goals:[ _og('Learn a New Skill in 90 Days','🌟','Go from beginner to confident with focused daily practice.',[
+        ['Choose and plan',['Pick one skill and write why it matters','Find one main course or book','Schedule a daily practice slot']],
+        ['Learn the basics',['Finish the first third of your course','Complete 10 practice exercises','Note what is hardest']],
+        ['Apply it',['Build or do one small real project','Share it with someone for feedback','Plan your next level']] ]) ] },
+    { icon:'🤝', name:'Social Connector', cat:'Relationships', desc:'Stay close to the people who matter most.', tags:['social','general','light','professional','student'],
+      habits:[ _oh('Call Family','📞','Social','weekly',2), _oh('Message a Friend','💬','Social','weekly',4), _oh('Plan a Meetup','☕','Social','weekly',1), _oh('Small Act of Kindness','💛','Social','weekly',3), _oh('Phone-Free Meals','🍽️','Social') ],
+      goals:[ _og('Strengthen Key Relationships','💞','Be more present with the people you care about.',[
+        ['Make a list',['Write down 5 people who matter most','Note when you last spoke to each','Pick one way to reach out to each']],
+        ['Reach out',['Call or message each person once','Plan one meetup this month','Send one thoughtful note']],
+        ['Keep it going',['Set a weekly check-in rhythm','Remember one important date per person','Review how connected you feel']] ]) ] },
+    { icon:'🎨', name:'Creator Routine', cat:'Creative', desc:'Make something every day and share it with the world.', tags:['creative','creator','deep','medium'],
+      habits:[ _oh('Create Something','✍️','Productivity'), _oh('Practice Your Craft','🎨','Learning'), _oh('Share Your Work','📣','Social','weekly',2), _oh('Get Inspired','💡','Mind'), _oh('Weekly Reflection','🪞','Mind','weekly',1) ],
+      goals:[ _og('Publish 30 Pieces','📅','Build a body of work by finishing and sharing steadily.',[
+        ['Set up',['Choose your format and platform','Decide how often you will publish','List 10 ideas']],
+        ['Pieces 1–10',['Finish and publish 10 pieces','Do not aim for perfect','Note which ones people liked']],
+        ['Pieces 11–30',['Keep your publishing rhythm','Improve one thing in each piece','Review your best 5 pieces']] ]) ] }
+  ]
+};
+var _onboardingConfig = null;   // null = built-in defaults
+var _unsubOnboardingConfig = null;
+var _obCfgLoaded = false;
+var _ob = null;                 // live onboarding session (null = closed)
+var _obTries = 0;
+
+function effOnboarding(){
+  var c = _onboardingConfig || {}, d = DEFAULT_ONBOARDING;
+  return {
+    enabled: c.enabled===undefined ? d.enabled : !!c.enabled,
+    welcomeTitle: c.welcomeTitle || d.welcomeTitle,
+    welcomeSub: c.welcomeSub || d.welcomeSub,
+    paths: Object.assign({}, d.paths, c.paths||{}),
+    questions: Array.isArray(c.questions) ? c.questions : d.questions,
+    profiles: (Array.isArray(c.profiles) && c.profiles.length) ? c.profiles : d.profiles
+  };
+}
+function subscribeOnboardingConfig(){
+  if(_unsubOnboardingConfig) return;
+  _unsubOnboardingConfig = db.collection('config').doc('onboarding').onSnapshot(function(doc){
+    _onboardingConfig = doc.exists ? doc.data() : null;
+    var first = !_obCfgLoaded;
+    _obCfgLoaded = true;
+    if(_bObDraft && bIsClean('onb', bObClean(_bObDraft))) _bObDraft = null;
+    if(_backendMode && _bCurSection==='onboarding') renderBackendOnboarding();
+    if(first) maybeStartOnboarding();
+  }, function(err){ _obCfgLoaded = true; console.error('onboarding config sync error', err); });
+}
+
+/* ---------------- user-facing flow ---------------- */
+function obFirstName(){
+  var n = ((S.profile && S.profile.name) || (_currentUser && _currentUser.displayName) || '').trim();
+  return n ? n.split(/\s+/)[0] : '';
+}
+function obFill(t){
+  var n = obFirstName();
+  return String(t||'').replace(/,?\s*\{name\}/g, function(m){ return n ? m.replace('{name}', n) : ''; });
+}
+function obNormalize(cfg){
+  var d = DEFAULT_ONBOARDING;
+  cfg = cfg || {};
+  return {
+    enabled: cfg.enabled!==false,
+    welcomeTitle: cfg.welcomeTitle || d.welcomeTitle,
+    welcomeSub: cfg.welcomeSub || d.welcomeSub,
+    paths: Object.assign({}, d.paths, cfg.paths||{}),
+    questions: Array.isArray(cfg.questions) ? cfg.questions : d.questions,
+    profiles: (Array.isArray(cfg.profiles) && cfg.profiles.length) ? cfg.profiles : d.profiles
+  };
+}
+function maybeStartOnboarding(){
+  if(!_currentUser || _ob || _backendMode) return;
+  if(S.profile.onboarded) return;
+  if((S.habits||[]).length || (S.goals||[]).length) return;
+  if(!_obCfgLoaded && _obTries<8){ _obTries++; setTimeout(maybeStartOnboarding, 350); return; }
+  if(!effOnboarding().enabled) return;
+  startOnboarding({});
+}
+function startOnboarding(opts){
+  opts = opts || {};
+  var cfg = obNormalize(opts.cfg || effOnboarding());
+  _ob = { step:'welcome', preview:!!opts.preview, manual:!!opts.manual, cfg:cfg, qi:0, ans:{}, cat:'all', pid:null, selH:{}, selG:{}, from:'browse', msg:'' };
+  document.getElementById('obVeil').classList.add('open');
+  document.body.classList.add('ob-lock');
+  obRender();
+}
+function obClose(){
+  _ob = null;
+  var v = document.getElementById('obVeil'); if(v) v.classList.remove('open');
+  document.body.classList.remove('ob-lock');
+}
+function obMarkDone(path, pname){
+  if(!_ob || _ob.preview) return;
+  S.profile.onboarded = true;
+  S.profile.onboardedAt = _todayStr;
+  S.profile.onboardPath = path;
+  if(pname) S.profile.starterProfile = pname;
+}
+function obSkip(){
+  if(!_ob) return;
+  if(!_ob.preview && !_ob.manual){
+    obMarkDone('skipped'); save();
+    toast('You can pick a starter profile anytime from Settings');
+  }
+  obClose();
+}
+function obPaths(){
+  var c = _ob.cfg, p = c.paths, out = [];
+  if(p.suggest && c.questions.length) out.push('suggest');
+  if(p.browse) out.push('browse');
+  if(p.custom || !out.length) out.push('custom');
+  return out;
+}
+function obRoom(){
+  if(_ob && _ob.preview) return { h:999, g:999 };
+  return {
+    h: isPro() ? 999 : Math.max(0, _planLimits.freeMaxActiveHabits - activeHabits().length),
+    g: isPro() ? 999 : Math.max(0, _planLimits.freeMaxGoals - (S.goals||[]).length)
+  };
+}
+function obFreq(h){
+  if(h.freqType==='weekly') return (h.freqCount||3)+'× per week';
+  if(h.freqType==='days') return (h.freqDays||[1,2,3,4,5]).map(function(d){ return DAY_LABELS_FULL[d]; }).join(', ');
+  return 'Every day';
+}
+function obCounts(p){
+  var h = (p.habits||[]).length, g = (p.goals||[]).length;
+  return h+' habit'+(h===1?'':'s')+' · '+g+' goal'+(g===1?'':'s');
+}
+function obShell(body, foot, pct){
+  var logo = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></svg>';
+  document.getElementById('obShell').innerHTML =
+    '<div class="ob-top"><div class="ob-brand">'+logo+'</div><div class="ob-bar"><i style="width:'+pct+'%"></i></div>'+
+      '<button class="ob-skip" onclick="obSkip()">'+((_ob.preview||_ob.manual)?'Close':'Skip for now')+'</button></div>'+
+    '<div class="ob-body" id="obBody">'+body+'</div>'+(foot ? '<div class="ob-foot">'+foot+'</div>' : '');
+  var b = document.getElementById('obBody'); if(b) b.scrollTop = 0;
+}
+function obRender(){
+  if(!_ob) return;
+  var s = _ob.step, nq = _ob.cfg.questions.length;
+  if(s==='welcome') return obRenderWelcome();
+  if(s==='q') return obRenderQuestion();
+  if(s==='results') return obRenderResults();
+  if(s==='browse') return obRenderBrowse();
+  if(s==='preview') return obRenderPreview();
+}
+function obRenderWelcome(){
+  var meta = {
+    suggest:{ ico:'✨', title:'Suggest a profile for me', desc:'Answer a few quick questions and get a ready-made routine matched to you.', rec:true },
+    browse:{ ico:'🗂️', title:'Pick a starter profile', desc:'Browse ready-made routines by category and choose the one you like.' },
+    custom:{ ico:'🛠️', title:'Start my own way', desc:'Skip the presets and build your own habits and goals from scratch.' }
+  };
+  var paths = obPaths();
+  var body = '<div class="ob-hero"><div class="ob-emoji">👋</div><h2>'+esc(obFill(_ob.cfg.welcomeTitle))+'</h2><p>'+esc(obFill(_ob.cfg.welcomeSub))+'</p></div>'+
+    '<div class="ob-paths">'+paths.map(function(id){
+      var m = meta[id];
+      return '<button type="button" class="ob-path'+(m.rec?' rec':'')+'" onclick="obChoose(\''+id+'\')">'+
+        '<span class="ob-path-ico">'+m.ico+'</span>'+
+        '<span class="ob-path-tx"><b>'+m.title+'</b><em>'+m.desc+'</em></span>'+
+        (m.rec ? '<span class="ob-badge">Recommended</span>' : '<span class="ob-arrow">›</span>')+
+      '</button>';
+    }).join('')+'</div>';
+  obShell(body, '', 0);
+}
+function obChoose(path){
+  if(!_ob) return;
+  if(path==='suggest'){ _ob.from = 'suggest'; _ob.step = 'q'; _ob.qi = 0; }
+  else if(path==='browse'){ _ob.from = 'browse'; _ob.step = 'browse'; }
+  else { return obStartCustom(); }
+  obRender();
+}
+function obRenderQuestion(){
+  var q = _ob.cfg.questions[_ob.qi], nq = _ob.cfg.questions.length;
+  var sel = _ob.ans[_ob.qi] || [];
+  var body = '<div class="ob-q-title">'+esc(q.title)+'</div>'+(q.sub?'<div class="ob-q-sub">'+esc(q.sub)+'</div>':'<div style="height:14px"></div>')+
+    '<div class="ob-opts">'+(q.options||[]).map(function(o,i){
+      return '<button type="button" class="ob-opt'+(sel.indexOf(i)!==-1?' sel':'')+'" onclick="obPick('+i+')">'+
+        (o.icon?'<span class="ico">'+esc(o.icon)+'</span>':'')+'<span>'+esc(o.label)+'</span><span class="ob-tick">'+ICONS.check+'</span></button>';
+    }).join('')+'</div>'+(q.multi?'<div class="hint" style="margin-top:12px">You can pick more than one.</div>':'');
+  var last = _ob.qi===nq-1;
+  var foot = '<button class="btn" onclick="obBack()">Back</button>'+
+    '<button class="btn primary" onclick="obNext()"'+(sel.length?'':' disabled')+'>'+(last?'See my matches':'Next')+'</button>';
+  obShell(body, foot, Math.round((_ob.qi+1)/(nq+2)*100));
+}
+function obPick(i){
+  var q = _ob.cfg.questions[_ob.qi], cur = (_ob.ans[_ob.qi] || []).slice();
+  if(q.multi){ var k = cur.indexOf(i); if(k===-1) cur.push(i); else cur.splice(k,1); }
+  else cur = [i];
+  _ob.ans[_ob.qi] = cur;
+  obRenderQuestion();
+}
+function obNext(){
+  if(!(_ob.ans[_ob.qi]||[]).length) return;
+  if(_ob.qi < _ob.cfg.questions.length-1){ _ob.qi++; _ob.step = 'q'; }
+  else _ob.step = 'results';
+  obRender();
+}
+function obBack(){
+  var s = _ob.step;
+  if(s==='q'){ if(_ob.qi>0) _ob.qi--; else _ob.step = 'welcome'; }
+  else if(s==='results'){ _ob.step = 'q'; _ob.qi = _ob.cfg.questions.length-1; }
+  else if(s==='browse'){ _ob.step = 'welcome'; }
+  else if(s==='preview'){ _ob.step = _ob.from==='suggest' ? 'results' : 'browse'; }
+  _ob.msg = '';
+  obRender();
+}
+/* score = sum of question weights for every selected answer-tag the profile also carries */
+function obScores(){
+  var picks = [];
+  _ob.cfg.questions.forEach(function(q,qi){
+    var w = Math.max(1, Math.min(5, parseInt(q.weight,10)||2));
+    (_ob.ans[qi]||[]).forEach(function(oi){
+      var o = (q.options||[])[oi]; if(!o) return;
+      (o.tags||[]).forEach(function(t){ picks.push({ t:String(t).toLowerCase(), w:w }); });
+    });
+  });
+  return _ob.cfg.profiles.map(function(p,i){
+    var pt = (p.tags||[]).map(function(t){ return String(t).toLowerCase(); }), s = 0;
+    picks.forEach(function(x){ if(pt.indexOf(x.t)!==-1) s += x.w; });
+    return { p:p, i:i, s:s };
+  }).sort(function(a,b){ return b.s-a.s || a.i-b.i; });
+}
+function obProfCard(p, i, badge, best){
+  return '<button type="button" class="ob-prof'+(best?' best':'')+'" onclick="obOpenProfile('+i+')">'+
+    '<div class="ob-prof-head"><span class="ob-prof-ico">'+esc(p.icon||'✨')+'</span><div style="min-width:0"><b>'+esc(p.name)+'</b><div class="ob-prof-meta">'+esc(obCounts(p))+'</div></div>'+
+    (badge?'<span class="ob-badge'+(best?'':' soft')+'">'+badge+'</span>':'')+'</div>'+
+    (p.desc?'<p>'+esc(p.desc)+'</p>':'')+
+    (p.cat?'<span class="ob-cat">'+esc(p.cat)+'</span>':'')+
+  '</button>';
+}
+function obRenderResults(){
+  var all = obScores(), top = all.filter(function(x){ return x.s>0; }).slice(0,3), generic = false;
+  if(!top.length){ top = all.slice(0,3); generic = true; }
+  var labels = ['Best match','Also great','Worth a look'];
+  var body = '<div class="ob-q-title">'+(generic?'Popular ways to start':'Your best matches')+'</div>'+
+    '<div class="ob-q-sub">'+(generic?'Here are a few routines people love. Pick one to preview it.':'Based on your answers. Pick one to preview exactly what you will get.')+'</div>'+
+    '<div class="ob-profs">'+top.map(function(x,k){ return obProfCard(x.p, x.i, generic?'Popular':labels[k], k===0 && !generic); }).join('')+'</div>'+
+    '<div style="text-align:center;margin-top:16px"><button class="btn ghost sm" onclick="obGoBrowse()">Browse all profiles</button></div>';
+  var foot = '<button class="btn" onclick="obBack()">Back</button><button class="btn" onclick="obStartCustom()">Start my own way</button>';
+  obShell(body, foot, Math.round((_ob.cfg.questions.length+1)/(_ob.cfg.questions.length+2)*100));
+}
+function obGoBrowse(){ _ob.from = 'browse'; _ob.step = 'browse'; obRender(); }
+function obCats(){
+  var cats = [];
+  _ob.cfg.profiles.forEach(function(p){ var c = (p.cat||'').trim(); if(c && cats.indexOf(c)===-1) cats.push(c); });
+  return cats;
+}
+function obRenderBrowse(){
+  var cats = obCats();
+  if(_ob.cat!=='all' && cats.indexOf(_ob.cat)===-1) _ob.cat = 'all';
+  var list = _ob.cfg.profiles.map(function(p,i){ return {p:p,i:i}; }).filter(function(x){ return _ob.cat==='all' || (x.p.cat||'').trim()===_ob.cat; });
+  var body = '<div class="ob-q-title">Pick a starter profile</div><div class="ob-q-sub">Choose a category, then open a profile to see its habits and goals before you add anything.</div>'+
+    '<div class="ob-chips"><button type="button" class="chip'+(_ob.cat==='all'?' on':'')+'" onclick="obSetCat(\'all\')">All</button>'+
+    cats.map(function(c,k){ return '<button type="button" class="chip'+(_ob.cat===c?' on':'')+'" onclick="obSetCat('+k+')">'+esc(c)+'</button>'; }).join('')+'</div>'+
+    '<div class="ob-profs">'+list.map(function(x){ return obProfCard(x.p, x.i); }).join('')+'</div>';
+  var foot = '<button class="btn" onclick="obBack()">Back</button><button class="btn" onclick="obStartCustom()">Start my own way</button>';
+  obShell(body, foot, 50);
+}
+function obSetCat(k){ _ob.cat = (k==='all') ? 'all' : obCats()[k]; obRenderBrowse(); }
+function obOpenProfile(i){
+  var p = _ob.cfg.profiles[i]; if(!p) return;
+  _ob.pid = i; _ob.step = 'preview'; _ob.msg = '';
+  var room = obRoom(), n = 0;
+  _ob.selH = {}; _ob.selG = {};
+  (p.habits||[]).forEach(function(h,j){ if(n<room.h){ _ob.selH[j] = true; n++; } });
+  n = 0;
+  (p.goals||[]).forEach(function(g,j){ if(n<room.g){ _ob.selG[j] = true; n++; } });
+  obRender();
+}
+function obToggle(kind, j){
+  var map = kind==='h' ? _ob.selH : _ob.selG, room = obRoom();
+  if(map[j]){ delete map[j]; _ob.msg = ''; }
+  else if(Object.keys(map).length >= (kind==='h' ? room.h : room.g)){
+    _ob.msg = kind==='h' ? 'Your Free plan allows up to '+_planLimits.freeMaxActiveHabits+' active habits. Pro unlocks unlimited habits.'
+                          : 'Your Free plan allows up to '+_planLimits.freeMaxGoals+' goals. Pro unlocks unlimited goals.';
+  } else { map[j] = true; _ob.msg = ''; }
+  var keep = document.getElementById('obBody') ? document.getElementById('obBody').scrollTop : 0;
+  obRenderPreview();
+  var b = document.getElementById('obBody'); if(b) b.scrollTop = keep;
+}
+function obRenderPreview(){
+  var p = _ob.cfg.profiles[_ob.pid]; if(!p) return;
+  var nh = Object.keys(_ob.selH).length, ng = Object.keys(_ob.selG).length;
+  var body = '<div class="ob-hero" style="margin-bottom:14px"><div class="ob-emoji">'+esc(p.icon||'✨')+'</div><h2 style="font-size:21px">'+esc(p.name)+'</h2>'+(p.desc?'<p>'+esc(p.desc)+'</p>':'')+'</div>'+
+    '<div class="hint" style="text-align:center;margin-bottom:4px">Tap to keep or remove anything. Nothing is added until you press Start.</div>';
+  if((p.habits||[]).length){
+    body += '<div class="ob-sec"><span>Habits</span><span>'+nh+' of '+p.habits.length+'</span></div><div class="ob-list">'+
+      p.habits.map(function(h,j){
+        return '<button type="button" class="ob-chk'+(_ob.selH[j]?' sel':'')+'" onclick="obToggle(\'h\','+j+')"><span class="ob-tick">'+ICONS.check+'</span>'+
+          '<span class="ob-chk-ico">'+esc(h.icon||'✨')+'</span><span class="ob-chk-tx"><b>'+esc(h.name)+'</b><em>'+esc(obFreq(h))+(h.cat?' · '+esc(h.cat):'')+'</em></span></button>';
+      }).join('')+'</div>';
+  }
+  if((p.goals||[]).length){
+    body += '<div class="ob-sec"><span>Goals</span><span>'+ng+' of '+p.goals.length+'</span></div><div class="ob-list">'+
+      p.goals.map(function(g,j){
+        var ms = (g.milestones||[]), tasks = 0; ms.forEach(function(m){ tasks += (m.tasks||[]).length; });
+        return '<button type="button" class="ob-chk'+(_ob.selG[j]?' sel':'')+'" onclick="obToggle(\'g\','+j+')"><span class="ob-tick">'+ICONS.check+'</span>'+
+          '<span class="ob-chk-ico">'+esc(g.icon||'🎯')+'</span><span class="ob-chk-tx"><b>'+esc(g.title)+'</b><em>'+ms.length+' milestone'+(ms.length===1?'':'s')+' · '+tasks+' task'+(tasks===1?'':'s')+'</em>'+
+          (g.note?'<span class="ob-chk-note">'+esc(g.note)+'</span>':'')+'</span></button>';
+      }).join('')+'</div>';
+  }
+  if(_ob.msg) body += '<div class="ob-msg">'+esc(_ob.msg)+'</div>';
+  var label = (nh||ng) ? 'Start with this profile' : 'Pick something to add';
+  var foot = '<button class="btn" onclick="obBack()">Back</button>'+
+    '<button class="btn primary" onclick="obApply()"'+((nh||ng)?'':' disabled')+'>'+label+((nh||ng)?' ('+nh+' + '+ng+')':'')+'</button>';
+  obShell(body, foot, 100);
+}
+function obApply(){
+  if(!_ob) return;
+  var p = _ob.cfg.profiles[_ob.pid]; if(!p) return;
+  var preview = _ob.preview, nh = 0, ng = 0;
+  if(!preview){
+    (p.habits||[]).forEach(function(h,j){
+      if(!_ob.selH[j]) return;
+      S.habits.push({
+        id:uid(), name:h.name, icon:h.icon||'✨', cat:h.cat||'Other',
+        freqType:h.freqType||'daily', freqDays:h.freqDays||[1,2,3,4,5], freqCount:h.freqCount||3,
+        reminder:null, createdAt:_todayStr, logs:{}, archived:false
+      });
+      nh++;
+    });
+    (p.goals||[]).forEach(function(t,j){
+      if(!_ob.selG[j]) return;
+      S.goals.push({
+        id:uid(), title:t.title, icon:t.icon||'🎯', note:t.note||'',
+        targetDate:null, createdAt:_todayStr, status:'active',
+        milestones:(t.milestones||[]).map(function(m){
+          return { id:uid(), title:m.title, targetDate:null, done:false,
+            tasks:(m.tasks||[]).map(function(x){ return { id:uid(), title:String(x), done:false, targetDate:null }; }) };
+        })
+      });
+      ng++;
+    });
+    obMarkDone(_ob.from, p.name);
+    save();
+  }
+  var wasManual = _ob.manual;
+  obClose();
+  if(preview){ toast('Preview only — nothing was added to your account'); return; }
+  go(wasManual && _curPage!=='dashboard' ? _curPage : 'dashboard');
+  toast('Added '+nh+' habit'+(nh===1?'':'s')+' and '+ng+' goal'+(ng===1?'':'s')+' from "'+p.name+'"');
+}
+function obStartCustom(){
+  if(!_ob) return;
+  var preview = _ob.preview;
+  if(!preview){ obMarkDone('custom'); save(); }
+  obClose();
+  if(preview){ toast('Preview only — "Start my own way" simply closes the setup'); return; }
+  go('dashboard');
+  toast('All set. Add your first habit or goal whenever you\'re ready.');
+}
+/* Settings card: lets anyone re-open the setup later */
+function obSettingsCardHTML(){
+  var c = effOnboarding();
+  if(!c.enabled) return '';
+  return '<div class="card" style="margin-bottom:16px"><div class="sec-title" style="margin-top:0"><h3>Starter profiles</h3></div>'+
+    '<div class="muted" style="font-size:12.5px;line-height:1.55;margin-bottom:12px">Get a ready-made set of habits and goals matched to you, or browse profiles by category. You choose exactly what gets added.</div>'+
+    '<button class="btn primary" onclick="startOnboarding({manual:true})">'+ICONS.sparkle+' Choose a starter profile</button></div>';
+}
+
+/* ==================================================================
+   BACKEND — ONBOARDING
+   Working copy in _bObDraft; Save publishes to config/onboarding and every
+   new sign-in reflects it. Three tabs: Flow · Questions · Starter profiles.
+   ================================================================== */
+var _bObDraft = null, _bObTab = 'flow', _bObOpenQ = {}, _bObOpenP = {};
+function bObTags(v){
+  return (Array.isArray(v) ? v : String(v||'').split(',')).map(function(x){ return String(x).trim().toLowerCase(); }).filter(Boolean);
+}
+function bObClean(d){
+  d = d || {};
+  var paths = d.paths || {};
+  return {
+    enabled: !!d.enabled,
+    welcomeTitle: (d.welcomeTitle||'').trim(),
+    welcomeSub: (d.welcomeSub||'').trim(),
+    paths: { suggest:!!paths.suggest, browse:!!paths.browse, custom:!!paths.custom },
+    questions: (d.questions||[]).filter(function(q){ return (q.title||'').trim(); }).map(function(q){
+      return {
+        title:q.title.trim(), sub:(q.sub||'').trim(), multi:!!q.multi,
+        weight: Math.max(1, Math.min(5, parseInt(q.weight,10)||2)),
+        options:(q.options||[]).filter(function(o){ return (o.label||'').trim(); }).map(function(o){
+          return { icon:(o.icon||'').trim(), label:o.label.trim(), tags:bObTags(o.tags) };
+        })
+      };
+    }).filter(function(q){ return q.options.length; }),
+    profiles: (d.profiles||[]).filter(function(p){ return (p.name||'').trim(); }).map(function(p){
+      return {
+        icon:(p.icon||'✨').trim()||'✨', name:p.name.trim(), cat:(p.cat||'General').trim()||'General',
+        desc:(p.desc||'').trim(), tags:bObTags(p.tags),
+        habits:bTplClean(p.habits), goals:bGtClean(p.goals)
+      };
+    })
+  };
+}
+function ensureObDraft(){
+  if(!_bObDraft){ _bObDraft = JSON.parse(JSON.stringify(effOnboarding())); bSeed('onb', bObClean(_bObDraft)); }
+}
+function bObDirty(){ return bJSON(bObClean(_bObDraft)) !== bJSON(bObClean(effOnboarding())); }
+function bObTouch(){ bSetDirty(bObDirty()); }
+function renderBackendOnboarding(){
+  ensureObDraft();
+  var el = document.getElementById('page-b-onboarding'); if(!el) return;
+  var d = _bObDraft;
+  var tabs = [['flow','Flow',null],['questions','Questions',d.questions.length],['profiles','Starter profiles',d.profiles.length]];
+  var html = bPageHead('Onboarding','What a new user sees right after signing in — suggested profile, starter profiles by category, or start from scratch',
+    '<button class="btn" onclick="bObPreview()">'+ICONS.sparkle+' Preview flow</button>');
+  html += '<div class="seg-tabs">'+tabs.map(function(t){
+    return '<button class="seg-tab'+(_bObTab===t[0]?' active':'')+'" onclick="bObSetTab(\''+t[0]+'\')">'+t[1]+(t[2]===null?'':' <span class="b-count">'+t[2]+'</span>')+'</button>';
+  }).join('')+'</div>';
+  if(_bObTab==='flow') html += bObFlowHTML();
+  else if(_bObTab==='questions') html += bObQuestionsHTML();
+  else html += bObProfilesHTML();
+  html += bSaveBar({save:'saveBackendOnboarding()', reset:'resetBackendOnboarding()', discard:'bObDiscard()', saveLabel:'Save onboarding'});
+  el.innerHTML = html;
+  bSetDirty(bObDirty());
+}
+function bObSetTab(t){ _bObTab = t; renderBackendOnboarding(); }
+function bObSwitchRow(title, sub, on, onclick){
+  return '<div class="b-set"><div class="b-set-txt"><b>'+title+'</b><span>'+sub+'</span></div>'+
+    '<div class="b-set-ctl" style="width:auto"><div class="switch'+(on?' on':'')+'" role="switch" onclick="'+onclick+'"></div></div></div>';
+}
+function bObFlowHTML(){
+  var d = _bObDraft;
+  return '<div class="b-panel"><div class="b-panel-head"><h3>Flow</h3><span class="sub">Shown once, right after a brand-new account signs in</span></div>'+
+    bObSwitchRow('Show onboarding to new users','Turn off to skip it entirely. Users can still open it from Settings.', d.enabled, 'bObToggle(\'enabled\',this)')+
+    '<div class="b-set" style="flex-wrap:wrap"><div class="b-set-txt"><b>Welcome title</b><span>Use {name} for their first name</span></div>'+
+      '<div class="b-set-ctl" style="width:min(380px,100%)"><input class="inp" value="'+esc(d.welcomeTitle)+'" oninput="bObField(\'welcomeTitle\',this.value)"/></div></div>'+
+    '<div class="b-set" style="flex-wrap:wrap"><div class="b-set-txt"><b>Welcome message</b><span>One or two friendly lines under the title</span></div>'+
+      '<div class="b-set-ctl" style="width:min(380px,100%)"><input class="inp" value="'+esc(d.welcomeSub)+'" oninput="bObField(\'welcomeSub\',this.value)"/></div></div>'+
+  '</div>'+
+  '<div class="b-panel"><div class="b-panel-head"><h3>Ways to start</h3><span class="sub">Choose which of the three options new users are offered</span></div>'+
+    bObSwitchRow('Suggest a profile for me','Quick questions → best-matching starter profiles (needs at least one question)', d.paths.suggest, 'bObToggle(\'suggest\',this)')+
+    bObSwitchRow('Pick a starter profile','Browse ready-made profiles by category', d.paths.browse, 'bObToggle(\'browse\',this)')+
+    bObSwitchRow('Start my own way','Skip presets and build everything from scratch (always available if the others are off)', d.paths.custom, 'bObToggle(\'custom\',this)')+
+  '</div>';
+}
+function bObToggle(key, el){
+  var on = !el.classList.contains('on');
+  el.classList.toggle('on', on);
+  if(key==='enabled') _bObDraft.enabled = on; else _bObDraft.paths[key] = on;
+  bObTouch();
+}
+function bObField(k, v){ _bObDraft[k] = v; bObTouch(); }
+
+/* ---- Questions ---- */
+function bObQuestionsHTML(){
+  return '<div class="b-panel"><div class="b-panel-head"><h3>Questions</h3><span class="sub">Each answer carries tags; profiles with matching tags rank higher</span><span class="b-sp"></span>'+
+    '<button class="btn sm" onclick="bObQAdd()">'+ICONS.plus+' Add question</button></div><div id="bObQList">'+bObQListHTML()+'</div></div>';
+}
+function bObQListHTML(){
+  var qs = _bObDraft.questions;
+  return qs.length ? qs.map(bObQCard).join('') : '<div class="b-empty-cell">No questions yet — "Suggest a profile for me" needs at least one.</div>';
+}
+function bObQRender(){ var b = document.getElementById('bObQList'); if(b) b.innerHTML = bObQListHTML(); }
+function bObQCard(q, i){
+  var open = !!_bObOpenQ[i], n = (q.options||[]).length;
+  var out = '<div class="gt-bcard"><div class="gt-bhead">'+
+    '<span class="gt-ms-n mono" style="text-align:center">Q'+(i+1)+'</span>'+
+    '<input class="inp b-f-name" placeholder="Question" value="'+esc(q.title)+'" oninput="bObQField('+i+',\'title\',this.value)"/>'+
+    '<span class="gt-bsum">'+n+' option'+(n===1?'':'s')+'</span>'+
+    '<div class="b-acts">'+
+      '<button class="b-ib" title="Move up" onclick="bObQMove('+i+',-1)">↑</button>'+
+      '<button class="b-ib" title="Move down" onclick="bObQMove('+i+',1)">↓</button>'+
+      '<button class="b-ib del" title="Delete" onclick="bObQDel('+i+')">'+ICONS.trash+'</button>'+
+      '<button class="b-ib" title="'+(open?'Collapse':'Edit options')+'" onclick="bObQToggle('+i+')">'+(open?'▴':'▾')+'</button>'+
+    '</div></div>';
+  if(open){
+    out += '<div class="gt-bbody">'+
+      '<div><span class="field-label">Helper text</span><input class="inp" placeholder="Optional line under the question" value="'+esc(q.sub||'')+'" oninput="bObQField('+i+',\'sub\',this.value)"/></div>'+
+      '<div class="field-row" style="margin:0"><div class="field" style="margin:0"><span class="field-label">Answer type</span><select class="sel" onchange="bObQField('+i+',\'multi\',this.value===\'1\')">'+
+        '<option value="0"'+(q.multi?'':' selected')+'>Pick one</option><option value="1"'+(q.multi?' selected':'')+'>Pick several</option></select></div>'+
+      '<div class="field" style="margin:0"><span class="field-label">Importance</span><select class="sel" onchange="bObQField('+i+',\'weight\',parseInt(this.value,10))">'+
+        [1,2,3,4,5].map(function(w){ return '<option value="'+w+'"'+((parseInt(q.weight,10)||2)===w?' selected':'')+'>'+w+(w===1?' — low':w===5?' — high':'')+'</option>'; }).join('')+'</select></div></div>'+
+      (q.options||[]).map(function(o,j){
+        return '<div class="gt-ms"><div class="gt-ms-head">'+
+          '<input class="inp b-emo" style="width:46px;flex:none;text-align:center" maxlength="4" placeholder="🙂" value="'+esc(o.icon||'')+'" oninput="bObQOpt('+i+','+j+',\'icon\',this.value)"/>'+
+          '<input class="inp b-f-name" placeholder="Answer label" value="'+esc(o.label||'')+'" oninput="bObQOpt('+i+','+j+',\'label\',this.value)"/>'+
+          '<button class="b-ib del" title="Remove option" onclick="bObQDelOpt('+i+','+j+')">'+ICONS.trash+'</button></div>'+
+          '<input class="inp" placeholder="Tags this answer adds, e.g. health, light" value="'+esc(Array.isArray(o.tags)?o.tags.join(', '):(o.tags||''))+'" oninput="bObQOpt('+i+','+j+',\'tags\',this.value)"/></div>';
+      }).join('')+
+      '<div><button class="btn sm" onclick="bObQAddOpt('+i+')">'+ICONS.plus+' Add option</button></div></div>';
+  }
+  return out+'</div>';
+}
+function bObQField(i,f,v){ var q=_bObDraft.questions[i]; if(!q) return; q[f]=v; bObTouch(); }
+function bObQOpt(i,j,f,v){ var q=_bObDraft.questions[i]; if(!q||!q.options[j]) return; q.options[j][f]=v; bObTouch(); }
+function bObQToggle(i){ _bObOpenQ[i] = !_bObOpenQ[i]; bObQRender(); }
+function bObQAdd(){
+  if(_bObDraft.questions.length>=8){ toast('Up to 8 questions', true); return; }
+  _bObDraft.questions.push({title:'New question', sub:'', multi:false, weight:2, options:[{icon:'',label:'Option 1',tags:[]},{icon:'',label:'Option 2',tags:[]}]});
+  _bObOpenQ = {}; _bObOpenQ[_bObDraft.questions.length-1] = true;
+  bObQRender(); bObTouch();
+}
+function bObQDel(i){ _bObDraft.questions.splice(i,1); _bObOpenQ={}; bObQRender(); bObTouch(); renderBackendOnboardingCounts(); }
+function bObQMove(i,d){
+  var k=i+d, qs=_bObDraft.questions; if(k<0||k>=qs.length) return;
+  var x=qs.splice(i,1)[0]; qs.splice(k,0,x); _bObOpenQ={}; bObQRender(); bObTouch();
+}
+function bObQAddOpt(i){ var q=_bObDraft.questions[i]; if(!q) return; q.options.push({icon:'',label:'New option',tags:[]}); bObQRender(); bObTouch(); }
+function bObQDelOpt(i,j){ var q=_bObDraft.questions[i]; if(!q) return; q.options.splice(j,1); bObQRender(); bObTouch(); }
+function renderBackendOnboardingCounts(){ /* tab counts refresh on next full render */ }
+
+/* ---- Starter profiles ---- */
+function bObProfilesHTML(){
+  var _cats = []; _bObDraft.profiles.forEach(function(p){ var c=(p.cat||'').trim(); if(c && _cats.indexOf(c)===-1) _cats.push(c); });
+  return '<datalist id="bObCatList">'+_cats.map(function(c){ return '<option value="'+esc(c)+'">'; }).join('')+'</datalist>'+
+    '<div class="b-panel"><div class="b-panel-head"><h3>Starter profiles</h3><span class="sub">A ready-made set of habits and goals · grouped by category</span><span class="b-sp"></span>'+
+    '<button class="btn sm" onclick="bObPAdd()">'+ICONS.plus+' New profile</button></div><div id="bObPList">'+bObPListHTML()+'</div></div>';
+}
+function bObPListHTML(){
+  var ps = _bObDraft.profiles;
+  return ps.length ? ps.map(bObPCard).join('') : '<div class="b-empty-cell">No profiles yet — click “New profile”.</div>';
+}
+function bObPRender(){ var b = document.getElementById('bObPList'); if(b) b.innerHTML = bObPListHTML(); }
+function bObPCounts(p){ return (p.habits||[]).length+' habits · '+(p.goals||[]).length+' goals'; }
+function bObHabitRow(h, i, j){
+  var cats = effCategories().slice();
+  if(h.cat && cats.indexOf(h.cat)===-1) cats.push(h.cat);
+  var extra = '';
+  if(h.freqType==='weekly'){
+    extra = '<div class="b-wk"><input class="inp" type="number" min="1" max="7" value="'+(h.freqCount||3)+'" oninput="bObPHabit('+i+','+j+',\'freqCount\',parseInt(this.value,10)||1)"/>/ week</div>';
+  } else if(h.freqType==='days'){
+    var on = h.freqDays || [1,2,3,4,5];
+    extra = '<div class="b-days">'+B_DAYS.map(function(l,d){
+      return '<button type="button" class="b-day'+(on.indexOf(d)!==-1?' on':'')+'" title="'+DAY_LABELS_FULL[d]+'" onclick="bObPDay('+i+','+j+','+d+')">'+l+'</button>';
+    }).join('')+'</div>';
+  }
+  return '<div class="ob-hrow">'+
+    '<input class="inp b-emo" maxlength="4" value="'+esc(h.icon||'')+'" oninput="bObPHabit('+i+','+j+',\'icon\',this.value)"/>'+
+    '<input class="inp b-f-name" placeholder="Habit name" value="'+esc(h.name||'')+'" oninput="bObPHabit('+i+','+j+',\'name\',this.value)"/>'+
+    '<select class="sel" onchange="bObPHabit('+i+','+j+',\'cat\',this.value)">'+cats.map(function(c){ return '<option'+(h.cat===c?' selected':'')+'>'+esc(c)+'</option>'; }).join('')+'</select>'+
+    '<select class="sel" onchange="bObPHabit('+i+','+j+',\'freqType\',this.value)">'+
+      ['daily','weekly','days'].map(function(f){ return '<option value="'+f+'"'+(h.freqType===f?' selected':'')+'>'+(f==='daily'?'Every day':f==='weekly'?'X per week':'Specific days')+'</option>'; }).join('')+'</select>'+
+    extra+
+    '<button class="b-ib del" title="Remove habit" onclick="bObPDelHabit('+i+','+j+')">'+ICONS.trash+'</button></div>';
+}
+function bObPCard(p, i){
+  var open = !!_bObOpenP[i];
+  var out = '<div class="gt-bcard"><div class="gt-bhead">'+
+    '<input class="inp b-emo" maxlength="4" value="'+esc(p.icon||'')+'" oninput="bObPField('+i+',\'icon\',this.value)"/>'+
+    '<input class="inp b-f-name" placeholder="Profile name" value="'+esc(p.name||'')+'" oninput="bObPField('+i+',\'name\',this.value)"/>'+
+    '<span class="gt-bsum" id="bObPSum'+i+'">'+bObPCounts(p)+'</span>'+
+    '<div class="b-acts">'+
+      '<button class="b-ib" title="Move up" onclick="bObPMove('+i+',-1)">↑</button>'+
+      '<button class="b-ib" title="Move down" onclick="bObPMove('+i+',1)">↓</button>'+
+      '<button class="b-ib" title="Duplicate" onclick="bObPDup('+i+')">'+B_ICO.copy+'</button>'+
+      '<button class="b-ib del" title="Delete" onclick="bObPDel('+i+')">'+ICONS.trash+'</button>'+
+      '<button class="b-ib" title="'+(open?'Collapse':'Edit habits & goals')+'" onclick="bObPToggle('+i+')">'+(open?'▴':'▾')+'</button>'+
+    '</div></div>';
+  if(open){
+    var tplOpts = '<option value="">Add from habit templates…</option>'+effTemplates().map(function(t,k){ return '<option value="'+k+'">'+esc((t.icon||'')+' '+t.name)+'</option>'; }).join('');
+    var gOpts = '<option value="">Add from goal templates…</option>'+effGoalTemplates().map(function(t,k){ return '<option value="'+k+'">'+esc((t.icon||'')+' '+t.title)+'</option>'; }).join('');
+    out += '<div class="gt-bbody">'+
+      '<div class="field-row" style="margin:0"><div class="field" style="margin:0"><span class="field-label">Category</span>'+
+        '<input class="inp" list="bObCatList" placeholder="e.g. Health &amp; Fitness" value="'+esc(p.cat||'')+'" oninput="bObPField('+i+',\'cat\',this.value)"/></div>'+
+      '<div class="field" style="margin:0;flex:2"><span class="field-label">Description</span><input class="inp" placeholder="One line shown on the card" value="'+esc(p.desc||'')+'" oninput="bObPField('+i+',\'desc\',this.value)"/></div></div>'+
+      '<div><span class="field-label">Matching tags</span><input class="inp" placeholder="health, light, student" value="'+esc(Array.isArray(p.tags)?p.tags.join(', '):(p.tags||''))+'" oninput="bObPField('+i+',\'tags\',this.value)"/>'+
+        '<div class="hint">Comma-separated. A profile ranks higher the more of the user\'s answer tags it carries.</div></div>'+
+      '<div class="gt-ms"><div class="ob-subhead"><b>Habits</b><span class="b-sp"></span>'+
+        '<select class="sel" style="width:auto;max-width:200px" onchange="bObPAddTplHabit('+i+',this.value);this.value=\'\'">'+tplOpts+'</select>'+
+        '<button class="btn sm" onclick="bObPAddHabit('+i+')">'+ICONS.plus+' Habit</button></div>'+
+        ((p.habits||[]).length ? p.habits.map(function(h,j){ return bObHabitRow(h,i,j); }).join('') : '<div class="hint">No habits yet.</div>')+'</div>'+
+      '<div class="gt-ms"><div class="ob-subhead"><b>Goals</b><span class="b-sp"></span>'+
+        '<select class="sel" style="width:auto;max-width:200px" onchange="bObPAddTplGoal('+i+',this.value);this.value=\'\'">'+gOpts+'</select>'+
+        '<button class="btn sm" onclick="bObPAddGoal('+i+')">'+ICONS.plus+' Goal</button></div>'+
+        ((p.goals||[]).length ? p.goals.map(function(g,k){ return bObGoalHTML(g,i,k); }).join('') : '<div class="hint">No goals yet.</div>')+'</div>'+
+    '</div>';
+  }
+  return out+'</div>';
+}
+function bObGoalHTML(g, i, k){
+  return '<div class="ob-sub"><div class="gt-ms-head">'+
+    '<input class="inp b-emo" style="width:46px;flex:none;text-align:center" maxlength="4" value="'+esc(g.icon||'')+'" oninput="bObPGoal('+i+','+k+',\'icon\',this.value)"/>'+
+    '<input class="inp b-f-name" placeholder="Goal title" value="'+esc(g.title||'')+'" oninput="bObPGoal('+i+','+k+',\'title\',this.value)"/>'+
+    '<button class="b-ib del" title="Remove goal" onclick="bObPDelGoal('+i+','+k+')">'+ICONS.trash+'</button></div>'+
+    '<input class="inp" style="margin-top:6px" placeholder="Short description" value="'+esc(g.note||'')+'" oninput="bObPGoal('+i+','+k+',\'note\',this.value)"/>'+
+    (g.milestones||[]).map(function(m,n){
+      return '<div class="ob-ms"><div class="gt-ms-head"><span class="gt-ms-n mono">#'+(n+1)+'</span>'+
+        '<input class="inp b-f-name" placeholder="Milestone title" value="'+esc(m.title||'')+'" oninput="bObPMs('+i+','+k+','+n+',\'title\',this.value)"/>'+
+        '<button class="b-ib del" title="Remove milestone" onclick="bObPDelMs('+i+','+k+','+n+')">'+ICONS.trash+'</button></div>'+
+        '<textarea class="inp" placeholder="One task per line" oninput="bObPMs('+i+','+k+','+n+',\'tasks\',this.value)">'+esc((m.tasks||[]).join('\n'))+'</textarea></div>';
+    }).join('')+
+    '<div style="margin-top:6px"><button class="btn sm" onclick="bObPAddMs('+i+','+k+')">'+ICONS.plus+' Milestone</button></div></div>';
+}
+function bObPTouch(i){
+  var p = _bObDraft.profiles[i], s = document.getElementById('bObPSum'+i);
+  if(s && p) s.textContent = bObPCounts(p);
+  bObTouch();
+}
+function bObPField(i,f,v){ var p=_bObDraft.profiles[i]; if(!p) return; p[f]=v; bObTouch(); }
+function bObPHabit(i,j,f,v){
+  var h=((_bObDraft.profiles[i]||{}).habits||[])[j]; if(!h) return;
+  h[f]=v;
+  if(f==='freqType'){
+    if(v!=='days') delete h.freqDays;
+    if(v==='days' && !h.freqDays) h.freqDays=[1,2,3,4,5];
+    bObPRender();
+  }
+  bObTouch();
+}
+function bObPDay(i,j,d){
+  var h=((_bObDraft.profiles[i]||{}).habits||[])[j]; if(!h) return;
+  var on=(h.freqDays||[1,2,3,4,5]).slice(), k=on.indexOf(d);
+  if(k===-1) on.push(d); else if(on.length>1) on.splice(k,1);
+  on.sort(function(a,b){ return a-b; }); h.freqDays=on;
+  bObPRender(); bObTouch();
+}
+function bObPAddHabit(i){ var p=_bObDraft.profiles[i]; if(!p) return; p.habits=p.habits||[]; p.habits.push({name:'New habit',icon:'✨',cat:effCategories()[0]||'Other',freqType:'daily'}); bObPRender(); bObPTouch(i); }
+function bObPAddTplHabit(i,k){
+  if(k==='') return; var t=effTemplates()[parseInt(k,10)], p=_bObDraft.profiles[i]; if(!t||!p) return;
+  p.habits=p.habits||[]; p.habits.push(JSON.parse(JSON.stringify(t))); bObPRender(); bObPTouch(i);
+}
+function bObPDelHabit(i,j){ var p=_bObDraft.profiles[i]; if(!p) return; p.habits.splice(j,1); bObPRender(); bObPTouch(i); }
+function bObPGoal(i,k,f,v){ var g=((_bObDraft.profiles[i]||{}).goals||[])[k]; if(!g) return; g[f]=v; bObTouch(); }
+function bObPAddGoal(i){ var p=_bObDraft.profiles[i]; if(!p) return; p.goals=p.goals||[]; p.goals.push({title:'New goal',icon:'🎯',note:'',milestones:[{title:'Milestone 1',tasks:['']}]}); bObPRender(); bObPTouch(i); }
+function bObPAddTplGoal(i,k){
+  if(k==='') return; var t=effGoalTemplates()[parseInt(k,10)], p=_bObDraft.profiles[i]; if(!t||!p) return;
+  p.goals=p.goals||[]; p.goals.push(JSON.parse(JSON.stringify(t))); bObPRender(); bObPTouch(i);
+}
+function bObPDelGoal(i,k){ var p=_bObDraft.profiles[i]; if(!p) return; p.goals.splice(k,1); bObPRender(); bObPTouch(i); }
+function bObPMs(i,k,n,f,v){
+  var m=((((_bObDraft.profiles[i]||{}).goals||[])[k]||{}).milestones||[])[n]; if(!m) return;
+  if(f==='tasks') m.tasks=v.split('\n'); else m[f]=v;
+  bObTouch();
+}
+function bObPAddMs(i,k){ var g=((_bObDraft.profiles[i]||{}).goals||[])[k]; if(!g) return; g.milestones=g.milestones||[]; g.milestones.push({title:'New milestone',tasks:['']}); bObPRender(); bObTouch(); }
+function bObPDelMs(i,k,n){ var g=((_bObDraft.profiles[i]||{}).goals||[])[k]; if(!g) return; g.milestones.splice(n,1); bObPRender(); bObTouch(); }
+function bObPToggle(i){ _bObOpenP[i] = !_bObOpenP[i]; bObPRender(); }
+function bObPAdd(){
+  _bObDraft.profiles.push({icon:'✨',name:'New profile',cat:'General',desc:'',tags:[],habits:[],goals:[]});
+  _bObOpenP = {}; _bObOpenP[_bObDraft.profiles.length-1] = true;
+  bObPRender(); bObTouch();
+  setTimeout(function(){
+    var cards = document.querySelectorAll('#bObPList .gt-bcard'), row = cards[cards.length-1]; if(!row) return;
+    row.scrollIntoView({block:'center',behavior:'smooth'});
+    var inp = row.querySelector('.b-f-name'); if(inp){ inp.focus(); inp.select(); }
+  }, 30);
+}
+function bObPDel(i){ _bObDraft.profiles.splice(i,1); _bObOpenP={}; bObPRender(); bObTouch(); }
+function bObPMove(i,d){
+  var k=i+d, ps=_bObDraft.profiles; if(k<0||k>=ps.length) return;
+  var x=ps.splice(i,1)[0]; ps.splice(k,0,x); _bObOpenP={}; bObPRender(); bObTouch();
+}
+function bObPDup(i){
+  var p=_bObDraft.profiles[i]; if(!p) return;
+  var c=JSON.parse(JSON.stringify(p)); c.name=(c.name||'')+' copy';
+  _bObDraft.profiles.splice(i+1,0,c); _bObOpenP={}; _bObOpenP[i+1]=true; bObPRender(); bObTouch();
+}
+function bObPreview(){
+  var c = bObClean(_bObDraft);
+  if(!c.profiles.length){ toast('Add at least one starter profile to preview', true); return; }
+  startOnboarding({ preview:true, cfg:c });
+}
+function bObDiscard(){ _bObDraft = null; _bObOpenQ = {}; _bObOpenP = {}; renderBackendOnboarding(); }
+function resetBackendOnboarding(){
+  _bObDraft = JSON.parse(JSON.stringify(DEFAULT_ONBOARDING)); _bObOpenQ = {}; _bObOpenP = {};
+  renderBackendOnboarding();
+}
+function saveBackendOnboarding(){
+  var clean = bObClean(_bObDraft);
+  if(!clean.profiles.length){ toast('Add at least one starter profile', true); return; }
+  if(clean.paths.suggest && !clean.questions.length){ toast('"Suggest a profile" needs at least one question — add one or turn that option off', true); return; }
+  db.collection('config').doc('onboarding').set(clean).then(function(){
+    bSeed('onb', clean);
+    bSetDirty(false);
+    toast('Onboarding saved');
+  }).catch(function(err){ toast('Could not save: '+err.message, true); });
+}
+
 /* ---- Free vs Pro gating helpers, used everywhere a limit applies ---- */
 function isPro(){ return _myRole==='admin' || _myPlan==='pro'; }
 function canCreateGoal(){ return isPro() || (S.goals||[]).length < _planLimits.freeMaxGoals; }
@@ -3269,6 +4123,7 @@ function goBackend(section){
   else if(section==='settings') renderBackendSettings();
   else if(section==='templates') renderBackendTemplates();
   else if(section==='goalTemplates') renderBackendGoalTemplates();
+  else if(section==='onboarding') renderBackendOnboarding();
   else if(section==='limits') renderBackendLimits();
   var main = document.getElementById('bMain'); if(main) main.scrollTop = 0;
   window.scrollTo(0,0);
@@ -4701,6 +5556,7 @@ auth.onAuthStateChanged(function(user){
     subscribeHabitItemsConfig();
     subscribeTemplatesConfig();
     subscribeGoalTemplatesConfig();
+    subscribeOnboardingConfig();
   } else {
     _currentUser = null;
     stopRealtimeSync();
@@ -5084,6 +5940,7 @@ var B_NAV = [
   {id:'settings', label:'Settings', icon:ICONS.settings},
   {id:'templates', label:'Habit Templates', icon:ICONS.calendar},
   {id:'goalTemplates', label:'Goal Templates', icon:ICONS.target},
+  {id:'onboarding', label:'Onboarding', icon:ICONS.sparkle},
   {id:'limits', label:'Plan limits', icon:ICONS.sliders}
 ];
 var NAV = [
@@ -7330,6 +8187,7 @@ function renderSettings(){
   '</div>';
 
   html += pwaInstallCardHTML();
+  html += obSettingsCardHTML();
 
   html += '<div class="card" style="margin-bottom:16px"><div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">'+
     '<div class="avatar-big">'+(initials||'🙂')+'</div>'+
@@ -8456,6 +9314,7 @@ function initApp(){
   go('dashboard');
   applySidebarState(); // runs after go(), since go() always collapses the dock on navigation
   setInterval(refreshTodayIfChanged, 60000);
+  maybeStartOnboarding();
 }
 </script>
 <script>
