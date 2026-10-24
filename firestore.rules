@@ -1,0 +1,150 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(uid)  { return isSignedIn() && request.auth.uid == uid; }
+    // Mirrors ADMIN_EMAIL / isAdminEmail() in index.html — keep these two in sync.
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.email == 'ceo.nayeemuhammad@gmail.com';
+    }
+    // ---- checkout (public website) helpers ----
+    function pricingPath() { return /databases/$(database)/documents/config/pricing; }
+    function fallbackPrice(p) { return p == 'm1' ? 100 : (p == 'm3' ? 280 : (p == 'm6' ? 550 : (p == 'y1' ? 1050 : -1))); }
+    // price comes from config/pricing (editable in Admin > Payments); defaults apply until it exists
+    function priceOf(p) {
+      return exists(pricingPath()) ? get(pricingPath()).data.get(p, fallbackPrice(p)) : fallbackPrice(p);
+    }
+    function validOrder(ref, d) {
+      return d.keys().hasOnly(['ref','name','email','whatsapp','planId','amount','method','trxId','status','createdAt','source'])
+        && d.keys().hasAll(['ref','name','email','whatsapp','planId','amount','method','trxId','status','createdAt'])
+        && d.ref == ref
+        && ref.matches('[A-Z0-9]{12,24}')
+        && d.status == 'pending'
+        && d.createdAt == request.time
+        && d.name is string && d.name.size() >= 2 && d.name.size() <= 80
+        && d.email is string && d.email.size() <= 120
+        && d.email.matches('[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}')
+        && d.whatsapp is string && d.whatsapp.matches('\\+?[0-9]{10,15}')
+        && d.planId in ['m1','m3','m6','y1']
+        && d.amount is int && d.amount == priceOf(d.planId)
+        && d.method in ['bkash','nagad']
+        && d.trxId is string && d.trxId.matches('[A-Z0-9]{6,20}')
+        && existsAfter(/databases/$(database)/documents/trxIndex/$(d.method + '_' + d.trxId))
+        && existsAfter(/databases/$(database)/documents/orderStatus/$(ref));
+    }
+
+    // The invite an admin added for the signed-in person's email (if any)
+    function pendingPath() {
+      return /databases/$(database)/documents/userDirectoryPending/$(request.auth.token.email.lower());
+    }
+
+    // ---- users/{uid} — each person's private habits/goals/profile/trash.
+    // Only that person can ever read or write it. Not even Admin gets access.
+    match /users/{uid} {
+      allow read, write: if isOwner(uid);
+    }
+
+    // ---- userDirectory/{uid} — the lightweight doc the Admin console lists
+    // (name, email, role, plan, subscription, usage counts).
+    match /userDirectory/{uid} {
+      allow get:  if isOwner(uid) || isAdmin();
+      allow list: if isAdmin();
+
+      // First sign-in: you create YOUR OWN doc only.
+      //  - normal account: member + free  (admin email: admin + pro)
+      //  - or exactly the role/plan the admin pre-set in your invite
+      //  - createdAt must be the server time and no trial override, so nobody
+      //    can stretch their own free trial.
+      allow create: if isOwner(uid)
+        && request.resource.data.uid == uid
+        && request.resource.data.createdAt == request.time
+        && !('trialEndDate' in request.resource.data)
+        && (
+          (request.resource.data.role == (isAdmin() ? 'admin' : 'member')
+            && request.resource.data.plan == (isAdmin() ? 'pro' : 'free'))
+          ||
+          (!isAdmin()
+            && exists(pendingPath())
+            && request.resource.data.role == get(pendingPath()).data.role
+            && request.resource.data.plan == get(pendingPath()).data.plan)
+        );
+
+      allow update:
+        // admin account may self-heal its own role/plan back to admin/pro
+        if (isOwner(uid) && isAdmin()
+              && request.resource.data.role == 'admin'
+              && request.resource.data.plan == 'pro')
+        // everyone else may only refresh their own profile + usage counters
+        || (isOwner(uid) && !isAdmin()
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+                   'email', 'displayName', 'photoURL', 'lastActiveAt',
+                   'activeHabitsCount', 'activeGoalsCount']))
+        // admin manages OTHER people: role, status, plan, subscription dates + log, trial
+        || (isAdmin() && !isOwner(uid)
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+                   'role', 'status', 'plan', 'subscription',
+                   'subscriptionHistory', 'trialEndDate', 'notifications']));
+
+      // Admin can remove other people's directory entries (never their own)
+      allow delete: if isAdmin() && !isOwner(uid);
+    }
+
+    // ---- userDirectoryPending/{email} — invites the admin adds before the
+    // person has ever signed in (document id = lowercase email).
+    match /userDirectoryPending/{email} {
+      allow list: if isAdmin();
+      // the invited person reads and clears their own invite on first sign-in
+      allow get, delete: if isAdmin()
+        || (isSignedIn() && request.auth.token.email.lower() == email);
+      allow create, update: if isAdmin();
+    }
+
+    // ---- config/* — plan limits, greeting, achievements, colors, habit icons,
+    // templates, onboarding, pricing, payment numbers.
+    // Signed-in users read everything; the website (not signed in) may read only the three
+    // docs it needs to show plans, prices and payment instructions. Only Admin edits.
+    match /config/{docId} {
+      allow read:  if isSignedIn() || docId in ['planLimits', 'pricing', 'payment'];
+      allow write: if isAdmin();
+    }
+
+    // ---- Checkout from the public website (no sign-in needed) ----
+    // orders/{ref}: private details (name, email, WhatsApp, transaction). The website can only
+    // CREATE a valid pending order; only Admin can read or change it. Price is checked here.
+    match /orders/{ref} {
+      allow read, update, delete: if isAdmin();
+      allow create: if validOrder(ref, request.resource.data);
+    }
+    // trxIndex/{method_TRXID}: one doc per submitted transaction ID. Creating it twice is
+    // impossible for the website (the 2nd write would be an update), which blocks duplicates.
+    match /trxIndex/{key} {
+      allow read, update, delete: if isAdmin();
+      allow create: if request.resource.data.keys().hasOnly(['ref', 'createdAt'])
+        && request.resource.data.createdAt == request.time
+        && existsAfter(/databases/$(database)/documents/orders/$(request.resource.data.ref))
+        && (getAfter(/databases/$(database)/documents/orders/$(request.resource.data.ref)).data.method + '_'
+            + getAfter(/databases/$(database)/documents/orders/$(request.resource.data.ref)).data.trxId) == key;
+    }
+    // orderStatus/{ref}: NO personal data, just the status. Anyone holding the unguessable
+    // reference can read that one doc (the public status page). Only Admin changes it.
+    match /orderStatus/{ref} {
+      allow get: if true;
+      allow list: if isAdmin();
+      allow create: if request.resource.data.keys().hasOnly(['status', 'planId', 'createdAt'])
+        && request.resource.data.status == 'pending'
+        && request.resource.data.createdAt == request.time
+        && existsAfter(/databases/$(database)/documents/orders/$(ref));
+      allow update, delete: if isAdmin();
+    }
+    // Who approved or rejected what (Admin only)
+    match /auditLogs/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    // Deny everything else by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
