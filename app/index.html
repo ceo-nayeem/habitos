@@ -2345,6 +2345,183 @@ body.ob-lock{overflow:hidden}
 .glk-hg-bar{height:5px;border-radius:3px;background:var(--surface3);overflow:hidden;margin-top:5px}
 .glk-hg-bar i{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--ember))}
 .glk-hg-p{font-size:12px;font-weight:700;color:var(--accent);flex:none}
+
+/* off-schedule ("bonus") check-ins */
+.cal-cell.tap .cal-dot.unsched{cursor:pointer}
+.cal-cell.tap .cal-dot.unsched:hover{opacity:.55}
+.cal-dot.unsched.bonus{opacity:.8}
+.cal-dot.unsched.bonus:hover{opacity:1}
+.hab-rest-tag{font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ok);background:var(--ok-soft);padding:1px 7px;border-radius:10px}
+.hab-item.rest:not(.done){opacity:.78}
+.rest-box{margin-top:18px;border:1px dashed var(--border2);border-radius:14px;padding:0 12px}
+.rest-box summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:12px 2px;font-size:12.5px;font-weight:700;color:var(--text2)}
+.rest-box summary::-webkit-details-marker{display:none}
+.rest-box summary em{font-style:normal;font-weight:500;color:var(--text3);font-size:11.5px}
+.rest-box summary::after{content:"▾";margin-left:auto;color:var(--text3);transition:transform .2s}
+.rest-box[open] summary::after{transform:rotate(180deg)}
+.rest-box .hab-list{padding-bottom:12px}
+
+/* ============================================================
+   PREMIUM POLISH (whole app) + ADMIN COMMAND CENTER
+   Uses only existing brand tokens; honours reduced-motion.
+   ============================================================ */
+.mono{font-variant-numeric:tabular-nums}
+html{scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:10px;border:3px solid transparent;background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background:var(--text3);background-clip:padding-box;border:3px solid transparent}
+::-webkit-scrollbar-track{background:transparent}
+
+/* faint HUD grid fading out from the top, behind everything */
+#ambient::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);
+  background-size:56px 56px;opacity:.5;
+  -webkit-mask-image:radial-gradient(ellipse 80% 55% at 50% 0%,#000 0%,transparent 75%);mask-image:radial-gradient(ellipse 80% 55% at 50% 0%,#000 0%,transparent 75%)}
+html.day #ambient::after{opacity:.7}
+
+/* glass sheen + lift */
+.card,.stat-card,.widget,.tpl-card,.hero,.b-panel,.b-kpi{background-image:linear-gradient(135deg,color-mix(in srgb,var(--text) 5%,transparent),transparent 45%)}
+.stat-card,.widget,.tpl-card,.b-panel,.b-link-tile,.b-kpi,.b-q,.b-recent{transition:transform .22s cubic-bezier(.2,.8,.2,1),box-shadow .22s,border-color .2s,background-color .2s}
+@media(hover:hover){
+  .stat-card:hover,.tpl-card:hover,.b-kpi:hover,.b-link-tile:hover{transform:translateY(-3px);box-shadow:0 1px 0 var(--glass-hi) inset,0 14px 34px rgba(0,0,0,.22)}
+  html.day .stat-card:hover,html.day .tpl-card:hover,html.day .b-kpi:hover,html.day .b-link-tile:hover{box-shadow:0 1px 0 var(--glass-hi) inset,0 14px 30px rgba(30,41,80,.12)}
+}
+.btn{transition:transform .15s,filter .15s,box-shadow .2s,border-color .15s,background-color .15s}
+.btn:active:not(:disabled){transform:scale(.97)}
+.btn.primary{position:relative;overflow:hidden}
+.btn.primary::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 35%,rgba(255,255,255,.28) 50%,transparent 65%);transform:translateX(-120%);transition:transform .6s ease;pointer-events:none}
+@media(hover:hover){.btn.primary:hover{box-shadow:0 10px 26px var(--accent-soft)}.btn.primary:hover::after{transform:translateX(120%)}}
+.page-title{letter-spacing:-.03em}
+.page.active{animation:pageIn .4s cubic-bezier(.2,.8,.2,1)}
+.modal{box-shadow:0 1px 0 var(--glass-hi) inset,0 30px 80px rgba(0,0,0,.5)}
+@media(prefers-reduced-motion:reduce){.btn.primary::after{display:none}.page.active{animation:none}.stat-card:hover,.tpl-card:hover,.b-kpi:hover,.b-link-tile:hover{transform:none}}
+
+/* never let a long word or number break a card on small screens */
+.card,.b-panel,.modal,.page-title,.page-sub,.hab-name,.goal-card-title,.b-user-cell{overflow-wrap:anywhere}
+.modal{max-width:calc(100vw - 16px)}
+@media(max-width:380px){
+  html{font-size:15px}
+  #content{padding-left:12px !important;padding-right:12px !important}
+  .page-title{font-size:23px}
+  .modal{padding-left:16px;padding-right:16px}
+}
+@supports(height:100dvh){.modal{max-height:min(92dvh,900px)}}
+
+/* ---------------- Admin: grouped nav ---------------- */
+.b-nav{gap:2px}
+.b-nav-grp{font-family:var(--f-mono);font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--text3);padding:16px 12px 6px}
+.b-nav-grp:first-child{padding-top:4px}
+.b-nav-item{position:relative;overflow:hidden}
+.b-nav-item.active{box-shadow:inset 3px 0 0 var(--accent)}
+.b-nav-item.active svg{filter:drop-shadow(0 0 6px var(--accent-soft))}
+.b-nav-item .b-count{margin-left:auto}
+.b-palette-btn{display:flex;align-items:center;gap:9px;width:100%;margin:2px 0 8px;padding:9px 11px;border-radius:11px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-size:12.5px;font-weight:600;transition:border-color .15s,color .15s}
+.b-palette-btn:hover{border-color:var(--accent);color:var(--text)}
+.b-palette-btn svg{width:15px;height:15px;flex:none}
+.b-palette-btn span{flex:1;text-align:left}
+kbd{font-family:var(--f-mono);font-size:10px;font-weight:600;padding:2px 6px;border-radius:6px;border:1px solid var(--border2);background:var(--bg2);color:var(--text3)}
+
+/* ---------------- Admin: page head ---------------- */
+.b-eyebrow{display:inline-flex;align-items:center;gap:8px;font-family:var(--f-mono);font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+.b-eyebrow i{width:18px;height:2px;border-radius:2px;background:linear-gradient(90deg,var(--accent),var(--ember))}
+.b-head-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.b-live{display:inline-flex;align-items:center;gap:7px;font-family:var(--f-mono);font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ok);padding:6px 12px;border-radius:20px;background:var(--ok-soft)}
+.b-live i{width:7px;height:7px;border-radius:50%;background:var(--ok);animation:glkPulse 2s infinite}
+
+/* ---------------- Admin: command center ---------------- */
+.b-quick{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.b-q{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:12px;border:1px solid var(--border);background:var(--surface2);font-size:12.5px;font-weight:700;color:var(--text)}
+.b-q span{display:inline-flex;width:20px;height:20px;align-items:center;justify-content:center;color:var(--accent)}
+.b-q span svg{width:15px;height:15px}
+.b-q em{font-style:normal;font-family:var(--f-mono);font-size:11px;padding:1px 7px;border-radius:10px;background:var(--warn);color:#1a1200}
+.b-q kbd{margin-left:4px}
+.b-q:hover{border-color:var(--accent);background:var(--accent-soft)}
+.b-kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:18px}
+.b-kpi{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;padding:16px;border-radius:var(--radius);
+  border:1.5px solid var(--glass-border);background-color:var(--glass-bg-strong);box-shadow:var(--shadow-widget-sm);overflow:hidden;min-width:0}
+.b-kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--kc,var(--accent));opacity:.9}
+.b-kpi.k1{--kc:var(--accent)}.b-kpi.k2{--kc:var(--ember)}.b-kpi.k3{--kc:var(--ring-week)}.b-kpi.k4{--kc:var(--warn)}.b-kpi.k5{--kc:var(--ok)}
+.b-kpi-ic{width:30px;height:30px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:color-mix(in srgb,var(--kc,var(--accent)) 16%,transparent);color:var(--kc,var(--accent));margin-bottom:8px}
+.b-kpi-ic svg{width:16px;height:16px}
+.b-kpi b{font-size:26px;letter-spacing:-.03em;line-height:1.1;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.b-kpi-l{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--text2)}
+.b-kpi em{font-style:normal;font-size:11.5px;color:var(--text3)}
+@media(max-width:1180px){.b-kpis{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:700px){.b-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.b-kpi:last-child:nth-child(odd){grid-column:1/-1}.b-kpi b{font-size:23px}}
+.b-grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:0}
+.b-grid2 > .b-panel{margin-bottom:14px;min-width:0}
+@media(max-width:900px){.b-grid2{grid-template-columns:minmax(0,1fr)}}
+.b-bars{display:grid;grid-template-columns:repeat(14,minmax(0,1fr));gap:6px;align-items:end;height:140px}
+.b-bar{position:relative;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px}
+.b-bar i{display:block;width:100%;max-width:26px;border-radius:7px 7px 3px 3px;background:linear-gradient(180deg,var(--accent),var(--accent2));opacity:.55;transition:height .6s cubic-bezier(.2,.8,.2,1),opacity .2s}
+.b-bar.today i{opacity:1;box-shadow:0 0 14px var(--accent-soft)}
+.b-bar:hover i{opacity:1}
+.b-bar span{font-family:var(--f-mono);font-size:9.5px;color:var(--text3)}
+.b-mix{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.b-donut{position:relative;width:132px;height:132px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center}
+.b-donut::before{content:"";position:absolute;inset:16px;border-radius:50%;background:var(--bg2)}
+.b-donut div{position:relative;text-align:center}
+.b-donut b{display:block;font-size:24px;letter-spacing:-.03em}
+.b-donut span{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em}
+.b-legend{display:flex;flex-direction:column;gap:9px;flex:1;min-width:130px}
+.b-legend div{display:flex;align-items:center;gap:9px;font-size:13px}
+.b-legend i{width:10px;height:10px;border-radius:3px;flex:none}
+.b-legend span{flex:1;color:var(--text2)}
+.b-att-list,.b-recent-list{display:flex;flex-direction:column;gap:8px}
+.b-att{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:13px;border:1px solid var(--border);background:var(--surface2)}
+.b-att.warn{border-color:color-mix(in srgb,var(--warn) 35%,transparent)}
+.b-att.bad{border-color:color-mix(in srgb,var(--bad) 35%,transparent)}
+.b-att-i{font-size:19px;flex:none}
+.b-att-t{flex:1;min-width:0}
+.b-att-t b{display:block;font-size:13px}
+.b-att-t span{display:block;font-size:11.5px;color:var(--text2);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.b-allclear{text-align:center;padding:22px 10px;color:var(--text2)}
+.b-allclear span{display:inline-flex;width:40px;height:40px;border-radius:50%;align-items:center;justify-content:center;background:var(--ok-soft);color:var(--ok);font-size:20px;margin-bottom:8px}
+.b-allclear b{display:block;color:var(--text);font-size:14px}
+.b-allclear em{font-style:normal;font-size:12px}
+.b-badge-n{margin-left:8px;font-family:var(--f-mono);font-size:11px;padding:1px 8px;border-radius:10px;background:var(--warn);color:#1a1200;font-weight:800}
+.b-recent{display:flex;align-items:center;gap:11px;width:100%;text-align:left;padding:9px 10px;border-radius:12px;border:1px solid transparent;background:transparent;min-width:0}
+.b-recent:hover{background:var(--surface2);border-color:var(--border)}
+.b-recent-ic{width:32px;height:32px;border-radius:10px;background:var(--surface2);display:flex;align-items:center;justify-content:center;flex:none}
+.b-recent-t{flex:1;min-width:0}
+.b-recent-t b{display:block;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.b-recent-t em{display:block;font-style:normal;font-size:11.5px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.b-recent-ago{font-size:11px;color:var(--text3);flex:none;font-family:var(--f-mono)}
+@media(max-width:420px){.b-recent-ago{display:none}.b-mix{gap:14px}.b-donut{width:112px;height:112px}}
+
+/* ---------------- Admin: search palette ---------------- */
+.b-pal-veil{position:fixed;inset:0;z-index:700;display:none;align-items:flex-start;justify-content:center;padding:12vh 14px 14px;background:rgba(4,6,12,.55);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.b-pal-veil.open{display:flex}
+.b-pal{width:min(580px,100%);max-height:min(72vh,540px);display:flex;flex-direction:column;overflow:hidden;border-radius:20px;border:1.5px solid var(--glass-border);background:var(--bg2);box-shadow:0 30px 90px rgba(0,0,0,.55);animation:obIn .22s cubic-bezier(.2,.8,.2,1)}
+.b-pal-in{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border)}
+.b-pal-in > span{font-size:19px;color:var(--text3)}
+.b-pal-in input{flex:1;min-width:0;background:none;border:none;outline:none;font-size:15px;color:var(--text);font-family:inherit}
+.b-pal-list{overflow-y:auto;overflow-x:hidden;padding:6px 8px 10px}
+.b-pal-grp{font-family:var(--f-mono);font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--text3);padding:12px 10px 5px}
+.b-pal-row{display:flex;align-items:center;gap:12px;width:100%;padding:9px 10px;border-radius:11px;text-align:left;color:var(--text)}
+.b-pal-row.sel{background:var(--accent-soft)}
+.b-pal-ic{width:30px;height:30px;border-radius:9px;background:var(--surface2);display:flex;align-items:center;justify-content:center;flex:none;font-size:14px;color:var(--accent)}
+.b-pal-ic svg{width:15px;height:15px}
+.b-pal-t{flex:1;min-width:0}
+.b-pal-t b{display:block;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.b-pal-t em{display:block;font-style:normal;font-size:11.5px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.b-pal-go{color:var(--text3);font-size:13px;opacity:0}
+.b-pal-row.sel .b-pal-go{opacity:1}
+@media(max-width:560px){.b-pal-veil{padding-top:calc(8px + env(safe-area-inset-top,0px))}.b-pal{max-height:calc(100dvh - 24px)}}
+
+/* ---------------- Admin: responsive refinements ---------------- */
+@media(max-width:860px){
+  .b-palette-btn{width:42px;height:42px;margin:0;padding:0;justify-content:center;flex:none}
+  .b-palette-btn span,.b-palette-btn kbd{display:none}
+  .b-nav-grp{grid-column:1/-1;padding:10px 4px 2px}
+  .b-nav-grp:first-child{padding-top:0}
+  .b-head-actions{width:100%}
+}
+@media(max-width:560px){
+  .b-quick{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .b-q{justify-content:flex-start}
+  .b-q kbd{display:none}
+}
 </style>
 </head>
 <body>
@@ -2554,6 +2731,9 @@ body.ob-lock{overflow:hidden}
       <div class="b-brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.4 9 8 11 4.6-2 8-6 8-11V5l-8-3Z"/></svg></div>
       <div class="b-brand-text">HabitOS<span>Admin Console</span></div>
     </div>
+    <button class="b-palette-btn" onclick="bPaletteOpen()" aria-label="Search" title="Search (Ctrl K)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Search</span><kbd>Ctrl K</kbd>
+    </button>
     <button class="b-menu-btn" id="bMenuBtn" onclick="toggleBMenu()" aria-label="Open menu" aria-expanded="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
       <span id="bCurLabel">Overview</span>
@@ -3273,7 +3453,7 @@ function planState(rec, kind){
     st.subEnd = sub.endDate; st.subLeft = plainDiffDays(today, sub.endDate); st.subExpired = st.subLeft < 0;
   }
   var days = trialDaysCfg();
-  if(kind!=='pending' && (days>0 || rec.trialEndDate) && rec.plan!=='pro'){
+  if(kind!=='pending' && (days>0 || rec.trialEndDate) && rec.plan!=='pro' && (rec.createdAt || rec.trialEndDate)){
     var start = tsToISO(rec.createdAt);
     var end = rec.trialEndDate || plainAddDays(start, days-1);
     var left = plainDiffDays(today, end) + 1;          // days left, counting today
@@ -4225,6 +4405,7 @@ function ensurePaymentsSub(){
     _ordersCache = snap.docs.map(function(d){ return Object.assign({ ref:d.id }, d.data({serverTimestamps:'estimate'})); });
     renderBackendNav();
     if(_backendMode && _bCurSection==='payments') renderBackendPayments();
+    if(_backendMode && _bCurSection==='overview') renderBackendOverview();
   }, function(err){ toast('Could not load payments: '+err.message, true); });
   _unsubPricing = db.collection('config').doc('pricing').onSnapshot(function(doc){
     _pricingCfg = doc.exists ? doc.data() : null;
@@ -4542,12 +4723,13 @@ function exitBackend(){
 }
 function goBackend(section){
   closeBMenu();
+  var _bPrev = _bCurSection;
   _bCurSection = section;
   document.querySelectorAll('#bMain .page').forEach(function(p){ p.classList.remove('active'); });
   var el = document.getElementById('page-b-'+section);
   if(el) el.classList.add('active');
   renderBackendNav();
-  if(section==='overview') renderBackendOverview();
+  if(section==='overview'){ if(_bPrev!=='overview') _bOvAnimated = false; renderBackendOverview(); }
   else if(section==='users') renderBackendUsers();
   else if(section==='dashboard') renderBackendDashboard();
   else if(section==='achievements') renderBackendAchievements();
@@ -4571,16 +4753,6 @@ function closeBMenu(){
   var sb = document.getElementById('bSidebar'); if(sb) sb.classList.remove('open');
   var v = document.getElementById('bMenuVeil'); if(v) v.classList.remove('on');
   var b = document.getElementById('bMenuBtn'); if(b) b.setAttribute('aria-expanded','false');
-}
-function renderBackendNav(){
-  var wrap = document.getElementById('bSideNav');
-  if(!wrap) return;
-  var _cl = document.getElementById('bCurLabel');
-  if(_cl){ var _cur = B_NAV.filter(function(n){ return n.id===_bCurSection; })[0]; if(_cur) _cl.textContent = _cur.label; }
-  wrap.innerHTML = B_NAV.map(function(n){
-    var _pc = (n.id==='payments' && typeof payPendingCount==='function') ? payPendingCount() : 0;
-    return '<button class="b-nav-item'+(n.id===_bCurSection?' active':'')+'" onclick="goBackend(\''+n.id+'\')">'+n.icon+'<span>'+n.label+'</span>'+(_pc?'<span class="b-count b-pending-badge">'+_pc+'</span>':'')+'</button>';
-  }).join('');
 }
 function ensureAllUsersSub(){
   if(!_unsubAllUsers){
@@ -4620,37 +4792,276 @@ function userInitials(name){
   if(!name) return '?';
   return name.split(/\s+/).map(function(w){return w[0];}).slice(0,2).join('').toUpperCase();
 }
+/* ==================================================================
+   ADMIN CONSOLE — COMMAND CENTER
+   Grouped navigation · live overview (KPIs, signups, plan mix, needs-attention,
+   recent activity) · quick search palette (Ctrl/⌘ + K) · section eyebrows.
+   ================================================================== */
+function bGroupOf(id){ for(var i=0;i<B_NAV.length;i++) if(B_NAV[i].id===id) return B_NAV[i]; return null; }
+function bMs(ts){
+  try{ if(!ts) return 0; if(ts.toDate) return +ts.toDate(); if(ts.seconds) return ts.seconds*1000; var d = new Date(ts); return isNaN(d) ? 0 : +d; }catch(e){ return 0; }
+}
+function bAgo(ms){
+  if(!ms) return '—';
+  var m = Math.max(0, Math.round((Date.now()-ms)/60000));
+  if(m<1) return 'just now'; if(m<60) return m+'m ago';
+  var h = Math.round(m/60); if(h<24) return h+'h ago';
+  var d = Math.round(h/24); if(d<30) return d+'d ago';
+  return new Date(ms).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+function bNavBadge(id){
+  if(id==='payments' && typeof payPendingCount==='function') return payPendingCount();
+  return 0;
+}
+function renderBackendNav(){
+  var wrap = document.getElementById('bSideNav');
+  if(!wrap) return;
+  var cur = bGroupOf(_bCurSection);
+  var _cl = document.getElementById('bCurLabel'); if(_cl && cur) _cl.textContent = cur.label;
+  var lastGrp = null, html = '';
+  B_NAV.forEach(function(n){
+    if(n.grp!==lastGrp){ html += '<div class="b-nav-grp">'+n.grp+'</div>'; lastGrp = n.grp; }
+    var pc = bNavBadge(n.id);
+    html += '<button class="b-nav-item'+(n.id===_bCurSection?' active':'')+'" onclick="goBackend(\''+n.id+'\')" title="'+esc(n.desc||'')+'">'+n.icon+'<span>'+n.label+'</span>'+
+      (pc ? '<span class="b-count b-pending-badge">'+pc+'</span>' : '')+'</button>';
+  });
+  wrap.innerHTML = html;
+}
+function bPageHead(title, sub, actions){
+  var g = bGroupOf(_bCurSection);
+  return '<div class="page-head"><div><div class="b-eyebrow"><i></i>Admin'+(g?' · '+g.grp:'')+'</div><div class="page-title">'+title+'</div><div class="page-sub">'+sub+'</div></div>'+(actions?'<div class="b-head-actions">'+actions+'</div>':'')+'</div>';
+}
+
+/* ---- Overview ---- */
+var _bOvAnimated = false;
+function bCountUp(root){
+  var els = root.querySelectorAll('[data-count]');
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  els.forEach(function(el){
+    var to = parseFloat(el.getAttribute('data-count')) || 0, pre = el.getAttribute('data-pre') || '';
+    var fmt = function(v){ return pre + Math.round(v).toLocaleString('en-US'); };
+    if(reduce || _bOvAnimated || to<=0){ el.textContent = fmt(to); return; }
+    var t0 = null, dur = 700;
+    function step(ts){
+      if(t0===null) t0 = ts;
+      var p = Math.min(1,(ts-t0)/dur), e = 1-Math.pow(1-p,3);
+      el.textContent = fmt(to*e);
+      if(p<1) requestAnimationFrame(step); else el.textContent = fmt(to);
+    }
+    requestAnimationFrame(step);
+  });
+  _bOvAnimated = true;
+}
+function bKpi(cls, icon, label, value, sub, pre, onclick){
+  return '<button class="b-kpi '+cls+'"'+(onclick?' onclick="'+onclick+'"':' tabindex="-1"')+'><span class="b-kpi-ic">'+icon+'</span>'+
+    '<b class="mono" data-count="'+value+'"'+(pre?' data-pre="'+pre+'"':'')+'>'+(pre||'')+value+'</b><span class="b-kpi-l">'+label+'</span>'+(sub?'<em>'+sub+'</em>':'')+'</button>';
+}
 function renderBackendOverview(){
   ensureAllUsersSub();
   var el = document.getElementById('page-b-overview'); if(!el) return;
-  var users = _bUsersCache;
+  var now = Date.now(), DAY = 86400000;
+  var users = _bUsersCache, orders = _ordersCache || [];
   var total = users.length;
-  var pro = users.filter(function(u){ return u.plan==='pro'; }).length;
-  var free = total - pro;
-  var suspended = users.filter(function(u){ return u.status==='suspended'; }).length;
-  var habitsSum = users.reduce(function(a,u){ return a+(u.activeHabitsCount||0); },0);
-  var goalsSum = users.reduce(function(a,u){ return a+(u.activeGoalsCount||0); },0);
-  var html = bPageHead('Overview','A live snapshot of every HabitOS account');
-  html += '<div class="b-stats-row">'+
-    '<div class="b-stat card"><b class="mono">'+total+'</b><span>Total users</span></div>'+
-    '<div class="b-stat card"><b class="mono" style="color:var(--ember)">'+pro+'</b><span>Pro users</span></div>'+
-    '<div class="b-stat card"><b class="mono">'+free+'</b><span>Free users</span></div>'+
-    '<div class="b-stat card"><b class="mono" style="color:var(--bad)">'+suspended+'</b><span>Suspended</span></div>'+
+  var states = users.map(function(u){ return { u:u, st:planState(u,'real') }; });
+  var nPro = states.filter(function(x){ return x.u.role!=='admin' && x.st.paid; }).length;
+  var nTrial = states.filter(function(x){ return x.u.role!=='admin' && !x.st.paid && x.st.trialActive; }).length;
+  var nAdmin = users.filter(function(u){ return u.role==='admin'; }).length;
+  var nFree = Math.max(0, total - nPro - nTrial - nAdmin);
+  var nSusp = users.filter(function(u){ return u.status==='suspended'; }).length;
+  var week = users.filter(function(u){ return bMs(u.createdAt) > now-7*DAY; }).length;
+  var payers = Math.max(1, total - nAdmin);
+  var conv = Math.round(nPro/payers*100);
+  var pendingOrders = orders.filter(function(o){ return o.status==='pending'; });
+  var ym = dateStr(new Date()).slice(0,7);
+  var monthRev = 0, allRev = 0;
+  orders.forEach(function(o){
+    if(o.status!=='approved') return;
+    allRev += Number(o.amount)||0;
+    var ms = bMs(o.reviewedAt) || bMs(o.createdAt);
+    if(ms && dateStr(new Date(ms)).slice(0,7)===ym) monthRev += Number(o.amount)||0;
+  });
+  var expiring = states.filter(function(x){ return x.u.role!=='admin' && x.u.plan==='pro' && x.st.subEnd && !x.st.subExpired && x.st.subLeft<=7; });
+  var trialEnding = states.filter(function(x){ return x.st.trialActive && !x.st.paid && x.st.trial.left<=1; });
+  var nInvites = _bPendingCache.length;
+
+  var h = bPageHead('Command center','Everything happening across HabitOS, live',
+    '<span class="b-live"><i></i>Live</span>');
+
+  /* quick actions */
+  h += '<div class="b-quick">'+
+    '<button class="b-q" onclick="goBackend(\'users\');openAddUserModal()"><span>'+ICONS.plus+'</span>Add user</button>'+
+    '<button class="b-q" onclick="_payFilter=\'pending\';goBackend(\'payments\')"><span>'+ICONS.check+'</span>Review payments'+(pendingOrders.length?'<em>'+pendingOrders.length+'</em>':'')+'</button>'+
+    '<button class="b-q" onclick="goBackend(\'limits\')"><span>'+ICONS.sliders+'</span>Plan limits</button>'+
+    '<button class="b-q" onclick="goBackend(\'onboarding\')"><span>'+ICONS.sparkle+'</span>Onboarding</button>'+
+    '<button class="b-q" onclick="bPaletteOpen()"><span>⌕</span>Search<kbd>Ctrl K</kbd></button></div>';
+
+  /* KPIs */
+  h += '<div class="b-kpis">'+
+    bKpi('k1',ICONS.users,'Total users',total,week?('+'+week+' this week'):'no new this week','', "goBackend('users')")+
+    bKpi('k2',ICONS.sparkle,'Pro members',nPro,conv+'% of users','', "goBackend('users');bSetUsersFilter('pro')")+
+    bKpi('k3',ICONS.clock,'On free trial',nTrial,trialEnding.length?(trialEnding.length+' ending soon'):'running','', "goBackend('users');bSetUsersFilter('trial')")+
+    bKpi('k4',ICONS.flag,'Pending payments',pendingOrders.length,pendingOrders.length?'need your review':'all clear','', "_payFilter='pending';goBackend('payments')")+
+    bKpi('k5',ICONS.trophy,'Revenue this month',monthRev,'all time '+payBDT(allRev),'৳', "_payFilter='approved';goBackend('payments')")+
   '</div>';
-  html += '<div class="b-cols" style="grid-template-columns:repeat(2,minmax(0,1fr))">'+
-    '<div class="b-panel"><div class="b-panel-head"><h3>Current plan limits</h3><span class="b-sp"></span><button class="btn sm" onclick="goBackend(\'limits\')">'+ICONS.edit+' Edit</button></div>'+
-      '<div class="b-panel-body"><div class="hint" style="margin:0;font-size:12.5px;line-height:1.6">Free accounts get up to <b>'+_planLimits.freeMaxGoals+'</b> goals and <b>'+_planLimits.freeMaxActiveHabits+'</b> active habits, '+
-      (_planLimits.freeTemplatesAccess?'with':'without')+' habit templates, and '+(_planLimits.freeAchievementsFull?'every achievement unlocked':'a limited set of achievements')+'. Pro accounts have no limits.</div></div></div>'+
-    '<div class="b-panel"><div class="b-panel-head"><h3>Habits + goals tracked</h3></div>'+
-      '<div class="b-panel-body"><div class="hint" style="margin:0;font-size:12.5px;line-height:1.6">Across every account, people are tracking <b>'+habitsSum+'</b> active habits and <b>'+goalsSum+'</b> goals right now.</div></div></div>'+
+
+  /* charts row */
+  var days = [], max = 1, i;
+  for(i=13;i>=0;i--){
+    var d0 = new Date(); d0.setHours(0,0,0,0); d0 = new Date(+d0 - i*DAY);
+    var c = users.filter(function(u){ var m = bMs(u.createdAt); return m>=+d0 && m<+d0+DAY; }).length;
+    days.push({ d:d0, c:c }); if(c>max) max = c;
+  }
+  var sum14 = days.reduce(function(a,x){ return a+x.c; },0);
+  var bars = days.map(function(x,k){
+    var pct = x.c ? Math.max(8, Math.round(x.c/max*100)) : 3;
+    return '<div class="b-bar'+(k===13?' today':'')+'" title="'+x.d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+': '+x.c+'"><i style="height:'+pct+'%"></i><span>'+['S','M','T','W','T','F','S'][x.d.getDay()]+'</span></div>';
+  }).join('');
+  var parts = [['Pro',nPro,'var(--ember)'],['Trial',nTrial,'var(--accent)'],['Free',nFree,'var(--ring-week)'],['Admin',nAdmin,'var(--text3)']];
+  var acc = 0, stops = [];
+  parts.forEach(function(p){
+    var span = total ? p[1]/total*100 : 0;
+    stops.push(p[2]+' '+acc+'% '+(acc+span)+'%'); acc += span;
+  });
+  var donut = total ? 'conic-gradient('+stops.join(',')+')' : 'var(--surface3)';
+  h += '<div class="b-grid2">'+
+    '<div class="b-panel"><div class="b-panel-head"><h3>New signups</h3><span class="sub">last 14 days · '+sum14+' total</span></div><div class="b-panel-body"><div class="b-bars">'+bars+'</div></div></div>'+
+    '<div class="b-panel"><div class="b-panel-head"><h3>Plan mix</h3><span class="sub">who has what</span></div><div class="b-panel-body"><div class="b-mix"><div class="b-donut" style="background:'+donut+'"><div><b class="mono">'+total+'</b><span>users</span></div></div>'+
+      '<div class="b-legend">'+parts.map(function(p){ return '<div><i style="background:'+p[2]+'"></i><span>'+p[0]+'</span><b class="mono">'+p[1]+'</b></div>'; }).join('')+'</div></div></div></div>'+
   '</div>';
-  html += '<div class="b-panel"><div class="b-panel-head"><h3>Configuration</h3><span class="sub">What every user currently sees</span></div><div class="b-panel-body"><div class="b-link-tiles">'+
-    [['templates','Templates',effTemplates().length],['goalTemplates','Goal templates',effGoalTemplates().length],['settings','Categories',effCategories().length],['settings','Habit icons',effEmojis().length],
-     ['achievements','Achievements',effBadges().length],['settings','Accent colors',effAccents().length]].map(function(x){
+
+  /* attention + recent */
+  var att = [];
+  if(pendingOrders.length) att.push(['warn','💳', pendingOrders.length+' payment'+(pendingOrders.length===1?'':'s')+' waiting for review','Check your bKash / Nagad account, then approve.','Review',"_payFilter='pending';goBackend('payments')"]);
+  if(expiring.length) att.push(['warn','⏳', expiring.length+' Pro plan'+(expiring.length===1?'':'s')+' ending within 7 days', expiring.slice(0,3).map(function(x){ return x.u.displayName||x.u.email; }).join(', ')+(expiring.length>3?' …':''),'View',"goBackend('users');bSetUsersFilter('expiring')"]);
+  if(trialEnding.length) att.push(['info','✨', trialEnding.length+' trial'+(trialEnding.length===1?'':'s')+' ending today or tomorrow','A good moment to share the Pro offer.','View',"goBackend('users');bSetUsersFilter('trial')"]);
+  if(nSusp) att.push(['bad','⛔', nSusp+' suspended account'+(nSusp===1?'':'s'),'These users cannot sign in.','View',"goBackend('users');bSetUsersFilter('suspended')"]);
+  if(nInvites) att.push(['info','✉️', nInvites+' pending invite'+(nInvites===1?'':'s'),'People you added who haven\'t signed in yet.','View',"goBackend('users');bSetUsersFilter('pending')"]);
+  var attHTML = att.length ? att.map(function(a){
+    return '<div class="b-att '+a[0]+'"><span class="b-att-i">'+a[1]+'</span><div class="b-att-t"><b>'+a[2]+'</b><span>'+esc(a[3])+'</span></div><button class="btn sm" onclick="'+a[5]+'">'+a[4]+'</button></div>';
+  }).join('') : '<div class="b-allclear"><span>✓</span><b>All clear</b><em>Nothing needs your attention right now.</em></div>';
+
+  var recent = users.slice().sort(function(a,b){ return bMs(b.createdAt)-bMs(a.createdAt); }).slice(0,6);
+  var recentHTML = recent.length ? recent.map(function(u){
+    var name = u.displayName || u.email || 'Unknown';
+    var av = u.photoURL ? '<img class="b-avatar" src="'+esc(u.photoURL)+'" referrerpolicy="no-referrer"/>' : '<div class="b-avatar-fallback">'+esc(userInitials(name)||'?')+'</div>';
+    var st = planState(u,'real');
+    var pill = u.role==='admin' ? '<span class="b-pill admin">Admin</span>' : (st.paid ? '<span class="b-pill pro">Pro</span>' : (st.trialActive ? '<span class="b-pill trial">Trial</span>' : '<span class="b-pill free">Free</span>'));
+    return '<button class="b-recent" onclick="goBackend(\'users\');openUserDetail(\'real\',\''+esc(String(u.uid).replace(/\\/g,'\\\\').replace(/'/g,"\\'"))+'\')">'+av+
+      '<span class="b-recent-t"><b>'+esc(name)+'</b><em>'+esc(u.email||'')+'</em></span>'+pill+'<span class="b-recent-ago">'+bAgo(bMs(u.createdAt))+'</span></button>';
+  }).join('') : '<div class="b-empty-cell">No users yet.</div>';
+
+  var payRecent = orders.slice(0,5);
+  var payHTML = payRecent.length ? payRecent.map(function(o){
+    var pill = o.status==='approved' ? '<span class="b-pill active">Verified</span>' : (o.status==='rejected' ? '<span class="b-pill suspended">Rejected</span>' : '<span class="b-pill pending">Pending</span>');
+    return '<button class="b-recent" onclick="_payFilter=\'all\';_paySearch=\''+esc(o.ref)+'\';goBackend(\'payments\')"><span class="b-recent-ic">💳</span>'+
+      '<span class="b-recent-t"><b>'+esc(o.name||'—')+'</b><em>'+payBDT(o.amount)+' · '+(o.method==='nagad'?'Nagad':'bKash')+'</em></span>'+pill+'<span class="b-recent-ago">'+bAgo(bMs(o.createdAt))+'</span></button>';
+  }).join('') : '<div class="b-empty-cell">No payments yet.</div>';
+
+  h += '<div class="b-grid2">'+
+    '<div class="b-panel"><div class="b-panel-head"><h3>Needs attention</h3>'+(att.length?'<span class="b-badge-n">'+att.length+'</span>':'')+'</div><div class="b-panel-body b-att-list">'+attHTML+'</div></div>'+
+    '<div class="b-panel"><div class="b-panel-head"><h3>Recent signups</h3><span class="b-sp"></span><button class="btn sm ghost" onclick="goBackend(\'users\')">All users</button></div><div class="b-panel-body b-recent-list">'+recentHTML+'</div></div>'+
+  '</div>';
+  h += '<div class="b-grid2">'+
+    '<div class="b-panel"><div class="b-panel-head"><h3>Recent payments</h3><span class="b-sp"></span><button class="btn sm ghost" onclick="goBackend(\'payments\')">All payments</button></div><div class="b-panel-body b-recent-list">'+payHTML+'</div></div>'+
+    '<div class="b-panel"><div class="b-panel-head"><h3>Current plan rules</h3><span class="b-sp"></span><button class="btn sm" onclick="goBackend(\'limits\')">'+ICONS.edit+' Edit</button></div>'+
+      '<div class="b-panel-body"><div class="hint" style="margin:0;font-size:12.5px;line-height:1.7">Free accounts get up to <b>'+_planLimits.freeMaxGoals+'</b> goals and <b>'+_planLimits.freeMaxActiveHabits+'</b> active habits, '+
+      (_planLimits.freeTemplatesAccess?'with':'without')+' habit templates, and '+(_planLimits.freeAchievementsFull?'every achievement unlocked':'a limited set of achievements')+'. New accounts get <b>'+trialDaysCfg()+'</b>-day Pro trial. Pro accounts have no limits.</div></div></div>'+
+  '</div>';
+
+  h += '<div class="b-panel"><div class="b-panel-head"><h3>Configuration</h3><span class="sub">What every user currently sees</span></div><div class="b-panel-body"><div class="b-link-tiles">'+
+    [['templates','Habit templates',effTemplates().length],['goalTemplates','Goal templates',effGoalTemplates().length],['settings','Categories',effCategories().length],['settings','Habit icons',effEmojis().length],
+     ['achievements','Achievements',effBadges().length],['settings','Accent colors',effAccents().length],['onboarding','Starter profiles',effOnboarding().profiles.length]].map(function(x){
       return '<button class="b-link-tile" onclick="goBackend(\''+x[0]+'\')"><b>'+x[2]+'</b><span>'+x[1]+'</span></button>';
     }).join('')+'</div></div></div>';
-  el.innerHTML = html;
+  el.innerHTML = h;
+  bCountUp(el);
 }
+
+/* ---- Quick search palette (Ctrl / ⌘ + K) ---- */
+var _palSel = 0, _palRun = [];
+function bPaletteOpen(){
+  if(!_backendMode) return;
+  var v = document.getElementById('bPalette');
+  if(!v){ v = document.createElement('div'); v.id = 'bPalette'; document.body.appendChild(v); }
+  v.className = 'b-pal-veil open';
+  v.onclick = function(e){ if(e.target===v) bPaletteClose(); };
+  v.innerHTML = '<div class="b-pal" role="dialog" aria-label="Search"><div class="b-pal-in"><span>⌕</span><input id="bPalIn" autocomplete="off" spellcheck="false" placeholder="Search pages, users, payments, actions…" aria-label="Search"/><kbd>Esc</kbd></div><div class="b-pal-list" id="bPalList"></div></div>';
+  var inp = document.getElementById('bPalIn');
+  inp.oninput = function(){ _palSel = 0; bPaletteRender(inp.value); };
+  inp.onkeydown = function(e){
+    if(e.key==='ArrowDown'){ e.preventDefault(); _palSel = Math.min(_palRun.length-1, _palSel+1); bPaletteMark(); }
+    else if(e.key==='ArrowUp'){ e.preventDefault(); _palSel = Math.max(0, _palSel-1); bPaletteMark(); }
+    else if(e.key==='Enter'){ e.preventDefault(); bPaletteGo(_palSel); }
+    else if(e.key==='Escape'){ e.preventDefault(); bPaletteClose(); }
+  };
+  _palSel = 0; bPaletteRender('');
+  setTimeout(function(){ inp.focus(); }, 30);
+}
+function bPaletteClose(){ var v = document.getElementById('bPalette'); if(v) v.remove(); }
+function bPaletteMark(){
+  var rows = document.querySelectorAll('#bPalList .b-pal-row');
+  rows.forEach(function(r,i){ r.classList.toggle('sel', i===_palSel); });
+  var s = rows[_palSel]; if(s && s.scrollIntoView) s.scrollIntoView({block:'nearest'});
+}
+function bPaletteGo(i){ var f = _palRun[i]; if(!f) return; bPaletteClose(); f(); }
+function bPaletteRender(q){
+  q = (q||'').trim().toLowerCase();
+  var groups = [], run = [];
+  function has(t){ return !q || String(t||'').toLowerCase().indexOf(q)!==-1; }
+  var pages = B_NAV.filter(function(n){ return has(n.label) || has(n.desc) || has(n.grp); }).map(function(n){
+    return { ic:n.icon, t:n.label, s:n.desc||n.grp, f:function(){ goBackend(n.id); } };
+  });
+  if(pages.length) groups.push(['Go to', pages]);
+  var acts = [
+    { ic:ICONS.plus, t:'Add user', s:'Invite someone by email', f:function(){ goBackend('users'); openAddUserModal(); } },
+    { ic:ICONS.check, t:'Review pending payments', s:'Approve or reject orders', f:function(){ _payFilter='pending'; goBackend('payments'); } },
+    { ic:ICONS.sparkle, t:'Preview onboarding', s:'Walk through the new-user flow', f:function(){ goBackend('onboarding'); setTimeout(bObPreview, 60); } },
+    { ic:ICONS.sliders, t:'Edit plan limits', s:'Free limits and trial length', f:function(){ goBackend('limits'); } },
+    { ic:'↩', t:'Exit to HabitOS', s:'Back to the app', f:function(){ exitBackend(); } }
+  ].filter(function(a){ return has(a.t) || has(a.s); });
+  if(acts.length) groups.push(['Actions', acts]);
+  if(q.length>=2){
+    var us = unifiedUserList().filter(function(u){ return has(u.displayName) || has(u.email); }).slice(0,6).map(function(u){
+      return { ic:'👤', t:u.displayName||u.email, s:(u.email||'')+(u._kind==='pending'?' · invite':''), f:function(){ goBackend('users'); openUserDetail(u._kind,u._id); } };
+    });
+    if(us.length) groups.push(['Users', us]);
+    var os = (_ordersCache||[]).filter(function(o){ return has(o.name)||has(o.email)||has(o.trxId)||has(o.ref); }).slice(0,4).map(function(o){
+      return { ic:'💳', t:(o.name||'—')+' · '+payBDT(o.amount), s:(o.trxId||'')+' · '+o.status, f:function(){ _payFilter='all'; _paySearch=o.trxId||o.ref; goBackend('payments'); } };
+    });
+    if(os.length) groups.push(['Payments', os]);
+  }
+  var html = '', idx = 0;
+  groups.forEach(function(g){
+    html += '<div class="b-pal-grp">'+g[0]+'</div>';
+    g[1].forEach(function(it){
+      html += '<button class="b-pal-row'+(idx===_palSel?' sel':'')+'" onmousemove="_palSel='+idx+';bPaletteMark()" onclick="bPaletteGo('+idx+')"><span class="b-pal-ic">'+it.ic+'</span><span class="b-pal-t"><b>'+esc(it.t)+'</b><em>'+esc(it.s||'')+'</em></span><span class="b-pal-go">↵</span></button>';
+      run.push(it.f); idx++;
+    });
+  });
+  _palRun = run;
+  document.getElementById('bPalList').innerHTML = html || '<div class="b-empty-cell">Nothing matches “'+esc(q)+'”.</div>';
+}
+document.addEventListener('keydown', function(e){
+  if((e.ctrlKey||e.metaKey) && (e.key==='k' || e.key==='K') && _backendMode){ e.preventDefault(); if(document.getElementById('bPalette')) bPaletteClose(); else bPaletteOpen(); }
+});
+
+/* ---- accessibility: every icon-only button gets an accessible name from its tooltip ---- */
+(function(){
+  function label(root){
+    (root.querySelectorAll ? root.querySelectorAll('button[title]:not([aria-label])') : []).forEach(function(b){
+      var t = b.getAttribute('title'); if(t) b.setAttribute('aria-label', t);
+    });
+  }
+  function start(){
+    label(document);
+    if(window.MutationObserver){
+      var pend = false;
+      new MutationObserver(function(){ if(pend) return; pend = true; setTimeout(function(){ pend = false; label(document); }, 250); }).observe(document.body, {childList:true, subtree:true});
+    }
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+
 
 /* ---- Users page: merges real accounts (userDirectory, keyed by uid) with
    pending / manually-provisioned accounts (userDirectoryPending, keyed by
@@ -4721,7 +5132,7 @@ function renderBackendUsers(){
   else if(f==='trial') users = users.filter(function(u){ return u._acc.f.trial; });
   else if(f==='expiring') users = users.filter(function(u){ return u._acc.f.expiring || (u.plan==='pro' && u._acc.st.subExpired); });
 
-  var html = '<div class="page-head"><div><div class="page-title">Users</div><div class="page-sub">'+_bUsersCache.length+' registered account'+(_bUsersCache.length===1?'':'s')+(_bPendingCache.length?', '+_bPendingCache.length+' pending invite'+(_bPendingCache.length===1?'':'s'):'')+'</div></div></div>';
+  var html = bPageHead('Users', _bUsersCache.length+' registered account'+(_bUsersCache.length===1?'':'s')+(_bPendingCache.length?', '+_bPendingCache.length+' pending invite'+(_bPendingCache.length===1?'':'s'):''));
   function chip(key, n, label, tone){
     return '<button class="b-chipf '+tone+(f===key?' on':'')+'" onclick="bSetUsersFilter(\''+key+'\')"><b>'+n+'</b><span>'+label+'</span></button>';
   }
@@ -5197,9 +5608,6 @@ function bSetDirty(d){
   var el = document.querySelector('#bMain .page.active .b-dirty'); if(!el) return;
   el.classList.toggle('on', !!d);
   var em = el.querySelector('em'); if(em) em.textContent = d ? 'Unsaved changes' : 'All changes saved';
-}
-function bPageHead(title, sub, actions){
-  return '<div class="page-head"><div><div class="page-title">'+title+'</div><div class="page-sub">'+sub+'</div></div>'+(actions||'')+'</div>';
 }
 function bSaveBar(o){
   return '<div class="b-savebar"><span class="b-dirty"><i></i><em>All changes saved</em></span>'+
@@ -6083,7 +6491,9 @@ function isScheduledIgnoringStart(h, dStr){
 function cycleStatus(hId,dStr){
   var h = habitById(hId); if(!h || isFuture(dStr)) return;
   var cur = getStatus(h,dStr);
-  var next = cur===null ? 'done' : (cur==='done' ? 'missed' : null);
+  var sched = isScheduledIgnoringStart(h,dStr);
+  /* off-schedule day (e.g. a weekend for a Mon-Fri habit): a "bonus" check-in, so only done <-> cleared */
+  var next = cur===null ? 'done' : (cur==='done' ? (sched ? 'missed' : null) : null);
   setStatus(hId,dStr,next);
 }
 /* Daily View checklist row: single click marks the habit done, double click marks
@@ -6106,7 +6516,9 @@ function habitCheckDblClick(btnEl,hId,dStr){
   var key = hId+'|'+dStr;
   if(_habClickTimers[key]){ clearTimeout(_habClickTimers[key]); delete _habClickTimers[key]; }
   var h = habitById(hId); if(!h || isFuture(dStr)) return;
-  var next = getStatus(h,dStr)==='missed' ? null : 'missed';
+  var next;
+  if(!isScheduledIgnoringStart(h,dStr)) next = getStatus(h,dStr)==='done' ? null : 'done';   // bonus day: never "missed"
+  else next = getStatus(h,dStr)==='missed' ? null : 'missed';
   runHabitStatusAnim(btnEl,hId,dStr,next);
 }
 /* Reverting a habit back to pending (clicking "done" again, or double-clicking
@@ -6367,16 +6779,16 @@ var ICONS = {
   grid:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>'
 };
 var B_NAV = [
-  {id:'overview', label:'Overview', icon:ICONS.grid},
-  {id:'users', label:'Users', icon:ICONS.users},
-  {id:'payments', label:'Payments', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20M6 15h4"/></svg>'},
-  {id:'dashboard', label:'Dashboard', icon:ICONS.home},
-  {id:'achievements', label:'Achievements', icon:ICONS.trophy},
-  {id:'settings', label:'Settings', icon:ICONS.settings},
-  {id:'templates', label:'Habit Templates', icon:ICONS.calendar},
-  {id:'goalTemplates', label:'Goal Templates', icon:ICONS.target},
-  {id:'onboarding', label:'Onboarding', icon:ICONS.sparkle},
-  {id:'limits', label:'Plan limits', icon:ICONS.sliders}
+  {id:'overview',      grp:'Monitor',    label:'Overview',        desc:'Live snapshot of your product',          icon:ICONS.grid},
+  {id:'users',         grp:'Monitor',    label:'Users',           desc:'Accounts, plans and access',             icon:ICONS.users},
+  {id:'payments',      grp:'Monitor',    label:'Payments',        desc:'Verify bKash / Nagad orders',            icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20M6 15h4"/></svg>'},
+  {id:'onboarding',    grp:'Content',    label:'Onboarding',      desc:'First-run flow and starter profiles',    icon:ICONS.sparkle},
+  {id:'templates',     grp:'Content',    label:'Habit Templates', desc:'Ready-made habits people can add',       icon:ICONS.calendar},
+  {id:'goalTemplates', grp:'Content',    label:'Goal Templates',  desc:'Ready-made goals with milestones',       icon:ICONS.target},
+  {id:'achievements',  grp:'Content',    label:'Achievements',    desc:'Badges and how they unlock',             icon:ICONS.trophy},
+  {id:'dashboard',     grp:'Experience', label:'Dashboard',       desc:'Greeting and home screen widgets',       icon:ICONS.home},
+  {id:'settings',      grp:'Experience', label:'Settings',        desc:'Categories, icons and accent colors',    icon:ICONS.settings},
+  {id:'limits',        grp:'Plans',      label:'Plan limits',     desc:'Free limits and the new-account trial',  icon:ICONS.sliders}
 ];
 var NAV = [
   {id:'dashboard', label:'Dashboard', icon:ICONS.home},
@@ -6790,6 +7202,8 @@ function dailyHabitListHTML(viewDate){
   var pending = all.filter(function(h){ return getStatus(h,viewDate)===null; });
   var done2 = all.filter(function(h){ return getStatus(h,viewDate)==='done'; });
   var missed = all.filter(function(h){ return getStatus(h,viewDate)==='missed'; });
+  /* habits whose weekday rule skips this date (e.g. Mon-Fri habits on a weekend): optional bonus check-ins */
+  var rest = isFuture(viewDate) ? [] : activeHabits().filter(function(h){ return !isScheduledIgnoringStart(h,viewDate) && viewDate>=h.createdAt; });
   var html = '';
 
   if(!S.habits.length){
@@ -6811,6 +7225,11 @@ function dailyHabitListHTML(viewDate){
     html += '</div>';
   }
 
+  if(rest.length && S.habits.length){
+    var restDone = rest.filter(function(h){ return getStatus(h,viewDate)==='done'; }).length;
+    html += '<details class="rest-box"'+(restDone?' open':'')+'><summary><span>Not scheduled '+(isToday?'today':'this day')+' · '+rest.length+'</span><em>tap to log a bonus check-in anyway</em></summary>'+
+      '<div class="hab-list">'+rest.map(function(h){ return habitItemHTML(h,viewDate); }).join('')+'</div></details>';
+  }
   var archived = S.habits.filter(function(h){ return h.archived; });
   if(archived.length){
     html += '<div class="sec-title"><h3>Archived</h3></div><div class="hab-list">'+archived.map(function(h){
@@ -6958,13 +7377,14 @@ function habitItemHTML(h, dStr){
   dStr = dStr || _todayStr;
   var st = getStatus(h,dStr);
   var streak = currentStreak(h);
-  var cls = st==='done' ? 'done' : (st==='missed' ? 'missed' : '');
+  var rest = !isScheduledIgnoringStart(h,dStr);
+  var cls = (st==='done' ? 'done' : (st==='missed' ? 'missed' : ''))+(rest?' rest':'');
   var checkIcon = st==='done' ? ICONS.check : (st==='missed' ? ICONS.x : '');
-  var checkTitle = isFuture(dStr) ? 'Future day' : 'Click to mark done · double-click to mark missed';
+  var checkTitle = isFuture(dStr) ? 'Future day' : (rest ? 'Not scheduled today — click to log a bonus check-in' : 'Click to mark done · double-click to mark missed');
   return '<div class="hab-item hab-item-static '+cls+'">'+
     '<div class="hab-icon">'+h.icon+'</div>'+
     '<div class="hab-info"><div class="hab-name">'+esc(h.name)+'</div>'+
-      '<div class="hab-meta">'+(streak>0?'<span class="flame">🔥 '+streak+'</span> · ':'')+esc(freqLabel(h))+habitGoalChipHTML(h)+(h.reminder?' · ⏰ '+fmtTime(h.reminder):'')+'</div></div>'+
+      '<div class="hab-meta">'+(streak>0?'<span class="flame">🔥 '+streak+'</span> · ':'')+esc(freqLabel(h))+habitGoalChipHTML(h)+(rest?' · <span class="hab-rest-tag">Bonus</span>':'')+(h.reminder?' · ⏰ '+fmtTime(h.reminder):'')+'</div></div>'+
     '<button class="hab-check'+(isFuture(dStr)?' disabled':'')+'" onclick="event.stopPropagation();habitCheckClick(this,\''+h.id+'\',\''+dStr+'\')" ondblclick="event.stopPropagation();event.preventDefault();habitCheckDblClick(this,\''+h.id+'\',\''+dStr+'\')" title="'+checkTitle+'">'+checkIcon+'</button>'+
   '</div>';
 }
@@ -7338,18 +7758,18 @@ function renderCalendar(){
       var future = isFuture(ds);
       var sched = isScheduledIgnoringStart(h,ds);
       var st = getStatus(h,ds);
-      var cls = 'cal-dot'+(future?' future':'')+((!sched)?' unsched':'');
-      var tapOk = (sched && !future);
+      var cls = 'cal-dot'+(future?' future':'')+((!sched)?' unsched':'')+((!sched && st==='done')?' bonus':'');
+      var tapOk = !future;   // off-schedule days stay tappable: log a bonus check-in
       var dot;
-      if(sched && st==='done') dot = '<div class="'+cls+'" style="background:var(--ok)">'+ICONS.check+'</div>';
+      if(st==='done') dot = '<div class="'+cls+'" style="background:var(--ok)"'+(sched?'':' title="Bonus check-in (not a scheduled day)"')+'>'+ICONS.check+'</div>';
       else if(sched && st==='missed') dot = '<div class="'+cls+'" style="background:var(--bad)">'+ICONS.x+'</div>';
-      else dot = '<div class="'+cls+'"></div>';
+      else dot = '<div class="'+cls+'"'+(sched?'':' title="Not scheduled — tap to log a bonus check-in"')+'></div>';
       html += '<td class="cal-cell'+(ds===_todayStr?' today':'')+(tapOk?' tap':'')+'"'+(tapOk?' onclick="calCellTap(this,\''+h.id+'\',\''+ds+'\')"':'')+'>'+dot+'</td>';
     }
     html += '</tr>';
   });
   html += '</tbody></table></div>';
-  html += '<div class="hint" style="margin-top:6px;font-size:11px">Tap a cell to mark done, tap again for missed, tap again to clear. Works for past dates too — use the arrows to go back to earlier months.</div>';
+  html += '<div class="hint" style="margin-top:6px;font-size:11px">Tap a cell to mark done, tap again for missed, tap again to clear. Faded cells are days this habit isn\'t scheduled — you can still tap them to log a bonus check-in (it never breaks or changes your streak). Works for past dates too — use the arrows to go back to earlier months.</div>';
 
   el.innerHTML = html;
   calAfterRender(_prevScroll);
@@ -7391,6 +7811,8 @@ function calCellTap(cell,hId,ds){
   var el = cell.querySelector('.cal-dot') || cell;
   cycleStatus(hId,ds);
   var st = getStatus(h,ds);
+  var offDay = !isScheduledIgnoringStart(h,ds);
+  el.classList.toggle('bonus', offDay && st==='done');
   if(st==='done'){ el.style.background = 'var(--ok)'; el.innerHTML = ICONS.check; }
   else if(st==='missed'){ el.style.background = 'var(--bad)'; el.innerHTML = ICONS.x; }
   else { el.style.background = ''; el.innerHTML = ''; }
