@@ -2522,6 +2522,58 @@ kbd{font-family:var(--f-mono);font-size:10px;font-weight:600;padding:2px 6px;bor
   .b-q{justify-content:flex-start}
   .b-q kbd{display:none}
 }
+
+/* ============================================================
+   MARKETING AGENT
+   ============================================================ */
+.b-pill.agent{background:var(--ember-soft);color:var(--ember)}
+.ma-how{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.ma-how div{padding:12px;border-radius:13px;background:var(--surface2);border:1px solid var(--border)}
+.ma-how b{display:block;font-size:13px;margin-bottom:4px}
+.ma-how span{font-size:12px;color:var(--text2);line-height:1.55}
+@media(max-width:760px){.ma-how{grid-template-columns:minmax(0,1fr)}}
+.ma-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px}
+.ma-wrap{border:1.5px solid var(--glass-border);background:var(--glass-bg-strong);border-radius:var(--radius);padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--shadow-widget-sm);min-width:0;background-image:linear-gradient(135deg,color-mix(in srgb,var(--text) 5%,transparent),transparent 45%)}
+.ma-card{display:flex;align-items:center;gap:10px}
+.ma-head{display:flex;align-items:center;gap:11px;flex:1;min-width:0}
+.ma-ico{font-size:26px;width:44px;height:44px;border-radius:13px;background:var(--surface2);display:flex;align-items:center;justify-content:center;flex:none}
+.ma-ht{min-width:0}
+.ma-ht b{display:block;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ma-ht em{display:block;font-style:normal;font-size:11.5px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ma-desc{font-size:12.5px;color:var(--text2);line-height:1.5;margin:0}
+.ma-acct{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:12px;background:var(--surface2);border:1px solid var(--border)}
+.ma-at{min-width:0}
+.ma-at b{display:block;font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ma-at em{display:block;font-style:normal;font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ma-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.ma-stats div{padding:9px 10px;border-radius:11px;background:var(--surface2);border:1px solid var(--border)}
+.ma-stats b{display:block;font-size:16px}
+.ma-stats span{font-size:10.5px;color:var(--text3)}
+.ma-bar{height:6px;border-radius:3px;background:var(--surface3);overflow:hidden}
+.ma-bar i{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--ember));transition:width .5s}
+.ma-last{font-size:11.5px;color:var(--text3);line-height:1.5}
+.ma-actions{display:flex;gap:8px;flex-wrap:wrap}
+.ma-actions .btn{flex:1 1 auto;justify-content:center}
+.ma-sec{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--text2);margin:20px 0 10px}
+.ma-sec .ob-pick{font-weight:600;letter-spacing:0;text-transform:none}
+.ma-two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:560px){.ma-two{grid-template-columns:minmax(0,1fr)}}
+.ma-range{width:100%;accent-color:var(--accent)}
+.ma-check{display:flex;align-items:center;gap:9px;font-size:12.5px;color:var(--text2);margin-top:2px;cursor:pointer}
+.ma-refs{display:flex;flex-direction:column;gap:7px}
+.ma-ref{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:var(--surface2);border:1px solid var(--border);flex-wrap:wrap}
+.ma-ref.warn{border-color:color-mix(in srgb,var(--warn) 45%,transparent)}
+.ma-ref-n{flex:1 1 120px;min-width:0;font-size:12.5px;font-weight:600;overflow-wrap:anywhere}
+.ma-ref > button{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text3);flex:none}
+.ma-ref > button:hover{background:var(--bad-soft);color:var(--bad)}
+.ma-ref > button svg{width:14px;height:14px}
+.ma-rs{width:auto;min-width:78px;padding:5px 8px;font-size:12px}
+.ma-days{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text2)}
+.ma-days input{width:64px;padding:5px 8px;border-radius:9px;border:1.5px solid var(--border);background:var(--bg2);color:var(--text);font-size:12.5px}
+.ma-ll{font-size:12px;color:var(--text2);padding:6px 0;border-bottom:1px solid var(--border);display:flex;gap:10px}
+.ma-ll span{flex:none;width:64px;color:var(--text3);font-family:var(--f-mono);font-size:11px}
+.ma-foot{flex-wrap:wrap}
+.ma-foot .btn{flex:1 1 auto;justify-content:center}
 </style>
 </head>
 <body>
@@ -2757,6 +2809,7 @@ kbd{font-family:var(--f-mono);font-size:10px;font-weight:600;padding:2px 6px;bor
     <section class="page" id="page-b-goalTemplates"></section>
     <section class="page" id="page-b-onboarding"></section>
     <section class="page" id="page-b-payments"></section>
+    <section class="page" id="page-b-marketing"></section>
     <section class="page" id="page-b-limits"></section>
   </main>
 </div>
@@ -3252,6 +3305,7 @@ function subscribeMyDirectory(){
     if(_curPage==='settings') renderSettings();
     if(_curPage==='achievements') renderAchievements();
     if(wasAdmin && _myRole!=='admin' && _backendMode) exitBackend();
+    if(_myRole==='admin' && !_maStarted){ _maStarted = true; setTimeout(maBoot, 3500); }   // marketing agents catch up whenever an admin is signed in
   }, function(err){ console.error('directory sync error', err); });
 }
 function subscribePlanLimits(){
@@ -3336,6 +3390,9 @@ function stopDirectorySync(){
   if(_unsubOnboardingConfig){ _unsubOnboardingConfig(); _unsubOnboardingConfig=null; }
   _obCfgLoaded=false; _obTries=0; _onboardingConfig=null; if(typeof obClose==='function') obClose();
   if(_unsubOrders){ _unsubOrders(); _unsubOrders=null; }
+  if(_unsubAgents){ _unsubAgents(); _unsubAgents=null; }
+  if(_unsubEngine){ _unsubEngine(); _unsubEngine=null; }
+  _agentsCache=[]; _maSubStarted=false; _maStarted=false; if(_maTimer){ clearInterval(_maTimer); _maTimer=null; }
   if(_unsubPricing){ _unsubPricing(); _unsubPricing=null; }
   if(_unsubPayment){ _unsubPayment(); _unsubPayment=null; }
   _ordersCache=[]; _pricingCfg=null; _paymentCfg=null; _paySubStarted=false;
@@ -4679,6 +4736,413 @@ function planCardHTML(){
       cta+(st.isAdmin?'':'<a class="btn" href="/status">Order status</a>')+
     '</div></div>';
 }
+/* ==================================================================
+   MARKETING AGENT (Admin tool)
+   One automated demo account per Onboarding starter profile. The admin assigns any
+   registered account to a profile; that account then "lives" by itself:
+     • habits get checked day after day (a believable rhythm, not 100%),
+     • goal tasks / milestones are ticked off in step with the goal's target date,
+     • habit-linked goals move because the habits do.
+   The engine is a deterministic CATCH-UP: it works out what should have happened
+   on every day since the agent started and fills in only what is missing. Running it
+   twice changes nothing, so it can run whenever an admin is signed in (on sign-in,
+   every 15 minutes, and on "Run now") without double-counting.
+   Agent accounts are flagged on their userDirectory doc (agent:{id,profile}); the
+   Firestore rules let an admin write ONLY those accounts' habits/goals.
+   ================================================================== */
+var _agentsCache = [], _unsubAgents = null, _unsubEngine = null, _engineCfg = { enabled:true };
+var _maBusy = false, _maStarted = false, _maSubStarted = false, _maTimer = null, _maDraft = null, _maDraftId = null;
+var MA_HOURS = { natural:[7,21], morning:[6,11], evening:[17,22] };
+var MA_PACE = { slow:0.8, steady:1, fast:1.25 };
+
+function maSlug(s){ return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'') || 'agent'; }
+function maHash(str){ var h = 2166136261; for(var i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h,16777619); } return ((h>>>0) % 100000) / 100000; }
+function maHour(a, name){
+  var r = MA_HOURS[a.timing] || MA_HOURS.natural;
+  return r[0] + Math.floor(maHash((a.seed||'')+'|hr|'+name) * (r[1]-r[0]+1));
+}
+function maAgentById(id){ for(var i=0;i<_agentsCache.length;i++) if(_agentsCache[i].id===id) return _agentsCache[i]; return null; }
+function maAgentForProfile(name){ for(var i=0;i<_agentsCache.length;i++) if(_agentsCache[i].profile===name) return _agentsCache[i]; return null; }
+function maEligibleUsers(agent){
+  return _bUsersCache.filter(function(u){
+    return u.role!=='admin' && u.status!=='suspended' && (!u.agent || (agent && u.agent.id===agent.id));
+  }).sort(function(a,b){ return String(a.displayName||a.email).localeCompare(String(b.displayName||b.email)); });
+}
+function maDefaults(profile){
+  return {
+    rate:88, weekendDip:true, timing:'natural', pace:'steady', historyDays:30,
+    habits:(profile.habits||[]).map(function(x){ return { name:bObRefName('h',x), rate:null }; }),
+    goals:(profile.goals||[]).map(function(x){ return { title:bObRefName('g',x), days:45 }; })
+  };
+}
+
+/* ---------------- realtime subscriptions ---------------- */
+function ensureMarketingSub(){
+  ensureAllUsersSub();
+  if(_maSubStarted) return;
+  _maSubStarted = true;
+  _unsubAgents = db.collection('marketingAgents').onSnapshot(function(snap){
+    _agentsCache = snap.docs.map(function(d){ return Object.assign({ id:d.id }, d.data()); });
+    if(_backendMode && _bCurSection==='marketing' && !document.getElementById('maVeil')) renderBackendMarketing();
+    if(document.getElementById('maVeil')) maRefreshModalHeader();
+  }, function(err){ console.error('marketing agents sync', err); });
+  _unsubEngine = db.collection('config').doc('marketingEngine').onSnapshot(function(doc){
+    _engineCfg = Object.assign({ enabled:true }, doc.exists ? doc.data() : {});
+    if(_backendMode && _bCurSection==='marketing' && !document.getElementById('maVeil')) renderBackendMarketing();
+  }, function(){});
+}
+/* any admin sign-in starts the catch-up loop (no need to open the tool) */
+function maBoot(){
+  ensureMarketingSub();
+  var tries = 0;
+  (function waitThenRun(){
+    if((_agentsCache.length && _bUsersCache.length) || tries++>12){ maRunAll('boot', true); return; }
+    setTimeout(waitThenRun, 700);
+  })();
+  if(!_maTimer) _maTimer = setInterval(function(){ if(_myRole==='admin') maRunAll('auto', true); }, 15*60*1000);
+}
+
+/* ---------------- the engine (pure: works on a data object) ---------------- */
+function maSimulate(data, a, opts){
+  var savedS = S, savedToast = toast, today = _todayStr;
+  var hour = (opts && opts.hour!=null) ? opts.hour : new Date().getHours();
+  var st = { habits:0, missed:0, tasks:0, milestones:0 };
+  toast = function(){};                                   // the engine must never pop messages on the admin's screen
+  S = { habits:data.habits||[], goals:data.goals||[], trash:[], profile:Object.assign({}, savedS.profile, data.profile||{}) };
+  try{
+    var floorMin = dateStr(addDays(parseDate(today), -180));
+    S.habits.forEach(function(h){
+      if(h.archived) return;
+      h.logs = h.logs || {};
+      var cfg = (a.habits||[]).filter(function(x){ return String(x.name).toLowerCase()===String(h.name).toLowerCase(); })[0];
+      var rate = ((cfg && cfg.rate!=null) ? cfg.rate : a.rate) / 100;
+      var d = parseDate(h.createdAt > floorMin ? h.createdAt : floorMin);
+      var hr = maHour(a, h.name);
+      while(true){
+        var ds = dateStr(d);
+        if(ds > today) break;
+        d = addDays(d,1);
+        if(h.logs[ds]) continue;                           // never touch an existing mark
+        if(!isScheduledOn(h, ds)) continue;
+        var isToday = ds===today, dow = parseDate(ds).getDay();
+        if(h.freqType==='weekly'){                          // "X times a week": a stable plan of X days per week
+          var wk = weekStartDate(ds), days = [], w = parseDate(dateStr(wk));
+          for(var i=0;i<7;i++){ days.push(dateStr(w)); w = addDays(w,1); }
+          days.sort(function(x,y){ return maHash((a.seed||'')+'|'+h.name+'|wk|'+x) - maHash((a.seed||'')+'|'+h.name+'|wk|'+y); });
+          if(days.slice(0, Math.max(1, h.freqCount||1)).indexOf(ds)===-1) continue;
+        }
+        if(isToday && hour < hr) continue;                  // today: only what a real person would have done by now
+        var r = rate * ((a.weekendDip && (dow===0 || dow===6)) ? 0.8 : 1);
+        var key = (a.seed||'')+'|'+h.name+'|'+ds;
+        if(maHash(key+'|p') < r){ h.logs[ds] = 'done'; st.habits++; }
+        else if(!isToday && maHash(key+'|m') < 0.3){ h.logs[ds] = 'missed'; st.missed++; }
+      }
+    });
+    S.goals.forEach(function(g){
+      if(g.link || g.status==='done') return;
+      var ms = g.milestones || [], units = [];
+      ms.forEach(function(m){ if(m.tasks && m.tasks.length) m.tasks.forEach(function(t){ units.push({t:t}); }); else units.push({m:m}); });
+      if(!units.length) return;
+      var gcfg = (a.goals||[]).filter(function(x){ return String(x.title).toLowerCase()===String(g.title).toLowerCase(); })[0];
+      var start = g.createdAt || today;
+      var target = g.targetDate || dateStr(addDays(parseDate(start), (gcfg && gcfg.days) || 45));
+      var span = Math.max(1, (parseDate(target) - parseDate(start))/86400000), el = (parseDate(today) - parseDate(start))/86400000;
+      var f = clamp(el/span * (MA_PACE[a.pace] || 1), 0, 1);
+      var want = Math.floor(units.length * f);
+      var have = units.filter(function(u){ return u.t ? u.t.done : u.m.done; }).length;
+      var before = ms.filter(isMilestoneDone).length;
+      for(var k=0; k<units.length && have<want; k++){
+        var u = units[k];
+        if(u.t && !u.t.done){ u.t.done = true; have++; st.tasks++; }
+        else if(u.m && !u.m.done){ u.m.done = true; have++; st.tasks++; }
+      }
+      st.milestones += ms.filter(isMilestoneDone).length - before;
+      syncGoalStatus(g);
+    });
+    syncLinkedGoals();
+    /* snapshot the numbers the admin sees on the agent card */
+    var act = S.habits.filter(function(h){ return !h.archived; });
+    var sched = act.filter(function(h){ return isScheduledOn(h,today); });
+    st.snap = {
+      habits: act.length, goals: S.goals.length,
+      todayTotal: sched.length, todayDone: sched.filter(function(h){ return getStatus(h,today)==='done'; }).length,
+      streak: act.reduce(function(m,h){ return Math.max(m, currentStreak(h)); }, 0),
+      goalPct: S.goals.length ? Math.round(S.goals.reduce(function(s,g){ return s+goalPct(g); },0)/S.goals.length) : 0
+    };
+  } finally { S = savedS; toast = savedToast; }
+  return st;
+}
+function maBuildData(a, data, rebuild){
+  var start = dateStr(addDays(parseDate(_todayStr), -Math.max(1, a.historyDays||30)));
+  var habits = rebuild ? [] : (data.habits||[]).slice(), goals = rebuild ? [] : (data.goals||[]).slice();
+  (a.habits||[]).forEach(function(cfg){
+    if(habits.some(function(h){ return String(h.name).toLowerCase()===String(cfg.name).toLowerCase(); })) return;
+    var t = obFindHabit(cfg.name); if(!t) return;
+    habits.push({ id:uid(), name:t.name, icon:t.icon||'✨', cat:t.cat||'Other', freqType:t.freqType||'daily', freqDays:t.freqDays||[1,2,3,4,5], freqCount:t.freqCount||3, reminder:null, createdAt:start, logs:{}, archived:false });
+  });
+  (a.goals||[]).forEach(function(cfg){
+    if(goals.some(function(g){ return String(g.title).toLowerCase()===String(cfg.title).toLowerCase(); })) return;
+    var t = obFindGoal(cfg.title); if(!t) return;
+    goals.push({
+      id:uid(), title:t.title, icon:t.icon||'🎯', note:t.note||'', targetDate:dateStr(addDays(parseDate(start), cfg.days||45)), createdAt:start, status:'active',
+      milestones:(t.milestones||[]).map(function(m){ return { id:uid(), title:m.title, targetDate:null, done:false, tasks:(m.tasks||[]).map(function(x){ return { id:uid(), title:String(x), done:false, targetDate:null }; }) }; })
+    });
+  });
+  return { habits:habits, goals:goals, profile:Object.assign({}, data.profile||{}, { onboarded:true, onboardPath:'agent' }) };
+}
+/* run one agent: read the account, fill in what's missing, write once (transaction) */
+function maRunAgent(a, opts){
+  opts = opts || {};
+  if(!a || !a.uid) return Promise.resolve(null);
+  var ref = db.collection('users').doc(a.uid), ts = firebase.firestore.FieldValue.serverTimestamp(), out = null;
+  return db.runTransaction(function(tx){
+    return tx.get(ref).then(function(snap){
+      if(!snap.exists) throw new Error('This account has no data yet. Sign in with it once first.');
+      var data = snap.data(), built = false;
+      if(opts.provision){ data = Object.assign({}, data, maBuildData(a, data, !!opts.rebuild)); built = true; }
+      var st = maSimulate(data, a, opts);
+      if(built || st.habits || st.missed || st.tasks || st.milestones){
+        tx.update(ref, { habits:data.habits, goals:data.goals, profile:data.profile, updatedAt:ts });
+      }
+      out = st;
+    });
+  }).then(function(){
+    var did = out.habits + out.tasks + out.milestones;
+    var upd = { lastRunAt:new Date().toISOString(), lastRunDate:_todayStr, stats:out.snap };
+    if(opts.provision) upd.provisionedAt = new Date().toISOString();
+    if(did || opts.provision){
+      var bits = [];
+      if(out.habits) bits.push('+'+out.habits+' habit check-in'+(out.habits===1?'':'s'));
+      if(out.tasks) bits.push('+'+out.tasks+' goal step'+(out.tasks===1?'':'s'));
+      if(out.milestones) bits.push(out.milestones+' milestone'+(out.milestones===1?'':'s')+' reached');
+      if(opts.provision) bits.unshift(opts.rebuild ? 'Account rebuilt' : 'Account set up');
+      upd.log = firebase.firestore.FieldValue.arrayUnion({ at:new Date().toISOString(), text:bits.join(' · ') || 'Checked' });
+    }
+    return db.collection('marketingAgents').doc(a.id).update(upd).then(function(){
+      return directoryDocRef(a.uid).update({ activeHabitsCount:out.snap.habits, activeGoalsCount:S_goalsActive(out), lastActiveAt:firebase.firestore.FieldValue.serverTimestamp() }).catch(function(){});
+    }).then(function(){ return out; });
+  });
+}
+function S_goalsActive(out){ return out.snap.goals; }
+function maRunAll(reason, quiet){
+  if(_maBusy || _myRole!=='admin') return Promise.resolve();
+  if(_engineCfg.enabled===false && reason!=='manual') return Promise.resolve();
+  var list = _agentsCache.filter(function(a){ return a.enabled!==false && a.uid && a.provisionedAt; });
+  if(!list.length){ if(!quiet) toast('No active agents to run yet'); return Promise.resolve(); }
+  _maBusy = true;
+  var total = { habits:0, tasks:0, milestones:0 }, failed = 0;
+  var chain = Promise.resolve();
+  list.forEach(function(a){
+    chain = chain.then(function(){ return maRunAgent(a).then(function(r){ if(r){ total.habits += r.habits; total.tasks += r.tasks; total.milestones += r.milestones; } }).catch(function(err){ failed++; console.error('agent run failed', a.profile, err); }); });
+  });
+  return chain.then(function(){
+    _maBusy = false;
+    if(!quiet || total.habits || total.tasks) toast('Agents updated · +'+total.habits+' check-ins, +'+total.tasks+' goal steps'+(failed?' · '+failed+' failed':''), failed?true:false);
+    if(_backendMode && _bCurSection==='marketing' && !document.getElementById('maVeil')) renderBackendMarketing();
+  });
+}
+
+/* ---------------- agent management ---------------- */
+function maCreate(profileName){
+  var sel = document.getElementById('maPick-'+maSlug(profileName));
+  var uidV = sel ? sel.value : '';
+  if(!uidV){ toast('Choose a registered account first', true); return; }
+  var u = null; _bUsersCache.forEach(function(x){ if(x.uid===uidV) u = x; });
+  var profile = effOnboarding().profiles.filter(function(p){ return p.name===profileName; })[0];
+  if(!u || !profile){ toast('Could not find that account or profile', true); return; }
+  var id = maSlug(profileName);
+  var doc = Object.assign({
+    id:id, profile:profileName, uid:u.uid, email:u.email||'', name:u.displayName||u.email||'',
+    enabled:true, startDate:_todayStr, seed:Math.random().toString(36).slice(2,10), createdAt:firebase.firestore.FieldValue.serverTimestamp()
+  }, maDefaults(profile));
+  var batch = db.batch();
+  batch.set(db.collection('marketingAgents').doc(id), doc);
+  batch.update(directoryDocRef(u.uid), { agent:{ id:id, profile:profileName } });
+  batch.commit().then(function(){
+    toast('Agent created — setting up the account…');
+    var a = Object.assign({}, doc, { createdAt:null });
+    return maRunAgent(a, { provision:true }).then(function(){ toast('✓ '+profileName+' agent is live'); });
+  }).catch(function(err){ toast('Could not create agent: '+(err && err.message || err), true); });
+}
+function maRemove(id){
+  var a = maAgentById(id); if(!a) return;
+  if(!confirm('Remove the "'+a.profile+'" agent? The account keeps all its data but stops being automated.')) return;
+  var batch = db.batch();
+  batch.delete(db.collection('marketingAgents').doc(id));
+  if(a.uid) batch.update(directoryDocRef(a.uid), { agent:firebase.firestore.FieldValue.delete() });
+  batch.commit().then(function(){ maCloseModal(); toast('Agent removed'); }).catch(function(err){ toast('Could not remove: '+err.message, true); });
+}
+function maToggle(id){
+  var a = maAgentById(id); if(!a) return;
+  db.collection('marketingAgents').doc(id).update({ enabled: a.enabled===false }).then(function(){ toast(a.enabled===false ? 'Agent resumed' : 'Agent paused'); }).catch(function(err){ toast(err.message, true); });
+}
+function maEngineToggle(el){
+  var on = !el.classList.contains('on'); el.classList.toggle('on', on);
+  db.collection('config').doc('marketingEngine').set({ enabled:on }).then(function(){ toast(on ? 'Automation is ON' : 'Automation paused for all agents'); }).catch(function(err){ toast(err.message, true); });
+}
+function maRunOne(id, opts){
+  var a = maAgentById(id); if(!a) return;
+  toast('Running…');
+  maRunAgent(a, opts || {}).then(function(r){
+    if(!r) return;
+    toast(r.habits||r.tasks ? '✓ '+a.profile+': +'+r.habits+' check-ins, +'+r.tasks+' goal steps' : '✓ '+a.profile+' is already up to date');
+  }).catch(function(err){ toast('Run failed: '+(err && err.message || err), true); });
+}
+
+/* ---------------- page ---------------- */
+function maAvatar(u, name){
+  return u && u.photoURL ? '<img class="b-avatar" src="'+esc(u.photoURL)+'" referrerpolicy="no-referrer"/>' : '<div class="b-avatar-fallback">'+esc(userInitials(name||'?')||'?')+'</div>';
+}
+function maCardHTML(p){
+  var a = maAgentForProfile(p.name), slug = maSlug(p.name);
+  var nh = (p.habits||[]).length, ng = (p.goals||[]).length;
+  var head = '<div class="ma-head"><span class="ma-ico">'+esc(p.icon||'✨')+'</span><div class="ma-ht"><b>'+esc(p.name)+'</b><em>'+esc(p.cat||'')+' · '+nh+' habits · '+ng+' goals</em></div>';
+  if(!a){
+    var opts = maEligibleUsers(null).map(function(u){ return '<option value="'+esc(u.uid)+'">'+esc((u.displayName||'Unnamed')+' · '+(u.email||''))+'</option>'; }).join('');
+    return '<div class="ma-card idle">'+head+'<span class="b-pill free">No agent</span></div>'+
+      '<p class="ma-desc">'+esc(p.desc||'')+'</p>'+
+      (opts ? '<select class="sel" id="maPick-'+slug+'"><option value="">Choose a registered account…</option>'+opts+'</select>'+
+        '<button class="btn primary block" style="margin-top:10px" onclick="maCreate(\''+esc(p.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'"))+'\')">'+ICONS.plus+' Make this account the agent</button>'
+        : '<div class="hint" style="margin:0">No free accounts available. Sign in with another Google account once, and it will appear here.</div>')+
+    '</div>';
+  }
+  var u = null; _bUsersCache.forEach(function(x){ if(x.uid===a.uid) u = x; });
+  var paused = a.enabled===false || _engineCfg.enabled===false;
+  var s = a.stats || null;
+  var pill = !u ? '<span class="b-pill suspended">Account missing</span>' : (!a.provisionedAt ? '<span class="b-pill pending">Not set up</span>' : (paused ? '<span class="b-pill pending">Paused</span>' : '<span class="b-pill active">Running</span>'));
+  var body = '<div class="ma-acct">'+maAvatar(u, a.name)+'<div class="ma-at"><b>'+esc(a.name||a.email)+'</b><em>'+esc(a.email||'')+'</em></div></div>';
+  if(s){
+    body += '<div class="ma-stats"><div><b class="mono">'+s.todayDone+'/'+s.todayTotal+'</b><span>done today</span></div><div><b class="mono">'+s.streak+'</b><span>best streak</span></div><div><b class="mono">'+s.goalPct+'%</b><span>goals</span></div></div>'+
+      '<div class="ma-bar"><i style="width:'+(s.todayTotal ? Math.round(s.todayDone/s.todayTotal*100) : 0)+'%"></i></div>';
+  }
+  var last = a.lastRunAt ? 'Last run '+bAgo(Date.parse(a.lastRunAt)) : 'Never run';
+  var logs = (a.log||[]).slice(-1)[0];
+  return '<div class="ma-card'+(paused?' paused':'')+'">'+head+pill+'</div>'+body+
+    '<div class="ma-last">'+last+(logs ? ' · '+esc(logs.text) : '')+'</div>'+
+    '<div class="ma-actions"><button class="btn sm primary" onclick="maRunOne(\''+a.id+'\')">'+ICONS.check+' Run now</button>'+
+      '<button class="btn sm" onclick="maOpenModal(\''+a.id+'\')">'+ICONS.edit+' Customize</button>'+
+      '<button class="btn sm ghost" onclick="maToggle(\''+a.id+'\')">'+(a.enabled===false?'Resume':'Pause')+'</button></div>'+
+  '</div>';
+}
+function renderBackendMarketing(){
+  ensureMarketingSub();
+  var el = document.getElementById('page-b-marketing'); if(!el) return;
+  var profiles = effOnboarding().profiles;
+  var active = _agentsCache.filter(function(a){ return a.enabled!==false && a.provisionedAt; }).length;
+  var h = bPageHead('Marketing Agent','One automated demo account per starter profile: habits get checked and goals move forward on their own, so you never have to sign in just to record visuals',
+    '<span class="b-live" style="'+(_engineCfg.enabled===false?'color:var(--warn);background:var(--warn-soft)':'')+'"><i style="'+(_engineCfg.enabled===false?'background:var(--warn);animation:none':'')+'"></i>'+(_engineCfg.enabled===false?'Paused':'Automation on')+'</span>'+
+    '<button class="btn" onclick="maRunAll(\'manual\')"'+(_maBusy?' disabled':'')+'>'+ICONS.check+' Run all now</button>');
+  h += '<div class="b-panel"><div class="b-panel-head"><h3>How it works</h3></div><div class="b-panel-body"><div class="ma-how">'+
+    '<div><b>1 · Assign</b><span>Pick a registered account for a profile. It becomes that profile\'s agent and is set up with the profile\'s habits and goals, with history already filled in.</span></div>'+
+    '<div><b>2 · It lives</b><span>Every time you sign in as admin, and every 15 minutes while you\'re in, the agents catch up: habits ticked at believable times, goal steps completed by each goal\'s target date.</span></div>'+
+    '<div><b>3 · You record</b><span>Open the agent\'s Gmail in another browser. Everything is already there and updates live as the engine runs.</span></div></div></div></div>';
+  h += '<div class="b-set" style="margin-bottom:14px"><div class="b-set-txt"><b>Automation</b><span>Master switch. Turn off to freeze every agent where it is ('+active+' running now).</span></div>'+
+    '<div class="b-set-ctl" style="width:auto"><div class="switch'+(_engineCfg.enabled===false?'':' on')+'" role="switch" onclick="maEngineToggle(this)"></div></div></div>';
+  h += '<div class="ma-grid">'+profiles.map(function(p){ return '<div class="ma-wrap">'+maCardHTML(p)+'</div>'; }).join('')+'</div>';
+  el.innerHTML = h;
+}
+
+/* ---------------- customize dialog ---------------- */
+function maOpenModal(id){
+  var a = maAgentById(id); if(!a) return;
+  _maDraftId = id;
+  _maDraft = JSON.parse(JSON.stringify({ rate:a.rate, weekendDip:a.weekendDip!==false, timing:a.timing||'natural', pace:a.pace||'steady', historyDays:a.historyDays||30, habits:a.habits||[], goals:a.goals||[], uid:a.uid }));
+  maModalRender(true);
+}
+function maCloseModal(){ var v = document.getElementById('maVeil'); if(v) v.remove(); _maDraft = null; _maDraftId = null; if(_backendMode && _bCurSection==='marketing') renderBackendMarketing(); }
+function maRefreshModalHeader(){ /* agent doc changed live (e.g. a run finished): keep the open dialog's log fresh */
+  var a = maAgentById(_maDraftId), box = document.getElementById('maLog'); if(a && box) box.innerHTML = maLogHTML(a);
+}
+function maLogHTML(a){
+  var lines = (a.log||[]).slice(-8).reverse();
+  return lines.length ? lines.map(function(l){ return '<div class="ma-ll"><span>'+esc(bAgo(Date.parse(l.at)))+'</span>'+esc(l.text)+'</div>'; }).join('') : '<div class="hint" style="margin:0">Nothing logged yet.</div>';
+}
+function maRefChip(kind, j, label, rateHTML){
+  var t = kind==='h' ? obFindHabit(label) : obFindGoal(label);
+  return '<div class="ma-ref'+(t?'':' warn')+'"><span class="ma-ref-n">'+(t && t.icon ? esc(t.icon)+' ' : '')+esc(label)+(t?'':' ⚠')+'</span>'+rateHTML+
+    '<button type="button" title="Remove" onclick="maDraftDel(\''+kind+'\','+j+')">'+ICONS.x+'</button></div>';
+}
+function maPicker(kind){
+  var list = kind==='h' ? effTemplates() : effGoalTemplates(), have = (kind==='h' ? _maDraft.habits : _maDraft.goals).map(function(x){ return String(kind==='h'?x.name:x.title).toLowerCase(); });
+  var opts = '';
+  list.forEach(function(t,k){ var nm = kind==='h' ? t.name : t.title; if(have.indexOf(String(nm).toLowerCase())===-1) opts += '<option value="'+k+'">'+esc((t.icon||'')+' '+nm)+'</option>'; });
+  return '<select class="sel ob-pick" onchange="maDraftAdd(\''+kind+'\',this.value);this.value=\'\'"'+(opts?'':' disabled')+'><option value="">'+(opts?'+ Add '+(kind==='h'?'habit':'goal')+' from templates…':'All templates added')+'</option>'+opts+'</select>';
+}
+function maModalRender(first){
+  var a = maAgentById(_maDraftId); if(!a || !_maDraft) return;
+  var d = _maDraft, v = document.getElementById('maVeil');
+  var users = maEligibleUsers(a), cur = null; _bUsersCache.forEach(function(u){ if(u.uid===d.uid) cur = u; });
+  if(cur && !users.some(function(u){ return u.uid===cur.uid; })) users.unshift(cur);
+  var rates = [[null,'Auto'],[100,'100%'],[90,'90%'],[75,'75%'],[60,'60%'],[40,'40%']];
+  var html = '<div class="modal-head"><div class="modal-title">'+esc(a.profile)+' agent</div><button class="icon-btn" onclick="maCloseModal()" aria-label="Close">'+ICONS.x+'</button></div>'+
+    '<div class="ma-sec">Account</div>'+
+    '<div class="field"><span class="field-label">Which registered account is this agent?</span><select class="sel" onchange="_maDraft.uid=this.value">'+
+      users.map(function(u){ return '<option value="'+esc(u.uid)+'"'+(u.uid===d.uid?' selected':'')+'>'+esc((u.displayName||'Unnamed')+' · '+(u.email||''))+'</option>'; }).join('')+'</select>'+
+      '<div class="hint">Changing the account moves the agent. The old account keeps its data but stops being automated.</div></div>'+
+    '<div class="ma-sec">Behaviour</div>'+
+    '<div class="ma-two"><div class="field"><span class="field-label">Daily completion rate: <b id="maRateV">'+d.rate+'%</b></span><input type="range" min="40" max="100" step="1" value="'+d.rate+'" oninput="_maDraft.rate=+this.value;document.getElementById(\'maRateV\').textContent=this.value+\'%\'" class="ma-range"/></div>'+
+    '<div class="field"><span class="field-label">When habits get ticked</span><select class="sel" onchange="_maDraft.timing=this.value">'+
+      [['natural','Spread through the day'],['morning','Morning person'],['evening','Evening person']].map(function(o){ return '<option value="'+o[0]+'"'+(d.timing===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join('')+'</select></div></div>'+
+    '<div class="ma-two"><div class="field"><span class="field-label">Goal pace</span><select class="sel" onchange="_maDraft.pace=this.value">'+
+      [['slow','Relaxed: finishes a bit late'],['steady','Steady: right on the target date'],['fast','Ahead of schedule']].map(function(o){ return '<option value="'+o[0]+'"'+(d.pace===o[0]?' selected':'')+'>'+o[1]+'</option>'; }).join('')+'</select></div>'+
+    '<div class="field"><span class="field-label">History on first set-up</span><select class="sel" onchange="_maDraft.historyDays=+this.value">'+
+      [7,14,30,60,90].map(function(n){ return '<option value="'+n+'"'+(d.historyDays===n?' selected':'')+'>'+n+' days of history</option>'; }).join('')+'</select></div></div>'+
+    '<label class="ma-check"><input type="checkbox" '+(d.weekendDip?'checked':'')+' onchange="_maDraft.weekendDip=this.checked"/> Slightly fewer check-ins on weekends (looks more human)</label>'+
+    '<div class="ma-sec">Habits <span class="ob-n">'+d.habits.length+'</span><span class="b-sp"></span>'+maPicker('h')+'</div>'+
+    '<div class="ma-refs">'+(d.habits.length ? d.habits.map(function(x,j){
+      var rs = '<select class="sel ma-rs" title="Completion rate for this habit" onchange="_maDraft.habits['+j+'].rate=this.value===\'\'?null:+this.value">'+rates.map(function(r){ return '<option value="'+(r[0]===null?'':r[0])+'"'+((x.rate==null&&r[0]===null)||x.rate===r[0]?' selected':'')+'>'+r[1]+'</option>'; }).join('')+'</select>';
+      return maRefChip('h', j, x.name, rs); }).join('') : '<div class="hint" style="margin:0">No habits. Pick some from your Habit Templates.</div>')+'</div>'+
+    '<div class="ma-sec">Goals <span class="ob-n">'+d.goals.length+'</span><span class="b-sp"></span>'+maPicker('g')+'</div>'+
+    '<div class="ma-refs">'+(d.goals.length ? d.goals.map(function(x,j){
+      var ds = '<label class="ma-days" title="Days from the start until this goal is finished"><input type="number" min="7" max="365" value="'+(x.days||45)+'" onchange="_maDraft.goals['+j+'].days=Math.max(7,Math.min(365,+this.value||45))"/> days</label>';
+      return maRefChip('g', j, x.title, ds); }).join('') : '<div class="hint" style="margin:0">No goals. Pick some from your Goal Templates.</div>')+'</div>'+
+    '<div class="hint" style="margin:8px 0 0">New habits and goals are added to the account the next time you press <b>Set up account</b>. Habits and goals come from your templates, so edit them there.</div>'+
+    '<div class="ma-sec">Recent activity</div><div id="maLog">'+maLogHTML(a)+'</div>'+
+    '<div class="modal-foot ma-foot"><button class="btn primary" onclick="maSave(false)">'+ICONS.check+' Save</button>'+
+      '<button class="btn" onclick="maSave(true)">Save &amp; set up account</button>'+
+      '<button class="btn" onclick="maRebuild()">Rebuild data</button>'+
+      '<button class="btn danger" onclick="maRemove(\''+a.id+'\')">Remove agent</button></div>';
+  if(!v){ v = document.createElement('div'); v.id = 'maVeil'; v.className = 'modal-veil open'; v.onclick = function(e){ if(e.target===v) maCloseModal(); }; v.innerHTML = '<div class="modal" id="maModal" style="max-width:600px"></div>'; document.body.appendChild(v); }
+  var m = document.getElementById('maModal'), top = m.scrollTop;
+  m.innerHTML = html; m.scrollTop = first ? 0 : top;
+}
+function maDraftAdd(kind, val){
+  if(val==='') return;
+  var t = (kind==='h' ? effTemplates() : effGoalTemplates())[parseInt(val,10)]; if(!t) return;
+  if(kind==='h') _maDraft.habits.push({ name:t.name, rate:null }); else _maDraft.goals.push({ title:t.title, days:45 });
+  maModalRender();
+}
+function maDraftDel(kind, j){ (kind==='h' ? _maDraft.habits : _maDraft.goals).splice(j,1); maModalRender(); }
+function maSave(provision){
+  var a = maAgentById(_maDraftId); if(!a || !_maDraft) return;
+  var d = _maDraft, moved = d.uid && d.uid!==a.uid;
+  var u = null; _bUsersCache.forEach(function(x){ if(x.uid===d.uid) u = x; });
+  if(!u){ toast('Choose a valid account', true); return; }
+  var patch = { rate:d.rate, weekendDip:d.weekendDip, timing:d.timing, pace:d.pace, historyDays:d.historyDays, habits:d.habits, goals:d.goals };
+  var batch = db.batch(), ref = db.collection('marketingAgents').doc(a.id);
+  if(moved){
+    patch.uid = u.uid; patch.email = u.email||''; patch.name = u.displayName||u.email||''; patch.provisionedAt = firebase.firestore.FieldValue.delete(); patch.stats = firebase.firestore.FieldValue.delete();
+    if(a.uid) batch.update(directoryDocRef(a.uid), { agent:firebase.firestore.FieldValue.delete() });
+    batch.update(directoryDocRef(u.uid), { agent:{ id:a.id, profile:a.profile } });
+  }
+  batch.update(ref, patch);
+  batch.commit().then(function(){
+    toast(moved ? 'Agent moved to '+(u.displayName||u.email) : 'Agent saved');
+    if(provision || moved){
+      var next = Object.assign({}, a, patch, { provisionedAt:null });
+      return maRunAgent(next, { provision:true }).then(function(){ toast('✓ Account set up'); });
+    }
+  }).then(function(){ maCloseModal(); }).catch(function(err){ toast('Could not save: '+(err && err.message || err), true); });
+}
+function maRebuild(){
+  var a = maAgentById(_maDraftId); if(!a) return;
+  if(!confirm('Rebuild "'+a.profile+'"? This REPLACES every habit and goal in the account ('+(a.email||'')+') with this profile\'s set and re-creates its history. Use it only for demo accounts.')) return;
+  var next = Object.assign({}, a, { rate:_maDraft.rate, weekendDip:_maDraft.weekendDip, timing:_maDraft.timing, pace:_maDraft.pace, historyDays:_maDraft.historyDays, habits:_maDraft.habits, goals:_maDraft.goals });
+  db.collection('marketingAgents').doc(a.id).update({ rate:next.rate, weekendDip:next.weekendDip, timing:next.timing, pace:next.pace, historyDays:next.historyDays, habits:next.habits, goals:next.goals }).then(function(){
+    return maRunAgent(next, { provision:true, rebuild:true });
+  }).then(function(){ toast('✓ Account rebuilt'); maCloseModal(); }).catch(function(err){ toast('Rebuild failed: '+(err && err.message || err), true); });
+}
+
 /* ---- Free vs Pro gating helpers, used everywhere a limit applies ---- */
 function isPro(){ return _myRole==='admin' || _myPlan==='pro'; }
 function canCreateGoal(){ return isPro() || (S.goals||[]).length < _planLimits.freeMaxGoals; }
@@ -4738,6 +5202,7 @@ function goBackend(section){
   else if(section==='goalTemplates') renderBackendGoalTemplates();
   else if(section==='onboarding') renderBackendOnboarding();
   else if(section==='payments') renderBackendPayments();
+  else if(section==='marketing') renderBackendMarketing();
   else if(section==='limits') renderBackendLimits();
   var main = document.getElementById('bMain'); if(main) main.scrollTop = 0;
   window.scrollTo(0,0);
@@ -5016,6 +5481,7 @@ function bPaletteRender(q){
     { ic:ICONS.plus, t:'Add user', s:'Invite someone by email', f:function(){ goBackend('users'); openAddUserModal(); } },
     { ic:ICONS.check, t:'Review pending payments', s:'Approve or reject orders', f:function(){ _payFilter='pending'; goBackend('payments'); } },
     { ic:ICONS.sparkle, t:'Preview onboarding', s:'Walk through the new-user flow', f:function(){ goBackend('onboarding'); setTimeout(bObPreview, 60); } },
+    { ic:ICONS.check, t:'Run marketing agents now', s:'Catch every demo account up to this moment', f:function(){ goBackend('marketing'); setTimeout(function(){ maRunAll('manual'); }, 80); } },
     { ic:ICONS.sliders, t:'Edit plan limits', s:'Free limits and trial length', f:function(){ goBackend('limits'); } },
     { ic:'↩', t:'Exit to HabitOS', s:'Back to the app', f:function(){ exitBackend(); } }
   ].filter(function(a){ return has(a.t) || has(a.s); });
@@ -5152,7 +5618,8 @@ function renderBackendUsers(){
     return u.role==='admin' ? '<span class="b-pill admin">Admin</span>' : '<span class="b-pill '+(u.plan==='pro'?'pro':'free')+'">'+(u.plan==='pro'?'Pro':'Free')+'</span>';
   }
   function statusPill(u){
-    return u._kind==='pending' ? '<span class="b-pill pending">Pending</span>' : (u.status==='suspended' ? '<span class="b-pill suspended">Suspended</span>' : '<span class="b-pill active">Active</span>');
+    var base = u._kind==='pending' ? '<span class="b-pill pending">Pending</span>' : (u.status==='suspended' ? '<span class="b-pill suspended">Suspended</span>' : '<span class="b-pill active">Active</span>');
+    return base + (u.agent ? '<span class="b-pill agent" title="Marketing agent: '+esc(u.agent.profile||'')+'">Agent</span>' : '');
   }
   function planBtn(u, cls){
     if(u.role==='admin') return '';
@@ -6786,6 +7253,7 @@ var B_NAV = [
   {id:'templates',     grp:'Content',    label:'Habit Templates', desc:'Ready-made habits people can add',       icon:ICONS.calendar},
   {id:'goalTemplates', grp:'Content',    label:'Goal Templates',  desc:'Ready-made goals with milestones',       icon:ICONS.target},
   {id:'achievements',  grp:'Content',    label:'Achievements',    desc:'Badges and how they unlock',             icon:ICONS.trophy},
+  {id:'marketing',     grp:'Growth',     label:'Marketing Agent', desc:'Automated demo accounts for your videos', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V4M9 4h6"/><circle cx="9" cy="14" r="1.2"/><circle cx="15" cy="14" r="1.2"/></svg>'},
   {id:'dashboard',     grp:'Experience', label:'Dashboard',       desc:'Greeting and home screen widgets',       icon:ICONS.home},
   {id:'settings',      grp:'Experience', label:'Settings',        desc:'Categories, icons and accent colors',    icon:ICONS.settings},
   {id:'limits',        grp:'Plans',      label:'Plan limits',     desc:'Free limits and the new-account trial',  icon:ICONS.sliders}
